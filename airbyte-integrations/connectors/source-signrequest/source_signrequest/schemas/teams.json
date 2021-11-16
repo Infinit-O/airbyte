@@ -1,0 +1,17 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "name": {"type": "string"},
+        "subdomain": {"type": "string"},
+        "url": {"type": "string"},
+        "logo": {"type": "string"},
+        "phone": {"type": "string"},
+        "primary_color": {"type": "string"},
+        "events_callback_url": {"type" :"string"},
+        "documents_as_attachments": {"type": "string"},
+        "members": {"type": "array"},
+        "delete_after": {"type": "string"},
+        "sandbox": {"type": "boolean"}
+    }
+}

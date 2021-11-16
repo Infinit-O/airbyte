@@ -1,0 +1,28 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "uuid": {"type": "string"},
+        "url": {"type": "string"},
+        "user": {
+            "type": "object",
+            "properties": {
+                "email": {"type": "string"},
+                "first_name": {"type": "string"},
+                "last_name": {"type": "string"},
+                "display_name": {"type": "string"}
+            }
+        },
+        "team": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "subdomain": {"type": "string"},
+                "url": {"type": "string"}
+            }
+        },
+        "is_active": {"type": "boolean"},
+        "is_admin": {"type": "boolean"},
+        "is_owner": {"type": "boolean"}
+    }
+}
