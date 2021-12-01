@@ -1,0 +1,9 @@
+{
+    "type": "object",
+    "required": ["timestamp", "rates"],
+    "properties": {
+        "currency": {"type": "string"},
+        "rate": {"type": "number"},
+        "timestamp": {"type": "number"}
+    }
+}
