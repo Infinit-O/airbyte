@@ -9,9 +9,26 @@ from airbyte_cdk import AirbyteLogger
 from airbyte_cdk.destinations import Destination
 from airbyte_cdk.models import AirbyteConnectionStatus, ConfiguredAirbyteCatalog, AirbyteMessage, Status
 
+import requests
+
 
 class AutopilotWriter():
-    pass
+    def __init__(self, config):
+        try:
+            self._token = config["api_token"]
+        except KeyError:
+            # TODO: figure out what to raise later.
+            raise
+
+        self.s = requests.session()
+        self._base_url = "https://api2.autopilothq.com/v1/"
+        self.s.headers.update({
+            'autopilotapikey': self._token
+        })
+
+    def write(self, record):
+        # TODO: determine correct API endpoint + payload
+        pass
 
 class DestinationAutopilot(Destination):
     def write(
@@ -22,7 +39,6 @@ class DestinationAutopilot(Destination):
     ) -> Iterable[AirbyteMessage]:
 
         """
-        TODO
         Reads the input stream of messages, config, and catalog to write data to the destination.
 
         This method returns an iterable (typically a generator of AirbyteMessages via yield) containing state messages received
