@@ -52,6 +52,7 @@ class DestinationAutopilot(Destination):
         :param input_messages: The stream of input messages received from the source
         :return: Iterable of AirbyteStateMessages wrapped in AirbyteMessage structs
         """
+        writer = AutopilotWriter(config)
 
         pass
 
@@ -68,9 +69,11 @@ class DestinationAutopilot(Destination):
         :return: AirbyteConnectionStatus indicating a Success or Failure
         """
         try:
-            token = ""
-            if config.get("api_token", None) is None:
+            token = config.get("api_token", None)
+            if not token:
                 return AirbyteConnectionStatus(status=Status.FAILED, message=f"Please provide a valid API token.")
+            if token == "":
+                return AirbyteConnectionStatus(status=Status.FAILED, message=f"Token cannot be an empty string.")
 
             return AirbyteConnectionStatus(status=Status.SUCCEEDED)
         except Exception as e:
