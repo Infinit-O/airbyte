@@ -8,6 +8,7 @@ from typing import Mapping, Any, Iterable
 from airbyte_cdk import AirbyteLogger
 from airbyte_cdk.destinations import Destination
 from airbyte_cdk.models import AirbyteConnectionStatus, ConfiguredAirbyteCatalog, AirbyteMessage, Status
+import analytics
 
 
 class DestinationSegmentio(Destination):
@@ -19,7 +20,6 @@ class DestinationSegmentio(Destination):
     ) -> Iterable[AirbyteMessage]:
 
         """
-        TODO
         Reads the input stream of messages, config, and catalog to write data to the destination.
 
         This method returns an iterable (typically a generator of AirbyteMessages via yield) containing state messages received
@@ -33,8 +33,19 @@ class DestinationSegmentio(Destination):
         :param input_messages: The stream of input messages received from the source
         :return: Iterable of AirbyteStateMessages wrapped in AirbyteMessage structs
         """
+        analytics.write_key = config.get("write_key")
 
-        pass
+        for message in input_messages:
+            event: dict = message.record.data
+            user_id: int = event["admin"]["id"]
+            user_name: str = event["admin"]["name"]
+            event_type: str = event["action_type"]
+            analytics.identify(user_id, {"name": user_name})
+            analytics.track(user_id, event_type, event)
+
+
+        # NOTE: Investigate the need for a call to .flush() here? 
+        analytics.flush()
 
     def check(self, logger: AirbyteLogger, config: Mapping[str, Any]) -> AirbyteConnectionStatus:
         """
@@ -49,9 +60,14 @@ class DestinationSegmentio(Destination):
         :return: AirbyteConnectionStatus indicating a Success or Failure
         """
         try:
-            # TODO
-
-            return AirbyteConnectionStatus(status=Status.SUCCEEDED)
+            key = config["write_key"]
+            if not key:
+                return AirbyteConnectionStatus(
+                    status=Status.FAILED,
+                    message="Write key is missing, check key and try again."
+                )
+            else:
+                return AirbyteConnectionStatus(status=Status.SUCCEEDED)
         except Exception as e:
             return AirbyteConnectionStatus(status=Status.FAILED, message=f"An exception occurred: {repr(e)}")
 

@@ -1,21 +1,19 @@
 {
   "documentationUrl": "https://docs.airbyte.io/integrations/destinations/segmentio",
-  "supported_destination_sync_modes": [
-    "TODO, available options are: 'overwrite', 'append', and 'append_dedup'"
-  ],
-  "supportsIncremental": true,
+  "supported_destination_sync_modes": ["append"],
+  "supportsIncremental": false,
   "supportsDBT": false,
   "supportsNormalization": false,
   "connectionSpecification": {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Destination Segmentio",
+    "title": "Destination Segment.io",
     "type": "object",
-    "required": ["TODO -- fix me!"],
+    "required": ["write_key"],
     "additionalProperties": false,
     "properties": {
-      "TODO": {
+      "write_key": {
         "type": "string",
-        "description": "FIX ME"
+        "description": "The write key is provided by segment.io when you create a data source."
       }
     }
   }
