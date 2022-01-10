@@ -62,3 +62,8 @@ resources/examples/airflow/logs/*
 !airbyte-webapp/src/packages/cloud/data
 /bin/
 /**/bin/
+
+# local env stuff
+.python-version
+.vscode
+*.jsonl
