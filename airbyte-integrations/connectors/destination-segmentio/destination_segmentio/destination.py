@@ -7,7 +7,7 @@ from typing import Mapping, Any, Iterable
 
 from airbyte_cdk import AirbyteLogger
 from airbyte_cdk.destinations import Destination
-from airbyte_cdk.models import AirbyteConnectionStatus, ConfiguredAirbyteCatalog, AirbyteMessage, Status
+from airbyte_cdk.models import AirbyteConnectionStatus, ConfiguredAirbyteCatalog, AirbyteMessage, Status, Type
 import analytics
 
 
@@ -34,17 +34,29 @@ class DestinationSegmentio(Destination):
         :return: Iterable of AirbyteStateMessages wrapped in AirbyteMessage structs
         """
         analytics.write_key = config.get("write_key")
+        successfully_written: int = 0
 
         for message in input_messages:
-            event: dict = message.record.data
-            user_id: int = event["admin"]["id"]
-            user_name: str = event["admin"]["name"]
-            event_type: str = event["action_type"]
-            analytics.identify(user_id, {"name": user_name})
-            analytics.track(user_id, event_type, event)
+            if message.type == Type.STATE:
+                yield message
+            elif message.type == Type.RECORD:
+                event: dict = message.record.data
+                user_id: int = event["admin"]["id"]
+                user_name: str = event["admin"]["name"]
+                event_type: str = event["action_type"]
+                # self.logger.info("Event -> {}".format(event))
+                self.logger.info("User ID -> {}".format(user_id))
+                self.logger.info("User name -> {}".format(user_name))
+                self.logger.info("Event type -> {}".format(event_type))
+                analytics.identify(user_id, {"name": user_name})
+                analytics.track(user_id, event_type, event)
+                successfully_written += 1
+            else:
+                continue
 
+        self.logger.info("Records written: {}".format(successfully_written))
 
-        # NOTE: Investigate the need for a call to .flush() here? 
+        # NOTE: Investigate the need for a call to .flush() here?
         analytics.flush()
 
     def check(self, logger: AirbyteLogger, config: Mapping[str, Any]) -> AirbyteConnectionStatus:
@@ -70,6 +82,3 @@ class DestinationSegmentio(Destination):
                 return AirbyteConnectionStatus(status=Status.SUCCEEDED)
         except Exception as e:
             return AirbyteConnectionStatus(status=Status.FAILED, message=f"An exception occurred: {repr(e)}")
-
-
-
