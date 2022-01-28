@@ -32,17 +32,14 @@ class SnipeitStream(HttpStream, ABC):
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.limit_per_page: int = 10000
+        self.limit_per_page: int = 500
         self.total: int = 0
         self.offset: int = 0
 
-    # TODO: Fill in the url base. Required.
     url_base = "https://infinit-o.snipe-it.io/api/v1/"
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
-        TODO: Override this method to define a pagination strategy. If you will not be using pagination, no action is required - just return None.
-
         This method should return a Mapping (e.g: dict) containing whatever information required to make paginated requests. This dict is passed
         to most other methods in this class to help you form headers, request bodies, query params, etc..
 
@@ -67,7 +64,10 @@ class SnipeitStream(HttpStream, ABC):
         TODO: Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
         Usually contains common params e.g. pagination size etc.
         """
-        return {}
+        if next_page_token:
+            return {'limit': self.limit_per_page, 'offset': next_page_token.get("offset", None)}
+        else:
+            return {'limit': self.limit_per_page, 'offset': self.offset}
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         """
