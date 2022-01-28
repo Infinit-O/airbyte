@@ -172,7 +172,19 @@
         "type": "string"
     },
     "mfa": {
-        "$ref": "#/definitions/mfa"
+        "type": "object",
+        "properties": {
+            "configured": {
+                "type": "boolean"
+            },
+            "exclusion": {
+                "type": "boolean"
+            },
+            "exclusionUntil": {
+                "format": "date-time",
+                "type": "string"
+            }
+        }
     },
     "middlename": {
         "maxLength": 1024,
@@ -249,7 +261,26 @@
     },
     "ssh_keys": {
         "items": {
-        "$ref": "#/definitions/sshkeylist"
+            "properties": {
+            "_id": {
+                "description": "The ID of the SSH key.",
+                "type": "string"
+            },
+            "create_date": {
+                "description": "The date the SSH key was created.",
+                "type": "string"
+            },
+            "name": {
+                "description": "The name of the SSH key.",
+                "type": "string"
+            },
+            "public_key": {
+                "description": "The Public SSH key.",
+                "type": "string"
+            }
+    },
+    "title": "SSHKeyList",
+    "type": "object"
         },
         "type": "array"
     },

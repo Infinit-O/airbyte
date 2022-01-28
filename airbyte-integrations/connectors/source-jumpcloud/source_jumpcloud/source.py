@@ -10,7 +10,6 @@ import requests
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
-from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
 
 
 # Basic full refresh stream
@@ -47,6 +46,7 @@ class JumpcloudStream(HttpStream, ABC):
         self.config = config
         self.offset = 0
         self.limit = 100
+        self.total = 0
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
@@ -61,12 +61,27 @@ class JumpcloudStream(HttpStream, ABC):
         :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
                 If there are no more pages in the result, return None.
         """
-        total = response.json().get("total")
-        if self.offset < total:
+        import pdb
+        pdb.set_trace()
+        if self.offset < self.total:
             self.offset = self.offset + self.limit
             return {'skip': self.offset}
         else:
-            return {'skip': self.offset} 
+            return {} 
+
+    def request_headers(
+        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> Mapping[str, Any]:
+        """
+        Override to return any non-auth headers. Authentication headers will overwrite any overlapping headers returned from this method.
+        """
+        # NOTE: Auth headers injected here because the included TokenAuthenticator won't do
+        #       {'x-api-token': 'token'} correctly. Specifying "" for auth_method will still
+        #       cause a blank space to be included the token string, which causes an error
+        #       when requests tries to send one out.
+        # NOTE: Do _NOT_ pass an authenticator in until I can find a way around this. This is
+        #       not 
+        return {'x-api-key': self.config['api_key']}
 
     def request_params(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
@@ -77,6 +92,8 @@ class JumpcloudStream(HttpStream, ABC):
 
         :return a dictionary
         """
+        # import pdb
+        # pdb.set_trace()
         if next_page_token:
             return {'skip': next_page_token.get('skip'), 'limit': self.limit}
         else:
@@ -88,6 +105,7 @@ class JumpcloudStream(HttpStream, ABC):
 
         :return an iterable containing each record in the response
         """
+        self.total = int(response.json().get("totalCount"))
         yield from response.json().get("results")
 
 class SystemUsers(JumpcloudStream):
@@ -152,7 +170,6 @@ class SourceJumpcloud(AbstractSource):
         """
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
-        auth = TokenAuthenticator(token=config.get("api_key"), auth_header="x-api-key")
         return [
-            SystemUsers(authenticator=auth)
+            SystemUsers(config=config)
         ]
