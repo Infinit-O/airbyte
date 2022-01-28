@@ -61,8 +61,8 @@ class JumpcloudStream(HttpStream, ABC):
         :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
                 If there are no more pages in the result, return None.
         """
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         if self.offset < self.total:
             self.offset = self.offset + self.limit
             return {'skip': self.offset}
