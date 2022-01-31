@@ -1,0 +1,48 @@
+{
+  "properties": {
+    "_id": {
+      "type": "string"
+    },
+    "mfa": {
+      "enum": [
+        "DISABLED",
+        "ENABLED",
+        "REQUIRED",
+        "ALWAYS"
+      ],
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "networkSourceIp": {
+      "type": "string"
+    },
+    "organization": {
+      "type": "string"
+    },
+    "sharedSecret": {
+      "type": "string"
+    },
+    "tagNames": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "userLockoutAction": {
+      "type": "string"
+    },
+    "userPasswordExpirationAction": {
+      "type": "string"
+    }
+  },
+  "title": "RadiusServer",
+  "type": "object"
+}

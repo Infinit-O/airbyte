@@ -11,102 +11,88 @@ from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
 
+from .base import JumpcloudStream
 
-# Basic full refresh stream
-class JumpcloudStream(HttpStream, ABC):
+class Applications(JumpcloudStream):
     """
-    This class represents a stream output by the connector.
-    This is an abstract base class meant to contain all the common functionality at the API level e.g: the API base URL, pagination strategy,
-    parsing responses etc..
-
-    Each stream should extend this class (or another abstract subclass of it) to specify behavior unique to that stream.
-
-    Typically for REST APIs each stream corresponds to a resource in the API. For example if the API
-    contains the endpoints
-        - GET v1/customers
-        - GET v1/employees
-
-    then you should have three classes:
-    `class JumpcloudStream(HttpStream, ABC)` which is the current class
-    `class Customers(JumpcloudStream)` contains behavior to pull data for customers using v1/customers
-    `class Employees(JumpcloudStream)` contains behavior to pull data for employees using v1/employees
-
-    If some streams implement incremental sync, it is typical to create another class
-    `class IncrementalJumpcloudStream((JumpcloudStream), ABC)` then have concrete stream implementations extend it. An example
-    is provided below.
-
-    See the reference docs for the full list of configurable options.
+    V1 Application API.
     """
+    primary_key = "_id"
 
-    url_base = "https://console.jumpcloud.com/api/"
-
-    def __init__(self, config, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.config = config
-        self.offset = 0
-        self.limit = 100
-        self.total = 0
-
-    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
         """
-        This method should return a Mapping (e.g: dict) containing whatever information required to make paginated requests. This dict is passed
-        to most other methods in this class to help you form headers, request bodies, query params, etc..
-
-        For example, if the API accepts a 'page' parameter to determine which page of the result to return, and a response from the API contains a
-        'page' number, then this method should probably return a dict {'page': response.json()['page'] + 1} to increment the page count by 1.
-        The request_params method should then read the input next_page_token and set the 'page' param to next_page_token['page'].
-
-        :param response: the most recent response from the API
-        :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
-                If there are no more pages in the result, return None.
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
         """
-        # import pdb
-        # pdb.set_trace()
-        if self.offset < self.total:
-            self.offset = self.offset + self.limit
-            return {'skip': self.offset}
-        else:
-            return {} 
+        return "applications/"
 
-    def request_headers(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> Mapping[str, Any]:
-        """
-        Override to return any non-auth headers. Authentication headers will overwrite any overlapping headers returned from this method.
-        """
-        # NOTE: Auth headers injected here because the included TokenAuthenticator won't do
-        #       {'x-api-token': 'token'} correctly. Specifying "" for auth_method will still
-        #       cause a blank space to be included the token string, which causes an error
-        #       when requests tries to send one out.
-        # NOTE: Do _NOT_ pass an authenticator in until I can find a way around this. This is
-        #       not 
-        return {'x-api-key': self.config['api_key']}
+class ApplicationTemplates(JumpcloudStream):
+    """
+    V1 Application Templates API.
+    """
+    primary_key = "_id"
 
-    def request_params(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> MutableMapping[str, Any]:
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
         """
-        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
-        Usually contains common params e.g. pagination size etc.
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "application-templates/"
 
-        :return a dictionary
-        """
-        # import pdb
-        # pdb.set_trace()
-        if next_page_token:
-            return {'skip': next_page_token.get('skip'), 'limit': self.limit}
-        else:
-            return {'limit': self.limit}
+class CommandResults(JumpcloudStream):
+    primary_key = "_id"
 
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
         """
-        Override this method to define how a response is parsed.
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "commandresults/"
 
-        :return an iterable containing each record in the response
+class Commands(JumpcloudStream):
+    primary_key = "_id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
         """
-        self.total = int(response.json().get("totalCount"))
-        yield from response.json().get("results")
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "commands/"
+
+class Organizations(JumpcloudStream):
+    """
+    V1 Organizations API.
+    """
+    primary_key = "_id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "organizations/"
+
+class RadiusServers(JumpcloudStream):
+    primary_key = "_id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "radiusservers/"
 
 class SystemUsers(JumpcloudStream):
     """
@@ -123,6 +109,21 @@ class SystemUsers(JumpcloudStream):
         should return "customers". Required.
         """
         return "systemusers/"
+
+class Systems(JumpcloudStream):
+    """
+    V1 Systems API.
+    """
+    primary_key = "_id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "systems/"
 
 # Basic incremental stream
 class IncrementalJumpcloudStream(JumpcloudStream, ABC):
@@ -171,5 +172,12 @@ class SourceJumpcloud(AbstractSource):
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
         return [
-            SystemUsers(config=config)
+            Applications(config=config),
+            ApplicationTemplates(config=config),
+            Commands(config=config),
+            CommandResults(config=config),
+            Organizations(config=config),
+            RadiusServers(config=config),
+            SystemUsers(config=config),
+            Systems(config=config),
         ]

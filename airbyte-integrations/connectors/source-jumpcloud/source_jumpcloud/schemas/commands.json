@@ -1,0 +1,84 @@
+{
+  "properties": {
+    "command": {
+      "description": "The command to execute on the server.",
+      "type": "string"
+    },
+    "commandRunners": {
+      "description": "An array of IDs of the Command Runner Users that can execute this command.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "commandType": {
+      "default": "linux",
+      "description": "The Command OS",
+      "type": "string"
+    },
+    "files": {
+      "description": "An array of file IDs to include with the command.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "launchType": {
+      "description": "How the command will execute.",
+      "type": "string"
+    },
+    "listensTo": {
+      "description": "",
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "organization": {
+      "description": "The ID of the organization.",
+      "type": "string"
+    },
+    "schedule": {
+      "description": "A crontab that consists of: [ (seconds) (minutes) (hours) (days of month) (months) (weekdays) ] or [ immediate ]. If you send this as an empty string, it will run immediately.\n",
+      "type": "string"
+    },
+    "scheduleRepeatType": {
+      "description": "When the command will repeat.",
+      "type": "string"
+    },
+    "shell": {
+      "description": "The shell used to run the command.",
+      "type": "string"
+    },
+    "sudo": {
+      "description": "",
+      "type": "boolean"
+    },
+    "systems": {
+      "description": "An array of system IDs to run the command on. Not available if you are using Groups.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "timeout": {
+      "description": "The time in seconds to allow the command to run for.",
+      "type": "string"
+    },
+    "trigger": {
+      "description": "The name of the command trigger.",
+      "type": "string"
+    },
+    "user": {
+      "description": "The ID of the system user to run the command as. This field is required when creating a command with a commandType of \"mac\" or \"linux\".",
+      "type": "string"
+    }
+  },
+  "required": [
+    "command",
+    "commandType",
+    "name"
+  ],
+  "title": "Command",
+  "type": "object"
+}

@@ -2,7 +2,7 @@
     "streams": [
         {
             "stream": {
-                "name": "system_users",
+                "name": "application_templates",
                 "json_schema": {},
                 "supported_sync_modes": ["full_refresh"]
             },

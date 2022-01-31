@@ -1,0 +1,561 @@
+{
+  "properties": {
+    "_id": {
+      "type": "string"
+    },
+    "created": {
+      "type": "string"
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "entitlement": {
+        "description": "",
+        "properties": {
+            "billingModel": {
+            "type": "string"
+            },
+            "entitlementProducts": {
+            "items": {
+                "properties": {
+                "committedUsers": {
+                    "type": "integer"
+                },
+                "contractType": {
+                    "type": "string"
+                },
+                "maxUserCount": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pricePerUser": {
+                    "type": "integer"
+                },
+                "productCategory": {
+                    "type": "string"
+                },
+                "productCode": {
+                    "type": "string"
+                },
+                "uncommittedUsers": {
+                    "type": "integer"
+                }
+                },
+                "type": "object"
+            },
+            "type": "array"
+            },
+            "isManuallyBilled": {
+            "type": "boolean"
+            },
+            "pricePerUserSum": {
+            "type": "integer"
+            }
+        },
+        "title": "OrganizationEntitlement",
+        "type": "object",
+        "x-examples": {}
+    },
+    "hasStripeCustomerId": {
+      "type": "boolean"
+    },
+    "lastEstimateCalculationTimeStamp": {
+      "type": "string"
+    },
+    "lastSfdcSyncStatus": {
+      "type": "object"
+    },
+    "logoUrl": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "settings": {
+        "description": "",
+        "properties": {
+            "agentVersion": {
+            "type": "string"
+            },
+            "betaFeatures": {
+            "type": "object"
+            },
+            "contactEmail": {
+            "type": "string"
+            },
+            "contactName": {
+            "type": "string"
+            },
+            "deviceIdentificationEnabled": {
+            "type": "boolean"
+            },
+            "disableCommandRunner": {
+            "type": "boolean"
+            },
+            "disableGoogleLogin": {
+            "type": "boolean"
+            },
+            "disableLdap": {
+            "type": "boolean"
+            },
+            "disableUM": {
+            "type": "boolean"
+            },
+            "displayPreferences": {
+            "properties": {
+                "orgInsights": {
+                "properties": {
+                    "consoleStats": {
+                    "properties": {
+                        "totalApplications": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "totalConfigurations": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "totalDevices": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "totalGroups": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "totalUsers": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        }
+                    },
+                    "type": "object"
+                    },
+                    "deviceNotifications": {
+                    "properties": {
+                        "agentOutOfDateMetric": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "inactiveMetric": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "uptimeMetric": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "visible": {
+                        "type": "boolean"
+                        },
+                        "withoutPoliciesMetric": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "withoutUsersMetric": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        }
+                    },
+                    "type": "object"
+                    },
+                    "diskEncryption": {
+                    "properties": {
+                        "visible": {
+                        "type": "boolean"
+                        }
+                    },
+                    "type": "object"
+                    },
+                    "expiredPasswords": {
+                    "properties": {
+                        "visible": {
+                        "type": "boolean"
+                        }
+                    },
+                    "type": "object"
+                    },
+                    "failedCommands": {
+                    "properties": {
+                        "visible": {
+                        "type": "boolean"
+                        }
+                    },
+                    "type": "object"
+                    },
+                    "fundamentals": {
+                    "properties": {
+                        "visible": {
+                        "type": "boolean"
+                        }
+                    },
+                    "type": "object"
+                    },
+                    "pendingCommands": {
+                    "properties": {
+                        "visible": {
+                        "type": "boolean"
+                        }
+                    },
+                    "type": "object"
+                    },
+                    "upcomingPasswordExpiration": {
+                    "properties": {
+                        "visible": {
+                        "type": "boolean"
+                        }
+                    },
+                    "type": "object"
+                    },
+                    "userLockouts": {
+                    "properties": {
+                        "visible": {
+                        "type": "boolean"
+                        }
+                    },
+                    "type": "object"
+                    },
+                    "userNotifications": {
+                    "properties": {
+                        "userWithAdminSudoPasswordlessAccess": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "usersWithAdminSudoAccess": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "usersWithSambaAccess": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "usersWithoutDevices": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "usersWithoutPassword": {
+                        "properties": {
+                            "visible": {
+                            "type": "boolean"
+                            }
+                        },
+                        "type": "object"
+                        },
+                        "visible": {
+                        "type": "boolean"
+                        }
+                    },
+                    "type": "object"
+                    }
+                },
+                "type": "object"
+                }
+            },
+            "type": "object"
+            },
+            "duplicateLDAPGroups": {
+            "type": "boolean"
+            },
+            "emailDisclaimer": {
+            "type": "string"
+            },
+            "enableGoogleApps": {
+            "type": "boolean"
+            },
+            "enableManagedUID": {
+            "type": "boolean"
+            },
+            "enableO365": {
+            "type": "boolean"
+            },
+            "enableUserPortalAgentInstall": {
+            "type": "boolean"
+            },
+            "features": {
+            "properties": {
+                "directoryInsights": {
+                "properties": {
+                    "enabled": {
+                    "type": "boolean"
+                    }
+                },
+                "type": "object"
+                },
+                "directoryInsightsPremium": {
+                "properties": {
+                    "createdAt": {
+                    "type": "string"
+                    },
+                    "enabled": {
+                    "type": "boolean"
+                    },
+                    "updatedAt": {
+                    "type": "string"
+                    }
+                },
+                "type": "object"
+                },
+                "systemInsights": {
+                "properties": {
+                    "createdAt": {
+                    "type": "string"
+                    },
+                    "enableNewDarwin": {
+                    "type": "boolean"
+                    },
+                    "enableNewLinux": {
+                    "type": "boolean"
+                    },
+                    "enableNewWindows": {
+                    "type": "boolean"
+                    },
+                    "enabled": {
+                    "type": "boolean"
+                    },
+                    "updatedAt": {
+                    "type": "string"
+                    }
+                },
+                "type": "object"
+                }
+            },
+            "type": "object"
+            },
+            "growthData": {
+            "description": "Object containing Optimizely experimentIds and states corresponding to them",
+            "type": "object"
+            },
+            "logo": {
+            "type": "string"
+            },
+            "name": {
+            "type": "string"
+            },
+            "passwordCompliance": {
+            "enum": [
+                "custom",
+                "pci3",
+                "windows"
+            ],
+            "type": "string"
+            },
+            "passwordPolicy": {
+            "properties": {
+                "allowUsernameSubstring": {
+                "type": "boolean"
+                },
+                "daysAfterExpirationToSelfRecover": {
+                "description": "Deprecated field used for the legacy grace period feature.",
+                "type": "integer"
+                },
+                "daysBeforeExpirationToForceReset": {
+                "minimum": 1,
+                "type": "integer"
+                },
+                "effectiveDate": {
+                "type": "string"
+                },
+                "enableDaysAfterExpirationToSelfRecover": {
+                "type": "boolean"
+                },
+                "enableDaysBeforeExpirationToForceReset": {
+                "type": "boolean"
+                },
+                "enableLockoutTimeInSeconds": {
+                "type": "boolean"
+                },
+                "enableMaxHistory": {
+                "type": "boolean"
+                },
+                "enableMaxLoginAttempts": {
+                "type": "boolean"
+                },
+                "enableMinChangePeriodInDays": {
+                "type": "boolean"
+                },
+                "enableMinLength": {
+                "type": "boolean"
+                },
+                "enablePasswordExpirationInDays": {
+                "type": "boolean"
+                },
+                "enableResetLockoutCounter": {
+                "type": "boolean"
+                },
+                "lockoutTimeInSeconds": {
+                "type": "integer"
+                },
+                "maxHistory": {
+                "maximum": 24,
+                "minimum": 1,
+                "type": "integer"
+                },
+                "maxLoginAttempts": {
+                "minimum": 1,
+                "type": "integer"
+                },
+                "minChangePeriodInDays": {
+                "type": "integer"
+                },
+                "minLength": {
+                "type": "integer"
+                },
+                "needsLowercase": {
+                "type": "boolean"
+                },
+                "needsNumeric": {
+                "type": "boolean"
+                },
+                "needsSymbolic": {
+                "type": "boolean"
+                },
+                "needsUppercase": {
+                "type": "boolean"
+                },
+                "passwordExpirationInDays": {
+                "minimum": 1,
+                "type": "integer"
+                },
+                "resetLockoutCounterMinutes": {
+                "minimum": 1,
+                "type": "integer"
+                }
+            },
+            "type": "object"
+            },
+            "pendingDelete": {
+            "type": "boolean"
+            },
+            "showIntro": {
+            "type": "boolean"
+            },
+            "systemUserPasswordExpirationInDays": {
+            "type": "integer"
+            },
+            "systemUsersCanEdit": {
+            "type": "boolean"
+            },
+            "trustedAppConfig": {
+                "description": "Object containing information about the list of trusted applications for the organization",
+                "properties": {
+                    "checksum": {
+                    "description": "Checksum to validate the trustedApp configuration for the organization",
+                    "example": "thisIsAnExampleChecksum1234",
+                    "type": "string"
+                    },
+                    "trustedApps": {
+                    "description": "List of authorized apps for the organization ",
+                    "items": {
+                        "description": "Represents an application that is going to be trusted by the organization",
+                        "properties": {
+                        "name": {
+                            "description": "Name of the trusted application",
+                            "example": "Application 1",
+                            "type": "string"
+                        },
+                        "path": {
+                            "description": "Absolute path for the app's location in user's device",
+                            "example": "/someuser/Applications/application1.app",
+                            "type": "string"
+                        },
+                        "teamid": {
+                            "description": "App's Team ID",
+                            "example": "FakeTeamID",
+                            "type": "string"
+                        }
+                        },
+                        "required": [
+                        "name"
+                        ],
+                        "type": "object"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                    }
+                },
+                "required": [
+                    "checksum",
+                    "trustedApps"
+                ],
+                "title": "trustedappConfigGet",
+                "type": "object"
+            },
+            "userPortal": {
+            "properties": {
+                "idleSessionDurationMinutes": {
+                "maximum": 129600,
+                "minimum": 1,
+                "type": "integer"
+                }
+            },
+            "type": "object"
+            }
+        },
+        "title": "OrganizationSettings",
+        "type": "object",
+        "x-examples": {}
+    },
+    "totalBillingEstimate": {
+      "type": "integer"
+    }
+  },
+  "title": "Organization",
+  "type": "object"
+}
