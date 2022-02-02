@@ -1,0 +1,57 @@
+{
+  "properties": {
+    "annualPrice": {
+      "description": "The annual (discounted) price of this subscription.",
+      "type": "number"
+    },
+    "displayName": {
+      "description": "The display name of this subscription.",
+      "type": "string"
+    },
+    "features": {
+      "description": "Array of the features included in the subscription.",
+      "items": {
+            "description": "A feature represents JumpCloud functionality.",
+            "properties": {
+                "name": {
+                "description": "The unique identifier for this feature.",
+                "enum": [
+                    "cloudDirectory",
+                    "deviceManagement",
+                    "directoryInsightsPremium",
+                    "ldap",
+                    "mdm",
+                    "mfa",
+                    "premiumSupport",
+                    "radius",
+                    "sso",
+                    "systemInsights",
+                    "userLifecycle",
+                    "zeroTrust"
+                ],
+                "type": "string"
+                }
+            },
+            "type": "object"
+      },
+      "type": "array"
+    },
+    "listPrice": {
+      "description": "The list price of this subscription.",
+      "type": "number"
+    },
+    "productCode": {
+      "description": "Unique identifier corresponding to this subscription.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "annualPrice",
+    "displayName",
+    "features",
+    "listPrice",
+    "productCode"
+  ],
+  "title": "Subscription",
+  "type": "object"
+}

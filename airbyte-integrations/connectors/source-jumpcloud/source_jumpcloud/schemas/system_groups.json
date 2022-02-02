@@ -1,0 +1,35 @@
+{
+  "properties": {
+    "attributes": {
+        "additionalProperties": true,
+        "description": "The graph attributes.",
+        "title": "GraphAttributes",
+        "type": "object"
+    },
+    "description": {
+      "description": "Description of a System Group",
+      "type": "string"
+    },
+    "email": {
+      "description": "E-mail address associated with a System Group",
+      "type": "string"
+    },
+    "id": {
+      "description": "ObjectId uniquely identifying a System Group.",
+      "type": "string"
+    },
+    "name": {
+      "description": "Display name of a System Group.",
+      "type": "string"
+    },
+    "type": {
+      "description": "The type of the group; always 'system' for a System Group.",
+      "enum": [
+        "system_group"
+      ],
+      "type": "string"
+    }
+  },
+  "title": "SystemGroup",
+  "type": "object"
+}

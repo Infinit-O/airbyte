@@ -1,0 +1,176 @@
+{
+  "description": "The shallow information about a Policy Template.",
+  "properties": {
+    "activation": {
+      "description": "Requirements before the policy can be activated.",
+      "type": "string"
+    },
+    "alert": {
+      "description": "Text to describe any risk associated with this policy.",
+      "type": "string"
+    },
+    "behavior": {
+      "description": "Specifics about the behavior of the policy.",
+      "type": "string"
+    },
+    "deliveryTypes": {
+      "description": "The supported delivery mechanisms for this policy template.",
+      "items": {
+        "default": "agent",
+        "enum": [
+          "agent",
+          "mdm"
+        ],
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "description": {
+      "description": "The default description for the Policy.",
+      "type": "string"
+    },
+    "displayName": {
+      "description": "The default display name for the Policy.",
+      "type": "string"
+    },
+    "id": {
+      "description": "ObjectId uniquely identifying a Policy Template.",
+      "type": "string"
+    },
+    "name": {
+      "description": "The unique name for the Policy Template.",
+      "type": "string"
+    },
+    "osMetaFamily": {
+      "enum": [
+        "linux",
+        "darwin",
+        "windows",
+        "ios"
+      ],
+      "type": "string"
+    },
+    "osRestrictions": {
+        "items": {
+            "description": "Contains OS properties to restrict the application of policies to devices based on the device's OS",
+        "properties": {
+        "appleRestrictions": {
+        "description": "The Apple specific restricitons for this policy, if there are any",
+        "properties": {
+            "requiresSupervision": {
+            "description": "Boolean representing if the policy requires the Apple devices to be MDM supervised",
+            "type": "boolean"
+            },
+            "supportedEnrollmentTypes": {
+            "description": "The supported Apple enrollment types for this policy",
+            "items": {
+                "enum": [
+                "automated",
+                "device",
+                "user"
+                ],
+                "type": "string"
+            },
+            "type": "array"
+            }
+        },
+        "type": "object"
+        },
+        "deprecatedVersion": {
+        "description": "The version of the OS in which the policy was deprecated",
+        "type": "string"
+        },
+        "earliestVersion": {
+        "description": "The earliest version of the OS in which the policy can be applied",
+        "type": "string"
+        },
+        "osName": {
+        "description": "The name of the OS in which this restriction applies",
+        "type": "string"
+        },
+        "supportedEnrollmentTypes": {
+        "description": "The supported enrollment types for this policy",
+        "items": {
+            "enum": [
+            "automated",
+            "device",
+            "user"
+            ],
+            "type": "string"
+        },
+        "type": "array",
+        "x-deprecated": true
+        }
+    },
+    "type": "object",
+    "x-examples": {
+        "with-apple-restrictions": {
+        "appleRestrictions": {
+            "requiresSupervision": false,
+            "supportedEnrollmentTypes": [
+            "automated",
+            "device",
+            "user"
+            ]
+        },
+        "deprecatedVersion": "16.2",
+        "earliestVersion": "14.1",
+        "osName": "iPadOS",
+        "supportedEnrollmentTypes": [
+            "automated",
+            "device",
+            "user"
+        ]
+        },
+        "without-apple-restrictions": {
+        "deprecatedVersion": "10.2",
+        "earliestVersion": "10.1",
+        "osName": "iOS",
+        "supportedEnrollmentTypes": [
+            "automated"
+        ]
+        }
+    }
+        },
+        "type": "array"
+        },
+        "reference": {
+        "description": "URL to visit for further information.",
+        "type": "string"
+        },
+        "state": {
+        "default": "",
+        "description": "String describing the release status of the policy template.",
+        "type": "string"
+        }
+    },
+    "title": "PolicyTemplate",
+    "type": "object",
+    "x-examples": {
+        "example-1": {
+        "activation": "string",
+        "alert": "string",
+        "behavior": "string",
+        "deliveryTypes": [
+            "agent"
+        ],
+        "description": "string",
+        "displayName": "string",
+        "id": "string",
+        "name": "string",
+        "osMetaFamily": "linux",
+        "osRestrictions": [
+            {
+            "deprecatedVersion": "string",
+            "earliestVersion": "string",
+            "osName": "string",
+            "supportedEnrollmentTypes": [
+                "automated"
+            ]
+            }
+        ],
+        "reference": "string",
+        "state": ""
+        }
+  }
+}

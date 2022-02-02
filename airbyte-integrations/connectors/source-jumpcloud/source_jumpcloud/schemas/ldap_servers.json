@@ -1,0 +1,43 @@
+{
+  "allOf": [
+    {
+      "properties": {
+        "id": {
+          "description": "Unique identifier of this LDAP server",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    {
+        "properties": {
+            "name": {
+            "description": "The name of this LDAP server",
+            "type": "string"
+            },
+            "userLockoutAction": {
+            "description": "action to take; one of 'remove' or 'disable'",
+            "enum": [
+                "disable",
+                "remove"
+            ],
+            "type": "string"
+            },
+            "userPasswordExpirationAction": {
+            "description": "action to take; one of 'remove' or 'disable'",
+            "enum": [
+                "disable",
+                "remove"
+            ],
+            "type": "string"
+            }
+        },
+        "title": "LDAP Server Input",
+        "type": "object"
+    }
+  ],
+  "title": "LDAP Server Output"
+}

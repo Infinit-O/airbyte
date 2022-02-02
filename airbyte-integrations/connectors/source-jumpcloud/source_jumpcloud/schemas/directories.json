@@ -1,0 +1,35 @@
+{
+  "description": "",
+  "properties": {
+    "id": {
+      "description": "The ObjectID of the directory.",
+      "type": "string"
+    },
+    "name": {
+      "description": "The name of the directory.",
+      "type": "string"
+    },
+    "oAuthStatus": {
+      "description": "the expiry and error status of the bearer token",
+      "type": "object"
+    },
+    "type": {
+      "description": "The type of directory.",
+      "enum": [
+        "active_directory",
+        "g_suite",
+        "ldap_server",
+        "office_365",
+        "workday"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "type"
+  ],
+  "title": "Directory",
+  "type": "object"
+}

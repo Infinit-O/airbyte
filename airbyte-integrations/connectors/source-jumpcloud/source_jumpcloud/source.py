@@ -12,144 +12,28 @@ from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
 
 from .base import JumpcloudStream
-
-class Applications(JumpcloudStream):
-    """
-    V1 Application API.
-    """
-    primary_key = "_id"
-
-    def path(
-        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        """
-        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
-        should return "customers". Required.
-        """
-        return "applications/"
-
-class ApplicationTemplates(JumpcloudStream):
-    """
-    V1 Application Templates API.
-    """
-    primary_key = "_id"
-
-    def path(
-        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        """
-        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
-        should return "customers". Required.
-        """
-        return "application-templates/"
-
-class CommandResults(JumpcloudStream):
-    primary_key = "_id"
-
-    def path(
-        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        """
-        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
-        should return "customers". Required.
-        """
-        return "commandresults/"
-
-class Commands(JumpcloudStream):
-    primary_key = "_id"
-
-    def path(
-        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        """
-        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
-        should return "customers". Required.
-        """
-        return "commands/"
-
-class Organizations(JumpcloudStream):
-    """
-    V1 Organizations API.
-    """
-    primary_key = "_id"
-
-    def path(
-        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        """
-        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
-        should return "customers". Required.
-        """
-        return "organizations/"
-
-class RadiusServers(JumpcloudStream):
-    primary_key = "_id"
-
-    def path(
-        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        """
-        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
-        should return "customers". Required.
-        """
-        return "radiusservers/"
-
-class SystemUsers(JumpcloudStream):
-    """
-    V1 SystemUsers API.
-    """
-    
-    primary_key = "_id"
-
-    def path(
-        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        """
-        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
-        should return "customers". Required.
-        """
-        return "systemusers/"
-
-class Systems(JumpcloudStream):
-    """
-    V1 Systems API.
-    """
-    primary_key = "_id"
-
-    def path(
-        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        """
-        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
-        should return "customers". Required.
-        """
-        return "systems/"
-
-# Basic incremental stream
-class IncrementalJumpcloudStream(JumpcloudStream, ABC):
-    """
-    TODO fill in details of this class to implement functionality related to incremental syncs for your connector.
-         if you do not need to implement incremental sync for any streams, remove this class.
-    """
-
-    state_checkpoint_interval = None
-
-    @property
-    def cursor_field(self) -> str:
-        """
-        Override to return the cursor field used by this stream e.g: an API entity might always use created_at as the cursor field. This is
-        usually id or date based. This field's presence tells the framework this in an incremental stream. Required for incremental.
-
-        :return str: The name of the cursor field.
-        """
-        return []
-
-    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
-        """
-        Override to determine the latest state after reading the latest record. This typically compared the cursor_field from the latest record and
-        the current state and picks the 'most' recent cursor. This is how a stream's state is determined. Required for incremental.
-        """
-        return {}
+from .v1 import (
+    Applications,
+    ApplicationTemplates,
+    Systems,
+    SystemUsers,
+    CommandResults, 
+    Commands,
+    Organizations,
+    RadiusServers
+)
+from .v2 import (
+    AuthnPolicy,
+    CustomEmailTemplates,
+    Directories,
+    Groups,
+    IPLists,
+    LDAPServers,
+    Policies,
+    PolicyTemplates,
+    Subscriptions,
+    SystemGroups,
+)
 
 # Source
 class SourceJumpcloud(AbstractSource):
@@ -174,10 +58,20 @@ class SourceJumpcloud(AbstractSource):
         return [
             Applications(config=config),
             ApplicationTemplates(config=config),
+            AuthnPolicy(config=config),
             Commands(config=config),
             CommandResults(config=config),
+            CustomEmailTemplates(config=config),
+            Directories(config=config),
+            Groups(config=config),
+            IPLists(config=config),
+            LDAPServers(config=config),
             Organizations(config=config),
+            Policies(config=config),
+            PolicyTemplates(config=config),
             RadiusServers(config=config),
+            Subscriptions(config=config),
+            SystemGroups(config=config),
             SystemUsers(config=config),
             Systems(config=config),
         ]

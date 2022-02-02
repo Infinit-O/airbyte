@@ -1,0 +1,46 @@
+{
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "fields": {
+      "items": {
+          "properties": {
+            "defaultValue": {
+                "type": "string"
+            },
+            "displayName": {
+                "type": "string"
+            },
+            "field": {
+                "type": "string"
+            },
+            "multiline": {
+                "type": "boolean"
+            }
+        },
+        "title": "CustomEmailTemplateField",
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "type": {
+        "enum": [
+            "activate_gapps_user",
+            "activate_o365_user",
+            "lockout_notice_user",
+            "password_expiration",
+            "password_expiration_warning",
+            "password_reset_confirmation",
+            "user_change_password",
+            "activate_user_custom"
+        ],
+        "type": "string"
+    }
+  },
+  "title": "CustomEmailTemplate",
+  "type": "object"
+}
