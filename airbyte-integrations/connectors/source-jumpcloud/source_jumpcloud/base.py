@@ -1,6 +1,7 @@
 from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 
+import arrow
 import requests
 from airbyte_cdk.sources.streams.http import HttpStream
 
@@ -200,7 +201,13 @@ class JumpcloudV2Stream(HttpStream, ABC):
 
 # Basic incremental stream
 class JumpcloudV2IncrementalStream(JumpcloudV2Stream, ABC):
-    state_checkpoint_interval = None
+    state_checkpoint_interval = 10
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # NOTE: The SystemInsights endpoints are the only ones that support a limit of 1000.
+        self.limit = 1000
 
     @property
     def cursor_field(self) -> str:
@@ -217,4 +224,11 @@ class JumpcloudV2IncrementalStream(JumpcloudV2Stream, ABC):
         Override to determine the latest state after reading the latest record. This typically compared the cursor_field from the latest record and
         the current state and picks the 'most' recent cursor. This is how a stream's state is determined. Required for incremental.
         """
-        return {}
+        if current_stream_state == {}:
+            return {self.cursor_field: latest_record['collection_time']}
+        else:
+            records = {}
+            records[current_stream_state[self.cursor_field]] = arrow.get(current_stream_state[self.cursor_field])
+            records[latest_record['collection_time']] = arrow.get(latest_record['collection_time'])
+            latest_record = max(records.items(), key=lambda x: x[1])
+            return {self.cursor_field: latest_record[0]}

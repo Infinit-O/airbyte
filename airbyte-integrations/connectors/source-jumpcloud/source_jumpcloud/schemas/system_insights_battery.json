@@ -1,0 +1,66 @@
+{
+    "properties": {
+        "amperage": {
+            "type": "integer"
+        },
+        "charged": {
+            "type": "integer"
+        },
+        "charging": {
+            "type": "integer"
+        },
+        "collection_time": {
+            "type": "string"
+        },
+        "condition": {
+            "type": "string"
+        },
+        "current_capacity": {
+            "type": "integer"
+        },
+        "cycle_count": {
+            "type": "integer"
+        },
+        "designed_capacity": {
+            "type": "integer"
+        },
+        "health": {
+            "type": "string"
+        },
+        "manufacture_date": {
+            "type": "integer"
+        },
+        "manufacturer": {
+            "type": "string"
+        },
+        "max_capacity": {
+            "type": "integer"
+        },
+        "minutes_to_full_charge": {
+            "type": "integer"
+        },
+        "minutes_until_empty": {
+            "type": "integer"
+        },
+        "model": {
+            "type": "string"
+        },
+        "percent_remaining": {
+            "type": "integer"
+        },
+        "serial_number": {
+            "type": "string"
+        },
+        "state": {
+            "type": "string"
+        },
+        "system_id": {
+            "type": "string"
+        },
+        "voltage": {
+            "type": "integer"
+        }
+    },
+    "title": "System Insights Battery",
+    "type": "object"
+}

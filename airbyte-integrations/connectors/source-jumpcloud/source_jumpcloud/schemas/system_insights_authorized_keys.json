@@ -1,0 +1,24 @@
+{
+    "properties": {
+        "algorithm": {
+            "type": "string"
+        },
+        "collection_time": {
+            "type": "string"
+        },
+        "key": {
+            "type": "string"
+        },
+        "key_file": {
+            "type": "string"
+        },
+        "system_id": {
+            "type": "string"
+        },
+        "uid": {
+            "type": "string"
+        }
+    },
+    "title": "System Insights Authorized Keys",
+    "type": "object"
+}

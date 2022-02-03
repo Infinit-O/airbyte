@@ -33,6 +33,14 @@ from .v2 import (
     SystemGroups,
 )
 
+from .v2_systeminsights import (
+    SystemInsightsALF,
+    SystemInsightsALFExceptions,
+    SystemInsightsApps,
+    SystemInsightsAuthorizedKeys,
+    SystemInsightsBattery,
+)
+
 # Source
 class SourceJumpcloud(AbstractSource):
     def check_connection(self, logger, config) -> Tuple[bool, any]:
@@ -53,24 +61,37 @@ class SourceJumpcloud(AbstractSource):
         """
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
-        return [
-            ActiveDirectory(config=config),
+        v1 = [
             Applications(config=config),
             ApplicationTemplates(config=config),
-            AuthnPolicy(config=config),
+            Systems(config=config),
+            SystemUsers(config=config),
+            CommandResults(config=config), 
             Commands(config=config),
-            CommandResults(config=config),
+            Organizations(config=config),
+            RadiusServers(config=config),
+        ]
+
+        v2 = [
+            ActiveDirectory(config=config),
+            AuthnPolicy(config=config),
             CustomEmailTemplates(config=config),
             Directories(config=config),
             Groups(config=config),
             IPLists(config=config),
             LDAPServers(config=config),
-            Organizations(config=config),
             Policies(config=config),
             PolicyTemplates(config=config),
-            RadiusServers(config=config),
             Subscriptions(config=config),
             SystemGroups(config=config),
-            SystemUsers(config=config),
-            Systems(config=config),
         ]
+
+        system_insights = [
+            SystemInsightsALF(config=config),
+            SystemInsightsALFExceptions(config=config),
+            SystemInsightsApps(config=config),
+            SystemInsightsAuthorizedKeys(config=config),
+            SystemInsightsBattery(config=config),
+        ]
+
+        return v1 + v2 + system_insights

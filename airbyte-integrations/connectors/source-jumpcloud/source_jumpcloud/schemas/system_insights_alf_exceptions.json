@@ -1,0 +1,18 @@
+{
+    "properties": {
+        "collection_time": {
+            "type": "string"
+        },
+        "path": {
+            "type": "string"
+        },
+        "state": {
+            "type": "number"
+        },
+        "system_id": {
+            "type": "string"
+        }
+    },
+    "title": "System Insights ALF Exceptions",
+    "type": "object"
+}

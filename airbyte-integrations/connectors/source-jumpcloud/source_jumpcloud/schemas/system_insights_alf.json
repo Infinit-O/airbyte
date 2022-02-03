@@ -1,0 +1,33 @@
+{
+    "properties": {
+        "allow_signed_enabled\t": {
+            "type": "integer"
+        },
+        "collection_time": {
+            "type": "string"
+        },
+        "firewall_unload": {
+            "type": "integer"
+        },
+        "global_state": {
+            "type": "integer"
+        },
+        "logging_enabled": {
+            "type": "integer"
+        },
+        "logging_option": {
+            "type": "integer"
+        },
+        "stealth_enabled": {
+            "type": "integer"
+        },
+        "system_id": {
+            "type": "string"
+        },
+        "version": {
+            "type": "string"
+        }
+    },
+    "title": "System Insights ALF",
+    "type": "object"
+}

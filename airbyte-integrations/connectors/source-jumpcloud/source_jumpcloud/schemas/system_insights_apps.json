@@ -1,0 +1,69 @@
+{
+    "properties": {
+        "applescript_enabled": {
+            "type": "string"
+        },
+        "bundle_executable": {
+            "type": "string"
+        },
+        "bundle_identifier": {
+            "type": "string"
+        },
+        "bundle_name": {
+            "type": "string"
+        },
+        "bundle_package_type": {
+            "type": "string"
+        },
+        "bundle_short_version": {
+            "type": "string"
+        },
+        "bundle_version": {
+            "type": "string"
+        },
+        "category": {
+            "type": "string"
+        },
+        "collection_time": {
+            "type": "string"
+        },
+        "compiler": {
+            "type": "string"
+        },
+        "copyright": {
+            "type": "string"
+        },
+        "development_region": {
+            "type": "string"
+        },
+        "display_name": {
+            "type": "string"
+        },
+        "element": {
+            "type": "string"
+        },
+        "environment": {
+            "type": "string"
+        },
+        "info_string": {
+            "type": "string"
+        },
+        "last_opened_time": {
+            "type": "number"
+        },
+        "minimum_system_version": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "path": {
+            "type": "string"
+        },
+        "system_id": {
+            "type": "string"
+        }
+    },
+    "title": "System Insights Apps",
+    "type": "object"
+}

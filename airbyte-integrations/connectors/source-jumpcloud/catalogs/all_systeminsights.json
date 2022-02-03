@@ -1,0 +1,49 @@
+{
+    "streams": [
+        {
+            "stream": {
+                "name": "system_insights_alf",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_alf_exceptions",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_apps",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_authorized_keys",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_battery",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        }
+    ]
+}
