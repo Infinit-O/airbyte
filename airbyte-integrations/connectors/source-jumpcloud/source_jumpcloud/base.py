@@ -2,7 +2,6 @@ from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 
 import requests
-import arrow
 from airbyte_cdk.sources.streams.http import HttpStream
 
 class JumpcloudStream(HttpStream, ABC):
@@ -53,8 +52,6 @@ class JumpcloudStream(HttpStream, ABC):
         :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
                 If there are no more pages in the result, return None.
         """
-        # import pdb
-        # pdb.set_trace()
         if self.offset < self.total:
             self.offset = self.offset + self.limit
             return {'skip': self.offset}
@@ -134,6 +131,9 @@ class JumpcloudV2Stream(HttpStream, ABC):
         super().__init__(*args, **kwargs)
 
         self.config = config
+        self.limit = 100
+        self.offset = 0
+        self.keep_going = True
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
@@ -148,7 +148,11 @@ class JumpcloudV2Stream(HttpStream, ABC):
         :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
                 If there are no more pages in the result, return None.
         """
-        return None
+        if self.keep_going:
+            self.offset += self.limit
+            return {"skip": self.offset}
+        else:
+            return None
 
     def request_headers(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
@@ -175,7 +179,10 @@ class JumpcloudV2Stream(HttpStream, ABC):
 
         :return a dictionary
         """
-        return {'limit': 1000}
+        if next_page_token:
+            return {"skip": next_page_token.get("skip"), "limit": self.limit}
+        else:
+            return {"limit": self.limit}
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         """
@@ -183,7 +190,13 @@ class JumpcloudV2Stream(HttpStream, ABC):
 
         :return an iterable containing each record in the response
         """
-        yield from response.json()
+        contents = response.json()
+        if not contents:
+            self.keep_going = False
+            return None
+        else:
+            yield from contents
+        
 
 # Basic incremental stream
 class JumpcloudV2IncrementalStream(JumpcloudV2Stream, ABC):

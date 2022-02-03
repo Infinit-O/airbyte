@@ -1,0 +1,27 @@
+{
+  "allOf": [
+    {
+      "properties": {
+        "id": {
+          "description": "ObjectID of this Active Directory instance.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    {
+        "properties": {
+        "domain": {
+            "description": "Domain name for this Active Directory instance.",
+            "type": "string"
+        }
+    },
+    "title": "Active Directory Input",
+    "type": "object"
+    }
+  ],
+  "title": "Active Directory Output"
+}

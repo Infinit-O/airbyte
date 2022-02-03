@@ -1,6 +1,21 @@
-from typing import Mapping, Any, MutableMapping
+from typing import Mapping, Any, MutableMapping, Iterable
+
+import requests
 
 from .base import JumpcloudV2Stream
+
+class ActiveDirectory(JumpcloudV2Stream):
+    primary_key = "id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "activedirectories/"
+
 
 class AuthnPolicy(JumpcloudV2Stream):
     primary_key = "id"
@@ -26,6 +41,12 @@ class CustomEmailTemplates(JumpcloudV2Stream):
         """
         return "customemail/templates/"
 
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        # NOTE: Stupid hack - customemail/templates/ does not support 'limit' and 'skip' params and will attempt to paginate
+        #       endlessly, causing this stream to run forever.
+        self.keep_going = False
+        yield from response.json()
+
 class Directories(JumpcloudV2Stream):
     primary_key = "id"
 
@@ -37,23 +58,15 @@ class Directories(JumpcloudV2Stream):
         should return "customers". Required.
         """
         return "directories/"
+        
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        # NOTE: Stupid hack - customemail/templates/ does not support 'limit' and 'skip' params and will attempt to paginate
+        #       endlessly, causing this stream to run forever.
+        self.keep_going = False
+        yield from response.json()
 
 class Groups(JumpcloudV2Stream):
     primary_key = "id"
-
-    def request_params(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> MutableMapping[str, Any]:
-        """
-        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
-        Usually contains common params e.g. pagination size etc.
-
-        NOTE: Groups endpoint does NOT support max limit of 1000 like others do. Max 'limit' value is
-            100 for this endpoint.
-
-        :return a dictionary
-        """
-        return {'limit': 100}
 
     def path(
         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
@@ -67,20 +80,6 @@ class Groups(JumpcloudV2Stream):
 class IPLists(JumpcloudV2Stream):
     primary_key = "id"
 
-    def request_params(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> MutableMapping[str, Any]:
-        """
-        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
-        Usually contains common params e.g. pagination size etc.
-
-        NOTE: Groups endpoint does NOT support max limit of 1000 like others do. Max 'limit' value is
-            100 for this endpoint.
-
-        :return a dictionary
-        """
-        return {'limit': 100}
-
     def path(
         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> str:
@@ -93,20 +92,6 @@ class IPLists(JumpcloudV2Stream):
 class LDAPServers(JumpcloudV2Stream):
     primary_key = "id"
 
-    def request_params(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> MutableMapping[str, Any]:
-        """
-        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
-        Usually contains common params e.g. pagination size etc.
-
-        NOTE: Groups endpoint does NOT support max limit of 1000 like others do. Max 'limit' value is
-            100 for this endpoint.
-
-        :return a dictionary
-        """
-        return {'limit': 100}
-
     def path(
         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> str:
@@ -118,20 +103,6 @@ class LDAPServers(JumpcloudV2Stream):
 
 class Policies(JumpcloudV2Stream):
     primary_key = "id"
-
-    def request_params(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> MutableMapping[str, Any]:
-        """
-        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
-        Usually contains common params e.g. pagination size etc.
-
-        NOTE: Groups endpoint does NOT support max limit of 1000 like others do. Max 'limit' value is
-            100 for this endpoint.
-
-        :return a dictionary
-        """
-        return {'limit': 100}
 
     def path(
         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
@@ -148,20 +119,6 @@ class PolicyTemplates(JumpcloudV2Stream):
     # TODO: Come back to this one and get pagination working!
     primary_key = "id"
 
-    def request_params(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> MutableMapping[str, Any]:
-        """
-        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
-        Usually contains common params e.g. pagination size etc.
-
-        NOTE: Groups endpoint does NOT support max limit of 1000 like others do. Max 'limit' value is
-            100 for this endpoint.
-
-        :return a dictionary
-        """
-        return {'limit': 100}
-
     def path(
         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> str:
@@ -174,20 +131,6 @@ class PolicyTemplates(JumpcloudV2Stream):
 class Subscriptions(JumpcloudV2Stream):
     primary_key = "id"
 
-    def request_params(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> MutableMapping[str, Any]:
-        """
-        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
-        Usually contains common params e.g. pagination size etc.
-
-        NOTE: Groups endpoint does NOT support max limit of 1000 like others do. Max 'limit' value is
-            100 for this endpoint.
-
-        :return a dictionary
-        """
-        return {'limit': 100}
-
     def path(
         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> str:
@@ -197,22 +140,14 @@ class Subscriptions(JumpcloudV2Stream):
         """
         return "subscriptions/"
 
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        # NOTE: Stupid hack - Subscriptions does not support 'limit' and 'skip' params and will attempt to paginate
+        #       endlessly, causing this stream to run forever.
+        self.keep_going = False
+        yield from response.json()
+
 class SystemGroups(JumpcloudV2Stream):
     primary_key = "id"
-
-    def request_params(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> MutableMapping[str, Any]:
-        """
-        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
-        Usually contains common params e.g. pagination size etc.
-
-        NOTE: Groups endpoint does NOT support max limit of 1000 like others do. Max 'limit' value is
-            100 for this endpoint.
-
-        :return a dictionary
-        """
-        return {'limit': 100}
 
     def path(
         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None

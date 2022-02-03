@@ -6,12 +6,9 @@
 from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 
-import requests
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
-from airbyte_cdk.sources.streams.http import HttpStream
 
-from .base import JumpcloudStream
 from .v1 import (
     Applications,
     ApplicationTemplates,
@@ -23,6 +20,7 @@ from .v1 import (
     RadiusServers
 )
 from .v2 import (
+    ActiveDirectory,
     AuthnPolicy,
     CustomEmailTemplates,
     Directories,
@@ -56,6 +54,7 @@ class SourceJumpcloud(AbstractSource):
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
         return [
+            ActiveDirectory(config=config),
             Applications(config=config),
             ApplicationTemplates(config=config),
             AuthnPolicy(config=config),
