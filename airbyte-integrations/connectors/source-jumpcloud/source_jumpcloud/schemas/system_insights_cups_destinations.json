@@ -1,0 +1,16 @@
+{
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "option_name": {
+      "type": "string"
+    },
+    "option_value": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    }
+  }
+}

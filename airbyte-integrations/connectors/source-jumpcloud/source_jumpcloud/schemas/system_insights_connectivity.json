@@ -1,0 +1,39 @@
+{
+    "properties": {
+        "collection_time": {
+            "type": "string"
+        },
+        "disconnected": {
+            "type": "integer"
+        },
+        "ipv4_internet": {
+            "type": "integer"
+        },
+        "ipv4_local_network": {
+            "type": "integer"
+        },
+        "ipv4_no_traffic": {
+            "type": "integer"
+        },
+        "ipv4_subnet": {
+            "type": "integer"
+        },
+        "ipv6_internet": {
+            "type": "integer"
+        },
+        "ipv6_local_network": {
+            "type": "integer"
+        },
+        "ipv6_no_traffic": {
+            "type": "integer"
+        },
+        "ipv6_subnet": {
+            "type": "integer"
+        },
+        "system_id": {
+            "type": "string"
+        }
+    },
+    "title": "system insights connectivity",
+    "type": "object"
+}

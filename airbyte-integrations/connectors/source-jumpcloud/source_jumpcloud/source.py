@@ -1,8 +1,6 @@
 #
 # Copyright (c) 2021 Airbyte, Inc., all rights reserved.
 #
-
-
 from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 
@@ -39,6 +37,17 @@ from .v2_systeminsights import (
     SystemInsightsApps,
     SystemInsightsAuthorizedKeys,
     SystemInsightsBattery,
+    SystemInsightsBitlockerInfo,
+    SystemInsightsBrowserPlugins,
+    SystemInsightsCertificates,
+    SystemInsightsChromeExtensions,
+    SystemInsightsConnectivity,
+    SystemInsightsCrashes,
+    SystemInsightsCUPSDestinations,
+    SystemInsightsDiskEncryption,
+    SystemInsightsDiskInfo,
+    SystemInsightsDNSResolvers,
+    SystemInsightsETCHosts,
 )
 
 # Source
@@ -92,6 +101,17 @@ class SourceJumpcloud(AbstractSource):
             SystemInsightsApps(config=config),
             SystemInsightsAuthorizedKeys(config=config),
             SystemInsightsBattery(config=config),
+            SystemInsightsBitlockerInfo(config=config),
+            SystemInsightsBrowserPlugins(config=config),
+            SystemInsightsCertificates(config=config),
+            SystemInsightsChromeExtensions(config=config),
+            SystemInsightsConnectivity(config=config),
+            SystemInsightsCrashes(config=config),
+            SystemInsightsCUPSDestinations(config=config),
+            SystemInsightsDiskEncryption(config=config),
+            SystemInsightsDiskInfo(config=config),
+            SystemInsightsDNSResolvers(config=config),
+            SystemInsightsETCHosts(config=config),
         ]
 
         return v1 + v2 + system_insights

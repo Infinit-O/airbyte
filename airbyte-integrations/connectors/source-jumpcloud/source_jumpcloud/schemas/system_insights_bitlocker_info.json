@@ -1,0 +1,30 @@
+{
+    "properties": {
+        "collection_time": {
+            "type": "string"
+        },
+        "conversion_status": {
+            "type": "integer"
+        },
+        "device_id": {
+            "type": "string"
+        },
+        "drive_letter": {
+            "type": "string"
+        },
+        "encryption_method": {
+            "type": "string"
+        },
+        "persistent_volume_id": {
+            "type": "string"
+        },
+        "protection_status": {
+            "type": "integer"
+        },
+        "system_id": {
+            "type": "string"
+        }
+    },
+    "title": "System Insights Bitlocker Info",
+    "type": "object"
+}

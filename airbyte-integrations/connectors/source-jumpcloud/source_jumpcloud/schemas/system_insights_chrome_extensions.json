@@ -1,0 +1,45 @@
+{
+    "properties": {
+        "author": {
+            "type": "string"
+        },
+        "collection_time": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "identifier": {
+            "type": "string"
+        },
+        "locale": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "path": {
+            "type": "string"
+        },
+        "permissions": {
+            "type": "string"
+        },
+        "persistent": {
+            "type": "integer"
+        },
+        "system_id": {
+            "type": "string"
+        },
+        "uid": {
+            "type": "string"
+        },
+        "update_url": {
+            "type": "string"
+        },
+        "version": {
+            "type": "string"
+        }
+    },
+    "title": "System Insights Chrome Extensions",
+    "type": "object"
+}

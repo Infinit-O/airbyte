@@ -1,0 +1,70 @@
+{
+    "properties": {
+        "authority_key_id": {
+            "type": "string"
+        },
+        "ca": {
+            "type": "integer"
+        },
+        "common_name": {
+            "type": "string"
+        },
+        "issuer": {
+            "type": "string"
+        },
+        "key_algorithm": {
+            "type": "string"
+        },
+        "key_strength": {
+            "type": "string"
+        },
+        "key_usage": {
+            "type": "string"
+        },
+        "not_valid_after": {
+            "type": "string"
+        },
+        "not_valid_before": {
+            "type": "string"
+        },
+        "path": {
+            "type": "string"
+        },
+        "self_signed": {
+            "type": "integer"
+        },
+        "serial": {
+            "type": "string"
+        },
+        "sha1": {
+            "type": "string"
+        },
+        "sid": {
+            "type": "string"
+        },
+        "signing_algorithm": {
+            "type": "string"
+        },
+        "store": {
+            "type": "string"
+        },
+        "store_id": {
+            "type": "string"
+        },
+        "store_location": {
+            "type": "string"
+        },
+        "subject": {
+            "type": "string"
+        },
+        "subject_key_id": {
+            "type": "string"
+        },
+        "system_id": {
+            "type": "string"
+        },
+        "username": {
+            "type": "string"
+        }
+    }
+}

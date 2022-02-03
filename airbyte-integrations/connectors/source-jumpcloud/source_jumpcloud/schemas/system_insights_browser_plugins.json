@@ -1,0 +1,42 @@
+{
+    "properties": {
+        "collection_time": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "development_region": {
+            "type": "string"
+        },
+        "disabled": {
+            "type": "integer"
+        },
+        "identifier": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "native": {
+            "type": "integer"
+        },
+        "path": {
+            "type": "string"
+        },
+        "sdk": {
+            "type": "string"
+        },
+        "system_id": {
+            "type": "string"
+        },
+        "uid": {
+            "type": "string"
+        },
+        "version": {
+            "type": "string"
+        }
+    },
+    "title": "System Insights Browser Plugins",
+    "type": "object"
+}

@@ -1,0 +1,60 @@
+{
+    "properties": {
+        "collection_time": {
+            "type": "string"
+        },
+        "crash_path": {
+            "type": "string"
+        },
+        "crashed_thread": {
+            "type": "string"
+        },
+        "datetime": {
+            "type": "string"
+        },
+        "exception_codes": {
+            "type": "string"
+        },
+        "exception_notes": {
+            "type": "string"
+        },
+        "exception_type": {
+            "type": "string"
+        },
+        "identifier": {
+            "type": "string"
+        },
+        "parent": {
+            "type": "string"
+        },
+        "path": {
+            "type": "string"
+        },
+        "pid": {
+            "type": "string"
+        },
+        "registers": {
+            "type": "string"
+        },
+        "responsible": {
+            "type": "string"
+        },
+        "stack_trace": {
+            "type": "string"
+        },
+        "system_id": {
+            "type": "string"
+        },
+        "type": {
+            "type": "string"
+        },
+        "uid": {
+            "type": "integer"
+        },
+        "version": {
+            "type": "string"
+        }
+    },
+    "title": "System Insights Crashes",
+    "type": "object"
+}

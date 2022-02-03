@@ -1,3 +1,6 @@
+# NOTES:
+* Certificates, etc_hosts are both good candidates for testing pagination because of the large number of recrods present (~700k and ~150k each, respectively)
+
 # Jumpcloud Source
 
 This is the repository for the Jumpcloud source connector, written in Python.

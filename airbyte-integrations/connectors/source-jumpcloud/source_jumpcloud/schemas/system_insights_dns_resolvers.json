@@ -1,0 +1,27 @@
+{
+  "properties": {
+    "address": {
+      "type": "string"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "id": {
+      "type": "number"
+    },
+    "netmask": {
+      "type": "string"
+    },
+    "options": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights DNS Resolvers",
+  "type": "object"
+}

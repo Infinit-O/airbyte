@@ -44,6 +44,96 @@
             },
             "sync_mode": "incremental",
             "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_bitlocker_info",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_browser_plugins",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_chrome_extensions",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_connectivity",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_crashes",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_cups_destinations",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_disk_encryption",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_disk_info",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_dns_resolvers",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_etc_hosts",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
         }
     ]
 }

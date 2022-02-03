@@ -198,7 +198,6 @@ class JumpcloudV2Stream(HttpStream, ABC):
         else:
             yield from contents
         
-
 # Basic incremental stream
 class JumpcloudV2IncrementalStream(JumpcloudV2Stream, ABC):
     state_checkpoint_interval = 10
@@ -232,3 +231,31 @@ class JumpcloudV2IncrementalStream(JumpcloudV2Stream, ABC):
             records[latest_record['collection_time']] = arrow.get(latest_record['collection_time'])
             latest_record = max(records.items(), key=lambda x: x[1])
             return {self.cursor_field: latest_record[0]}
+
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
+        def __newer_than_latest(recorded_state: arrow.Arrow, latest_record: dict) -> bool:
+            latest_record_date = arrow.get(latest_record["collection_time"])
+            if recorded_state > latest_record_date:
+                return False
+            else:
+                return True
+
+        contents = response.json()
+        if not contents:
+            self.keep_going = False
+            return None
+        else:
+            # NOTE: Stream contents appear to be in order already, so this _might_ be redundant.
+            #       but better safe than sorry...
+            sorted_contents = sorted(contents, key=lambda x: arrow.get(x["collection_time"]))
+            if stream_state:
+                stored_date = arrow.get(stream_state[self.cursor_field])
+                if __newer_than_latest(stored_date, sorted_contents[-1]) is False:
+                    self.keep_going = False
+                    return None
+                else:
+                    only_the_newest = [x for x in sorted_contents if __newer_than_latest(x)]
+                    yield from only_the_newest
+            else:
+                # NOTE: no reversal needed as its already in ascending order (at least it looks like that)
+                yield from sorted_contents

@@ -1,0 +1,45 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "disk_index": {
+      "type": "integer"
+    },
+    "disk_size": {
+      "type": "string"
+    },
+    "hardware_model": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "manufacturer": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "partitions": {
+      "type": "integer"
+    },
+    "pnp_device_id": {
+      "type": "string"
+    },
+    "serial": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Disk Info",
+  "type": "object"
+}

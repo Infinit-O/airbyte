@@ -1,0 +1,18 @@
+{
+  "properties": {
+    "address": {
+      "type": "string"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "hostnames": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Etc Hosts",
+  "type": "object"
+}

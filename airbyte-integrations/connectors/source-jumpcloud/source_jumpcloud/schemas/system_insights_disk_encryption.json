@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "encrypted": {
+      "type": "integer"
+    },
+    "encryption_status": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "uid": {
+      "type": "string"
+    },
+    "user_uuid": {
+      "type": "string"
+    },
+    "uuid": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Disk Encryption",
+  "type": "object"
+}
