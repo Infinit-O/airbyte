@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "config_value": {
+      "type": "string"
+    },
+    "current_value": {
+      "type": "string"
+    },
+    "field_name": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "oid": {
+      "type": "string"
+    },
+    "subsystem": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights System Controls",
+  "type": "object"
+}

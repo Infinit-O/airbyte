@@ -1,0 +1,75 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "disabled": {
+      "type": "string"
+    },
+    "groupname": {
+      "type": "string"
+    },
+    "inetd_compatibility": {
+      "type": "string"
+    },
+    "keep_alive": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "on_demand": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "process_type": {
+      "type": "string"
+    },
+    "program": {
+      "type": "string"
+    },
+    "program_arguments": {
+      "type": "string"
+    },
+    "queue_directories": {
+      "type": "string"
+    },
+    "root_directory": {
+      "type": "string"
+    },
+    "run_at_load": {
+      "type": "string"
+    },
+    "start_interval": {
+      "type": "string"
+    },
+    "start_on_mount": {
+      "type": "string"
+    },
+    "stderr_path": {
+      "type": "string"
+    },
+    "stdout_path": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "username": {
+      "type": "string"
+    },
+    "watch_paths": {
+      "type": "string"
+    },
+    "working_directory": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights LaunchD",
+  "type": "object"
+}

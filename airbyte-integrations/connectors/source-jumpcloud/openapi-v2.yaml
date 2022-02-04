@@ -3813,7 +3813,7 @@ definitions:
     type: object
   system-insights-python-packages:
     properties:
-      auther:
+      author:
         type: string
       directory:
         type: string

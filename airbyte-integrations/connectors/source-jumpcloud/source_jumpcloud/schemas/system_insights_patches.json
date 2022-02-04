@@ -1,0 +1,36 @@
+{
+  "properties": {
+    "caption": {
+      "type": "string"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "csname": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "fix_comments": {
+      "type": "string"
+    },
+    "hotfix_id": {
+      "type": "string"
+    },
+    "install_date": {
+      "type": "string"
+    },
+    "installed_by": {
+      "type": "string"
+    },
+    "installed_on": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Patches",
+  "type": "object"
+}

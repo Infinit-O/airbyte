@@ -1,0 +1,21 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "config_flag": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "integer"
+    },
+    "enabled_nvram": {
+      "type": "integer"
+    },
+    "system_id": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights SIP Config",
+  "type": "object"
+}

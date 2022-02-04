@@ -1,0 +1,42 @@
+{
+  "properties": {
+    "bluetooth_sharing": {
+      "type": "integer"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "content_caching": {
+      "type": "integer"
+    },
+    "disc_sharing": {
+      "type": "integer"
+    },
+    "file_sharing": {
+      "type": "integer"
+    },
+    "internet_sharing": {
+      "type": "integer"
+    },
+    "printer_sharing": {
+      "type": "integer"
+    },
+    "remote_apple_events": {
+      "type": "integer"
+    },
+    "remote_login": {
+      "type": "integer"
+    },
+    "remote_management": {
+      "type": "integer"
+    },
+    "screen_sharing": {
+      "type": "integer"
+    },
+    "system_id": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Sharing Preferences",
+  "type": "object"
+}

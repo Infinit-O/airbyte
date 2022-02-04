@@ -1,0 +1,57 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "computer_name": {
+      "type": "string"
+    },
+    "cpu_brand": {
+      "type": "string"
+    },
+    "cpu_logical_cores": {
+      "type": "integer"
+    },
+    "cpu_microcode": {
+      "type": "string"
+    },
+    "cpu_physical_cores": {
+      "type": "integer"
+    },
+    "cpu_subtype": {
+      "type": "string"
+    },
+    "cpu_type": {
+      "type": "string"
+    },
+    "hardware_model": {
+      "type": "string"
+    },
+    "hardware_serial": {
+      "type": "string"
+    },
+    "hardware_vendor": {
+      "type": "string"
+    },
+    "hardware_version": {
+      "type": "string"
+    },
+    "hostname": {
+      "type": "string"
+    },
+    "local_hostname": {
+      "type": "string"
+    },
+    "physical_memory": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "uuid": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights System Info",
+  "type": "object"
+}

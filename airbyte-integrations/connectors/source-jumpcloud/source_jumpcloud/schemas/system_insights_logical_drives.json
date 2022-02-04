@@ -1,0 +1,30 @@
+{
+  "properties": {
+    "boot_partition": {
+      "type": "integer"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "device_id": {
+      "type": "string"
+    },
+    "file_system": {
+      "type": "string"
+    },
+    "free_space": {
+      "type": "string"
+    },
+    "size": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Logical Drives",
+  "type": "object"
+}

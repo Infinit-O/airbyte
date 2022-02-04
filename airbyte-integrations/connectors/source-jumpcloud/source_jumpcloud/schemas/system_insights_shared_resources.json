@@ -1,0 +1,36 @@
+{
+  "properties": {
+    "allow_maximum": {
+      "type": "integer"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "install_date": {
+      "type": "string"
+    },
+    "maximum_allowed": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "integer"
+    }
+  },
+  "title": "System Insights Shared Resources",
+  "type": "object"
+}

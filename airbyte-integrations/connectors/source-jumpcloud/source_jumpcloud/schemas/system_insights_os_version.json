@@ -1,0 +1,42 @@
+{
+  "properties": {
+    "build": {
+      "type": "string"
+    },
+    "codename": {
+      "type": "string"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "install_date": {
+      "type": "string"
+    },
+    "major": {
+      "type": "integer"
+    },
+    "minor": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "patch": {
+      "type": "integer"
+    },
+    "platform": {
+      "type": "string"
+    },
+    "platform_like": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights OS Version",
+  "type": "object"
+}

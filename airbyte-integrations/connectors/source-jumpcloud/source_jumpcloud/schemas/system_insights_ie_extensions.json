@@ -1,0 +1,24 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "registry_path": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights IE Extensions",
+  "type": "object"
+}

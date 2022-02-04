@@ -1,0 +1,18 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Shared Folders",
+  "type": "object"
+}

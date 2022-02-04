@@ -1,0 +1,38 @@
+{
+  "properties": {
+    "action": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "integer"
+    },
+    "hidden": {
+      "type": "integer"
+    },
+    "last_run_code": {
+      "type": "string"
+    },
+    "last_run_message": {
+      "type": "string"
+    },
+    "last_run_time": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "next_run_time": {
+      "type": "integer"
+    },
+    "path": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    }
+  },
+  "type": "object"
+}

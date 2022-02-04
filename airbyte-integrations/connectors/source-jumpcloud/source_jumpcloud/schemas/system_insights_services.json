@@ -1,0 +1,44 @@
+{
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "module_path": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "pid": {
+      "type": "integer"
+    },
+    "service_exit_code": {
+      "type": "integer"
+    },
+    "service_type": {
+      "type": "string"
+    },
+    "start_type": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "user_account": {
+      "type": "string"
+    },
+    "win32_exit_code": {
+      "type": "integer"
+    }
+  },
+  "type": "object"
+}

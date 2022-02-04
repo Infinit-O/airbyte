@@ -134,6 +134,222 @@
             },
             "sync_mode": "incremental",
             "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_firefox_addons",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_groups",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_ie_extensions",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_interface_addresses",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_kernel_info",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_launch_d",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_logged_in_users",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_logical_drives",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_managed_policies",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_mounts",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_os_version",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_patches",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_programs",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_python_packages",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_scheduled_tasks",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_services",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_shadow",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_shared_folders",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_shared_resources",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_sharing_preferences",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_sip_config",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_startup_config",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_system_controls",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_system_info",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
         }
     ]
 }

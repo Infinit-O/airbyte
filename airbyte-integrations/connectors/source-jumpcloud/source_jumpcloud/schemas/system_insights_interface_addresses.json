@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "address": {
+      "type": "string"
+    },
+    "broadcast": {
+      "type": "string"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "friendly_name": {
+      "type": "string"
+    },
+    "interface": {
+      "type": "string"
+    },
+    "mask": {
+      "type": "string"
+    },
+    "point_to_point": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Interface Addresses",
+  "type": "object"
+}

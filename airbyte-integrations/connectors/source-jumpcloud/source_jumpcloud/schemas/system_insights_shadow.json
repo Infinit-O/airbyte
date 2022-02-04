@@ -1,0 +1,42 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "expire": {
+      "type": "string"
+    },
+    "flag": {
+      "type": "string"
+    },
+    "hash_alg": {
+      "type": "string"
+    },
+    "inactive": {
+      "type": "string"
+    },
+    "last_change": {
+      "type": "string"
+    },
+    "max": {
+      "type": "string"
+    },
+    "min": {
+      "type": "string"
+    },
+    "password_status": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "username": {
+      "type": "string"
+    },
+    "warning": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Shadow",
+  "type": "object"
+}

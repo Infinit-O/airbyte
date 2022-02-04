@@ -1,0 +1,30 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "host": {
+      "type": "string"
+    },
+    "pid": {
+      "type": "integer"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "time": {
+      "type": "integer"
+    },
+    "tty": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "user": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Logged-In Users",
+  "type": "object"
+}

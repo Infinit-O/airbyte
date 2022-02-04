@@ -1,0 +1,27 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "comment": {
+      "type": "string"
+    },
+    "gid": {
+      "type": "string"
+    },
+    "gid_signed": {
+      "type": "string"
+    },
+    "group_sid": {
+      "type": "string"
+    },
+    "groupname": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Groups",
+  "type": "object"
+}

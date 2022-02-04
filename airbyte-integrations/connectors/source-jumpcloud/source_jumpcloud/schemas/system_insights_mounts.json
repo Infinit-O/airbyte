@@ -1,0 +1,45 @@
+{
+  "properties": {
+    "blocks": {
+      "type": "string"
+    },
+    "blocks_available": {
+      "type": "string"
+    },
+    "blocks_free": {
+      "type": "string"
+    },
+    "blocks_size": {
+      "type": "string"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "device": {
+      "type": "string"
+    },
+    "device_alias": {
+      "type": "string"
+    },
+    "flags": {
+      "type": "string"
+    },
+    "inodes": {
+      "type": "string"
+    },
+    "inodes_free": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Mounts",
+  "type": "object"
+}

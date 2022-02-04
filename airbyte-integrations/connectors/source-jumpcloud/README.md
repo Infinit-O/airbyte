@@ -1,5 +1,11 @@
 # NOTES:
 * Certificates, etc_hosts are both good candidates for testing pagination because of the large number of recrods present (~700k and ~150k each, respectively)
+* Programs
+* Scheduled Tasks
+* Services
+* Shared Resources
+* Startup Items
+* System Controls
 
 # Jumpcloud Source
 

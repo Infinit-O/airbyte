@@ -1,0 +1,39 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "identifying_number": {
+      "type": "string"
+    },
+    "install_date": {
+      "type": "string"
+    },
+    "install_location": {
+      "type": "string"
+    },
+    "install_source": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "publisher": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "uninstall_string": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Programs",
+  "type": "object"
+}

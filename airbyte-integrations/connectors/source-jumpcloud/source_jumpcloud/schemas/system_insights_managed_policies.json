@@ -1,0 +1,30 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "manual": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "username": {
+      "type": "string"
+    },
+    "uuid": {
+      "type": "string"
+    },
+    "value": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Managed Policies",
+  "type": "object"
+}

@@ -1,0 +1,54 @@
+{
+  "properties": {
+    "active": {
+      "type": "integer"
+    },
+    "autoupdate": {
+      "type": "integer"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "creator": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "disabled": {
+      "type": "integer"
+    },
+    "identifier": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "uid": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "visible": {
+      "type": "integer"
+    }
+  },
+  "title": "System Insights Firefox Addons",
+  "type": "object"
+}
