@@ -496,3 +496,119 @@ class SystemInsightsSystemInfo(JumpcloudV2IncrementalStream):
         should return "customers". Required.
         """
         return "systeminsights/system_info/"
+
+class SystemInsightsUptime(JumpcloudV2IncrementalStream):
+    primary_key = "system_id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "systeminsights/uptime/"
+
+class SystemInsightsUSBDevices(JumpcloudV2IncrementalStream):
+    primary_key = "system_id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "systeminsights/usb_devices/"
+
+class SystemInsightsUserGroups(JumpcloudV2IncrementalStream):
+    primary_key = "system_id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "systeminsights/user_groups/"
+
+class SystemInsightsUserSSHKeys(JumpcloudV2IncrementalStream):
+    primary_key = "system_id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "systeminsights/user_ssh_keys/"
+
+class SystemInsightsUsers(JumpcloudV2IncrementalStream):
+    # NOTE: There is already a v1 stream with the name "users". Don't get confused!
+    primary_key = "system_id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "systeminsights/users/"
+
+class SystemInsightsWifiNetworks(JumpcloudV2IncrementalStream):
+    # NOTE: There is already a v1 stream with the name "users". Don't get confused!
+    primary_key = "system_id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "systeminsights/wifi_networks/"
+
+class SystemInsightsWifiStatus(JumpcloudV2IncrementalStream):
+    # NOTE: There is already a v1 stream with the name "users". Don't get confused!
+    primary_key = "system_id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "systeminsights/wifi_status/"
+
+class SystemInsightsWindowsSecurityProducts(JumpcloudV2IncrementalStream):
+    # NOTE: There is already a v1 stream with the name "users". Don't get confused!
+    primary_key = "system_id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "systeminsights/windows_security_products/"
+
+class SystemInsightsWorkday(JumpcloudV2IncrementalStream):
+    primary_key = "system_id"
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.limit = 100
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "workdays/"

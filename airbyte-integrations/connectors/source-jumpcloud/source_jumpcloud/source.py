@@ -72,6 +72,15 @@ from .v2_systeminsights import (
     SystemInsightsStartupItems,
     SystemInsightsSystemControls,
     SystemInsightsSystemInfo,
+    SystemInsightsUptime,
+    SystemInsightsUSBDevices,
+    SystemInsightsUserGroups,
+    SystemInsightsUserSSHKeys,
+    SystemInsightsUsers,
+    SystemInsightsWifiNetworks,
+    SystemInsightsWifiStatus,
+    SystemInsightsWindowsSecurityProducts,
+    SystemInsightsWorkday,
 )
 
 # Source
@@ -160,6 +169,15 @@ class SourceJumpcloud(AbstractSource):
             SystemInsightsStartupItems(config=config),
             SystemInsightsSystemControls(config=config),
             SystemInsightsSystemInfo(config=config),
+            SystemInsightsUptime(config=config),
+            SystemInsightsUSBDevices(config=config),
+            SystemInsightsUserGroups(config=config),
+            SystemInsightsUserSSHKeys(config=config),
+            SystemInsightsUsers(config=config),
+            SystemInsightsWifiNetworks(config=config),
+            SystemInsightsWifiStatus(config=config),
+            SystemInsightsWindowsSecurityProducts(config=config),
+            SystemInsightsWorkday(config=config)
         ]
 
         return v1 + v2 + system_insights

@@ -1,0 +1,21 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "encrypted": {
+      "type": "integer"
+    },
+    "path": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "uid": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights User SSH Keys",
+  "type": "object"
+}

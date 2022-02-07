@@ -1,0 +1,18 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "gid": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "uid": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights User Groups",
+  "type": "object"
+}

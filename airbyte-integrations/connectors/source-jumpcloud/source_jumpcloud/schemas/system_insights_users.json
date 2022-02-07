@@ -1,0 +1,66 @@
+{
+  "properties": {
+    "ad_managed": {
+      "description": "Indicates this account belongs to a AD-managed user",
+      "type": "boolean"
+    },
+    "admin": {
+      "description": "Indicates this account has local administrator privileges",
+      "type": "boolean"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "directory": {
+      "type": "string"
+    },
+    "gid": {
+      "type": "string"
+    },
+    "gid_signed": {
+      "type": "string"
+    },
+    "last_login": {
+      "description": "A Unix timestamp showing the last time this user logged in",
+      "type": "string"
+    },
+    "managed": {
+      "description": "Indicates this account belongs to a JumpCloud-managed user",
+      "type": "boolean"
+    },
+    "real_user": {
+      "description": "Indicates this account represents an interactive user account vs. a system or daemon account",
+      "type": "boolean"
+    },
+    "shell": {
+      "type": "string"
+    },
+    "suspended": {
+      "description": "Indicates this account is suspended or locked out",
+      "type": "boolean"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "uid": {
+      "type": "string"
+    },
+    "uid_signed": {
+      "type": "string"
+    },
+    "username": {
+      "type": "string"
+    },
+    "uuid": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Users",
+  "type": "object"
+}

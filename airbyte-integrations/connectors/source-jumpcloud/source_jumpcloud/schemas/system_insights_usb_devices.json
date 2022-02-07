@@ -1,0 +1,48 @@
+{
+  "properties": {
+    "class": {
+      "type": "string"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "model_id": {
+      "type": "string"
+    },
+    "protocol": {
+      "type": "string"
+    },
+    "removable": {
+      "type": "integer"
+    },
+    "serial": {
+      "type": "string"
+    },
+    "subclass": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "usb_address": {
+      "type": "integer"
+    },
+    "usb_port": {
+      "type": "integer"
+    },
+    "vendor": {
+      "type": "string"
+    },
+    "vendor_id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights USB Devices",
+  "type": "object"
+}

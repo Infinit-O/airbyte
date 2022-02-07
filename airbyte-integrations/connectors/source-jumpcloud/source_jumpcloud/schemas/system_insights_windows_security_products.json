@@ -1,0 +1,30 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "remediation_path": {
+      "type": "string"
+    },
+    "signatures_up_to_date": {
+      "type": "number"
+    },
+    "state": {
+      "type": "string"
+    },
+    "state_timestamp": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Windows Security Products",
+  "type": "object"
+}

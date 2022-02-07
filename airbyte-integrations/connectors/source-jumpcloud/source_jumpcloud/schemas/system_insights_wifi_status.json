@@ -1,0 +1,52 @@
+
+{
+  "properties": {
+    "bssid": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "number"
+    },
+    "channel_band": {
+      "type": "number"
+    },
+    "channel_width": {
+      "type": "number"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "country_code": {
+      "type": "string"
+    },
+    "interface": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string"
+    },
+    "network_name": {
+      "type": "string"
+    },
+    "noise": {
+      "type": "number"
+    },
+    "rssi": {
+      "type": "number"
+    },
+    "security_type": {
+      "type": "string"
+    },
+    "ssid": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "transmit_rate": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights WiFi Status",
+  "type": "object"
+}

@@ -65,6 +65,15 @@
         },
         {
             "stream": {
+                "name": "system_insights_certificates",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
                 "name": "system_insights_chrome_extensions",
                 "json_schema": {},
                 "supported_sync_modes": ["incremental"]
@@ -326,7 +335,7 @@
         },
         {
             "stream": {
-                "name": "system_insights_startup_config",
+                "name": "system_insights_startup_items",
                 "json_schema": {},
                 "supported_sync_modes": ["incremental"]
             },
@@ -345,6 +354,87 @@
         {
             "stream": {
                 "name": "system_insights_system_info",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_uptime",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_usb_devices",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_user_groups",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_user_ssh_keys",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_users",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_wifi_networks",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_wifi_status",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_windows_security_products",
+                "json_schema": {},
+                "supported_sync_modes": ["incremental"]
+            },
+            "sync_mode": "incremental",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_insights_workday",
                 "json_schema": {},
                 "supported_sync_modes": ["incremental"]
             },

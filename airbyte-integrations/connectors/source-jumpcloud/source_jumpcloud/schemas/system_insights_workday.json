@@ -1,0 +1,53 @@
+{
+  "properties": {
+    "auth": {
+      "properties": {
+        "basic": {
+            "properties": {
+                "expiry": {
+                "type": "string"
+                },
+                "isValid": {
+                "type": "boolean"
+                },
+                "message": {
+                "type": "string"
+                }
+            },
+            "title": "Auth Info",
+            "type": "object"
+        },
+        "oauth": {
+            "properties": {
+                "expiry": {
+                "type": "string"
+                },
+                "isValid": {
+                "type": "boolean"
+                },
+                "message": {
+                "type": "string"
+                }
+            },
+            "title": "Auth Info",
+            "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "id": {
+      "type": "string"
+    },
+    "lastImport": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "reportUrl": {
+      "type": "string"
+    }
+  },
+  "title": "Workday Output",
+  "type": "object"
+}

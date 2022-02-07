@@ -1,0 +1,48 @@
+{
+  "properties": {
+    "auto_login": {
+      "type": "number"
+    },
+    "captive_portal": {
+      "type": "number"
+    },
+    "collection_time": {
+      "type": "string"
+    },
+    "disabled": {
+      "type": "number"
+    },
+    "last_connected": {
+      "type": "number"
+    },
+    "network_name": {
+      "type": "string"
+    },
+    "passpoint": {
+      "type": "number"
+    },
+    "possibly_hidden": {
+      "type": "number"
+    },
+    "roaming": {
+      "type": "number"
+    },
+    "roaming_profile": {
+      "type": "string"
+    },
+    "security_type": {
+      "type": "string"
+    },
+    "ssid": {
+      "type": "string"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "temporarily_disabled": {
+      "type": "number"
+    }
+  },
+  "title": "System Insights WiFi Networks",
+  "type": "object"
+}

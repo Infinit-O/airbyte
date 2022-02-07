@@ -1,0 +1,27 @@
+{
+  "properties": {
+    "collection_time": {
+      "type": "string"
+    },
+    "days": {
+      "type": "integer"
+    },
+    "hours": {
+      "type": "integer"
+    },
+    "minutes": {
+      "type": "integer"
+    },
+    "seconds": {
+      "type": "integer"
+    },
+    "system_id": {
+      "type": "string"
+    },
+    "total_seconds": {
+      "type": "string"
+    }
+  },
+  "title": "System Insights Uptime",
+  "type": "object"
+}

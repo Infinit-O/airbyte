@@ -1,11 +1,14 @@
-# NOTES:
-* Certificates, etc_hosts are both good candidates for testing pagination because of the large number of recrods present (~700k and ~150k each, respectively)
+# Streams with very large numbers of records, suitable for testing pagination and resuming.
+* Certificates
+* etc_hosts
 * Programs
 * Scheduled Tasks
 * Services
 * Shared Resources
 * Startup Items
 * System Controls
+* System Insights - User Groups
+* System Insights - Users
 
 # Jumpcloud Source
 
