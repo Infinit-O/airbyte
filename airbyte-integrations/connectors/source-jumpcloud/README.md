@@ -17,10 +17,22 @@ For information about how to use this connector within Airbyte, see [the documen
 
 ## Local development
 
+To run the connector locally run the following command:
+
+`python main.py read --config secrets/<1> --catalog catalogs/<2>
+
+* <1> should be a JSON file containing a valid `api_key`. It's recommended that you store it in `secrets/` as this folder and its contents are automatically excluded from source control.
+* <2> should be a json file containing a valid "configuredCatalog" file, that describes the streams to be run. The `catalogs/` subfolder has a number of pre-made catalogs that can be used for testing individual Streams or groups of Streams. Feel free to add to it.
+
+* `all_v1.json` - contains every Jumpcloud V1 stream.
+* `all_v2.json` - contains every compatible V2 Jumpcloud stream. Note that some endpoints require IDs up front and have not been covered by this connector
+* `all_systeminsights.json` - if you need to run all the System Insights streams at once, use this json file.
+* `system_*.json` - the System Insights streams each have individual catalog files because some of them have a massive number of records (700k+ in one instance) and had to be tested / developed individually.
+
 ### Prerequisites
 **To iterate on this connector, make sure to complete this prerequisites section.**
 
-#### Minimum Python version required `= 3.7.0`
+#### Minimum Python version required `= 3.9.7`
 
 #### Build & Activate Virtual Environment and install dependencies
 From this connector directory, create a virtual environment:

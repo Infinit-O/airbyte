@@ -1,3 +1,76 @@
 {
-    "todo": "yeah later"
+    "streams": [
+        {
+            "stream": {
+                "name": "applications",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "application_templates",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "systems",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "system_users",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "commands",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "command_results",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "organizations",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "radius_servers",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        }
+    ]
 }
