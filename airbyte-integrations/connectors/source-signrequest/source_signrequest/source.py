@@ -6,6 +6,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 from math import inf
+from urllib.parse import urljoin, urlparse
 
 import requests
 from airbyte_cdk.sources import AbstractSource
@@ -53,8 +54,15 @@ class SignrequestStream(HttpStream, ABC):
     See the reference docs for the full list of configurable options.
     """
 
-    url_base = "https://infinito-transformation.signrequest.com/api/v1/"
     _path_name = ""
+    @property
+    def url_base(self):
+        return urljoin(self.config["url_base"], "api/v1/")
+
+    def __init__(self, config, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.config = config
+        pass
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
@@ -69,21 +77,20 @@ class SignrequestStream(HttpStream, ABC):
         :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
                 If there are no more pages in the result, return None.
         """
-        raw = response.json()
-        next = raw.get("next", None)
-        if next:
-            return {"next": next}
-        return None
+        # import pdb
+        # pdb.set_trace()
+        # raw = response.json()
+        # next = raw.get("next", None)
+        # if next is not None:
+        #     parts = urlparse(next)
+        #     return {"next": parts.query.split("=")[-1]}
+        # else:
+        return {}
 
     def path(
         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> str:
-        if next_page_token:
-            # NOTE: At this point (15 NOV 2021) I'm not sure if this is a full URL or just a path. The docs indicate its a
-            #       full URL but its not clear.
-            return next_page_token["next"]
-        else:
-            return self._path_name
+        return self._path_name
 
     def request_params(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
@@ -92,7 +99,10 @@ class SignrequestStream(HttpStream, ABC):
         TODO: Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
         Usually contains common params e.g. pagination size etc.
         """
-        return {}
+        if next_page_token:
+            return {"next": next_page_token["next"]}
+        else:
+            return {}
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         """
@@ -103,7 +113,7 @@ class SignrequestStream(HttpStream, ABC):
         yield from raw.get("results")
 
 class SignrequestIncrementalStream(SignrequestStream):
-    save_checkpoint_interval = inf
+    save_checkpoint_interval = 10
 
     @property
     @abstractmethod
@@ -152,8 +162,8 @@ class SourceSignrequest(AbstractSource):
         token = config.get("access_token")
         auth = TokenAuthenticator(token=token, auth_method="Token")  # Oauth2Authenticator is also available if you need oauth support
         return [
-            TeamMembers(authenticator=auth),
-            Events(authenticator=auth),
-            Documents(authenticator=auth),
-            Teams(authenticator=auth),
+            TeamMembers(config=config, authenticator=auth),
+            Events(config=config, authenticator=auth),
+            Documents(config=config, authenticator=auth),
+            Teams(config=config, authenticator=auth),
         ]
