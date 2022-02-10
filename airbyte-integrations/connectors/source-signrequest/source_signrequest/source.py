@@ -77,36 +77,34 @@ class SignrequestStream(HttpStream, ABC):
         :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
                 If there are no more pages in the result, return None.
         """
-        # import pdb
-        # pdb.set_trace()
-        # raw = response.json()
-        # next = raw.get("next", None)
-        # if next is not None:
-        #     parts = urlparse(next)
-        #     return {"next": parts.query.split("=")[-1]}
-        # else:
-        return {}
+        raw = response.json()
+        next = raw.get("next", None)
+        if next is not None:
+            return {"next": next}
+        else:
+            return {}
 
     def path(
         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> str:
-        return self._path_name
+        if next_page_token:
+            parts = urlparse(next_page_token["next"])
+            return self._path_name + "?" + parts.query
+        else:
+            return self._path_name
 
     def request_params(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
     ) -> MutableMapping[str, Any]:
         """
-        TODO: Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
+        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
         Usually contains common params e.g. pagination size etc.
         """
-        if next_page_token:
-            return {"next": next_page_token["next"]}
-        else:
-            return {}
+        return {}
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         """
-        TODO: Override this method to define how a response is parsed.
+        Override this method to define how a response is parsed.
         :return an iterable containing each record in the response
         """
         raw = response.json()
