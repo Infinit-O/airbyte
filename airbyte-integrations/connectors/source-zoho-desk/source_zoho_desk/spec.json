@@ -1,0 +1,19 @@
+{
+  "documentationUrl": "https://docsurl.com",
+  "connectionSpecification": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Zoho Desk Spec",
+    "type": "object",
+    "required": ["id", "secret"],
+    "additionalProperties": false,
+    "properties": {
+        "id": {
+          "type": "string"
+        },
+        "secret": {
+          "type": "string"
+        }
+      }
+    }
+  }
+
