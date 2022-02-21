@@ -254,7 +254,7 @@ class JumpcloudV2IncrementalStream(JumpcloudV2Stream, ABC):
                     self.keep_going = False
                     return None
                 else:
-                    only_the_newest = [x for x in sorted_contents if __newer_than_latest(x)]
+                    only_the_newest = [x for x in sorted_contents if __newer_than_latest(stored_date, x)]
                     yield from only_the_newest
             else:
                 # NOTE: no reversal needed as its already in ascending order (at least it looks like that)
