@@ -4,6 +4,10 @@ This is the repository for the Zoho Desk source connector, written in Python.
 For information about how to use this connector within Airbyte, see [the documentation](https://docs.airbyte.io/integrations/sources/zoho-desk).
 
 ## Local development
+### OAuth
+This connector requires that you acquire a refresh token manually through the use of the "self client" credentials, and a REST API client.
+
+Follow the instructions in the Zoho Desk official documentation and provide the information requested in `spec.json` to use this connector.
 
 ### Prerequisites
 **To iterate on this connector, make sure to complete this prerequisites section.**

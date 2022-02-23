@@ -1,0 +1,30 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "name": "organizations",
+    "properties": {
+        "zip": {"type": "string"},
+        "country": {"type": "string"},
+        "website": {"type": "string"},
+        "city": {"type": "string"},
+        "companyName": {"type": "string"},
+        "mobile": {"type": "string"},
+        "edition": {"type": "string"},
+        "currencySymbol": {"type": "string"},
+        "employeeCount": {"type": "number"},
+        "logoURL": {"type": "string"},
+        "isAdminInOrg": {"type": "boolean"},
+        "faviconURL": {"type": "string"},
+        "isDefault": {"type": "boolean"},
+        "phoneNumber": {"type": "string"},
+        "portalName": {"type": "string"},
+        "street": {"type": "string"},
+        "portalURL": {"type": "string"},
+        "primaryContact": {"type": "string"},
+        "currencyLocale": {"type": "string"},
+        "alias": {"type": "string"},
+        "id": {"type": "number"},
+        "state": {"type": "string"},
+        "fax": {"type": "string"}
+    }
+}

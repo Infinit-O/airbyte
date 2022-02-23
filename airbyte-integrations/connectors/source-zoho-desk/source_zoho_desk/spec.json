@@ -4,14 +4,28 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Zoho Desk Spec",
     "type": "object",
-    "required": ["id", "secret"],
+    "required": ["client_id", "client_secret", "refresh_token", "token_refresh_endpoint", "oauth_scopes"],
     "additionalProperties": false,
     "properties": {
-        "id": {
+        "client_id": {
           "type": "string"
         },
-        "secret": {
+        "client_secret": {
           "type": "string"
+        },
+        "refresh_token": {
+          "type": "string"
+        },
+        "token_refresh_endpoint": {
+          "type": "string",
+          "description": "Absolute URL to the endpoint used for refreshing access token."
+        },
+        "oauth_scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of comma-separated scopes to be used when refreshing token."
         }
       }
     }

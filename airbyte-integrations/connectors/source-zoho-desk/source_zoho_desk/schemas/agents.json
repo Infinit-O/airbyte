@@ -1,0 +1,29 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "name": "agents",
+    "properties": {
+        "zuid": {"type": "string"},
+        "emailId": {"type": "string"},
+        "isConfirmed": {"type": "boolean"},
+        "status": {"type": "string"},
+        "roleId": {"type": "string"},
+        "profileId": {"type": "string"},
+        "firstName": {"type": "string"},
+        "lastName": {"type": "string"},
+        "phone": {"type": "string"},
+        "mobile": {"type": "string"},
+        "aboutInfo": {"type": "string"},
+        "extn": {"type": "string"},
+        "country_code": {"type": "string"},
+        "rolePermissionType": {"type": "string"},
+        "associatedChatDepartmentIds": {"type": "array"},
+        "photoURL": {"type": "string"},
+        "associatedDepartmentIds": {"type": "array"},
+        "name": {"type": "string"},
+        "timeZone": {"type": "string"},
+        "id": {"type": "string"},
+        "channelExpert": {"type": "string"},
+        "langCode": {"type": "string"}
+    }
+}
