@@ -179,6 +179,44 @@ class Departments(ZohoDeskStream):
     ) -> str:
         return "departments"
 
+class Channels(ZohoDeskStream):
+    primary_key = "id"
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        return "channels"
+
+    def request_params(
+        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        """
+        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
+        Usually contains common params e.g. pagination size etc.
+
+        Important note: despite being listed as the general pagination method for the entire API
+        certain endpoints do NOT honor the "limit" param and will 422 if it is received.
+
+        This endpoint is one such endpoint, hence request_params is overridden here.
+        """
+        return {}
+
+class Tickets(ZohoDeskStream):
+    primary_key = "id"
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        return "tickets"
+
 # Source
 class SourceZohoDesk(AbstractSource):
     def check_connection(self, logger, config) -> Tuple[bool, any]:
@@ -217,8 +255,8 @@ class SourceZohoDesk(AbstractSource):
             token_refresh_endpoint=config["token_refresh_endpoint"],
             client_id=config["client_id"],
             client_secret=config["client_secret"],
-            refresh_token=config["refresh_token"],
-            scopes=config["oauth_scopes"]
+            refresh_token=config["refresh_token"]
+            # scopes=config["oauth_scopes"] # this apparently can be ommitted....
         )
         return [
             Organizations(authenticator=auth),
@@ -227,4 +265,6 @@ class SourceZohoDesk(AbstractSource):
             Roles(authenticator=auth),
             Teams(authenticator=auth),
             Departments(authenticator=auth),
+            Channels(authenticator=auth),
+            Tickets(authenticator=auth),
         ]

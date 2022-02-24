@@ -59,10 +59,14 @@ class ZohoDeskStream(HttpStream, ABC):
         # NOTE: if there are less than self.limit records in the response there are no other pages.
         if len(data) < self.limit:
             return None
+        # NOTE: I'm sorry if this doesn't make any sense. Please see the entry for `channels` in
+        #       WTF.md for more information 
+        if len(data) > self.limit:
+            return None
         else:
             # NOTE: -1 because certain endpoints will fail when limit happens to be 1 over.
             # NOTE: Zoho desk pagination is weird.
-            self.start_from += self.limit -1
+            self.start_from += self.limit - 1
             return {"from": self.start_from}
 
     def request_params(
