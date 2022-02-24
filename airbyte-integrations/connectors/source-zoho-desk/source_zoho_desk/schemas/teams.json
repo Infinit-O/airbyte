@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "name": "roles",
+    "type": "object",
+    "properties": {
+        "rolesWithSubordinates": {"type": "array"},
+        "departmentId": {"type": "string"},
+        "roles": {"type": "array"},
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "derivedAgents": {"type": "array", "items": {"type": "string"}},
+        "id": {"type": "string"},
+        "subTeams": {"type": "array"},
+        "agents": {"type": "array", "items": {"type": "string"}}
+    }
+}

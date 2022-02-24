@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "name": "roles",
+    "type": "object",
+    "properties": {
+        "isDefault": {"type": "boolean"},
+        "shareDataWithPeers": {"type": "boolean"},
+        "immediateSubRoles": {"type": "array"},
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "reportsTo": {"type": "string"},
+        "id": {"type": "string"},
+        "isVisible": {"type": "boolean"}
+    }
+}
