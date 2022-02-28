@@ -1,0 +1,12 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "name": "ticket_resolution_time",
+    "properties": {
+        "totalAvgSystemTime": {"type": "string"},
+        "totalAvgAgentTime": {"type": "string"},
+        "groupedBy": {"type": "string"},
+        "totalTicketCount": {"type": "number"},
+        "timeData": {"type": "array"}
+    }
+}

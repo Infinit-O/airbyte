@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "name": "modules",
+    "properties": {
+        "displayLabel": {"type": "string"},
+        "apiKey": {"type": "string"},
+        "isEnabled": {"type": "boolean"},
+        "pluralLabel": {"type": "string"},
+        "id": {"type": "string"},
+        "singularLabel": {"type": "string"}
+    }
+}

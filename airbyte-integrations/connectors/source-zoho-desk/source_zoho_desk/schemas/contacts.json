@@ -1,0 +1,26 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "name": "contacts",
+    "properties": {
+        "firstName": {"type": "string"},
+        "lastName": {"type": "string"},
+        "accountCount": {"type": "string"},
+        "email": {"type": "string"},
+        "secondaryEmail": {"type": "string"},
+        "mobile": {"type": "string"},
+        "phone": {"type": "string"},
+        "type": {"type": "string"},
+        "createdTime": {"type": "string"},
+        "ownerId": {"type": "string"},
+        "accountId": {"type": "string"},
+        "webUrl": {"type": "string"},
+        "photoUrl": {"type": "string"},
+        "customerHappiness": {"type": "object"},
+        "zohoCRMContact": {"type": "object"},
+        "id": {"type": "string"},
+        "isSpam": {"type": "boolean"},
+        "isAnonymous": {"type": "boolean"},
+        "isEndUser": {"type": "boolean"}
+    }
+}
