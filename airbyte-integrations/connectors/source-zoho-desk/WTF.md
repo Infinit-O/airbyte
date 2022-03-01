@@ -1,7 +1,8 @@
 # WHY
 I'm documenting all the problems I encounter while working with the Zoho Desk API so I can gripe about them later.
 
-* Desk.basic.READ,Desk.tickets.READ,Desk.contacts.READ,Desk.settings.READ
+* The following scopes were used
+* Desk.basic.READ,Desk.tickets.READ,Desk.contacts.READ,Desk.settings.READ,Desk.community.READ
 
 * &from and &limit are defined as the two pagination params in the documentation, but certain endpoints do NOT honor those params and will throw a 422 back at you if you try and pass them in. This means that I need to override the request_params method to return an empty object after all the time I spent getting it to work the other way.
 * Thus far, every endpoint stores the results in a "data" key within the json object. But the `teams` endpoint returns an object that uses "teams" as the key instead. WHY!?
@@ -25,5 +26,8 @@ I'm documenting all the problems I encounter while working with the Zoho Desk AP
 * The `dashboards/createdTickets` set of endpoints requires a `groupBy` param, and a `duration` param. `duration` is very clearly an enum but the list of valid values is not visible in the documentation. `groupBy=date` and `duration=LAST_7_DAYS` are the settings used in testing.
 * `dashboards/ticketResolutionTime` response has a different shape from everything else in the API.
 * `dashboards/ticketREsolutionTIme`, like a number of other endpoints, breaks my pagination, and I don't know if its worth fixing in this particular case.
+* `communityTopicTypes/` was 404'ing when I tested it yesterday, but now responds properly after adding the `Desk.community.READ` scope to the token. I suspect that a lot of the other "missing" API endpoints are simply 404'ing because I don't have the right scope.
+* `communityModeration/` was 404'ing when I tested it yesterday, but now responds properly after adding the `Desk.community.READ` scope to the token. I suspect that a lot of the other "missing" API endpoints are simply 404'ing because I don't have the right scope.
 
 * It's worth noting that the error messages indicating that I'm not authorized to access something are not consistent and don't indicate if I'm missing scopes (unlikely, according to documentation) or if my account simply isn't authorized.
+* I suspect that many of the "missing" APIs in the checklist are 404'ing simply because I'm providing the incorrect scope. I will have to go back and check.
