@@ -96,3 +96,27 @@ class RecycleBin(ZohoDeskStream):
         next_page_token: Mapping[str, Any] = None,
     ) -> str:
         return "recycleBin"
+
+class Users(ZohoDeskStream):
+    primary_key = "id"
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        return "users"
+
+class BusinessHours(ZohoDeskStream):
+    primary_key = "id"
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        return "businessHours"

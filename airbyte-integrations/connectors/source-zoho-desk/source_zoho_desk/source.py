@@ -1,6 +1,7 @@
 #
 # Copyright (c) 2021 Airbyte, Inc., all rights reserved.
 #
+from multiprocessing import AuthenticationError
 from typing import Any, List, Mapping, MutableMapping, Tuple, Iterable, Optional
 
 import requests
@@ -79,4 +80,6 @@ class SourceZohoDesk(AbstractSource):
             CommunityPreferences(authenticator=auth),
             AvailableBadgeIcons(authenticator=auth),
             RecycleBin(authenticator=auth),
+            Users(authenticator=auth),
+            BusinessHours(authenticator=auth)
         ]
