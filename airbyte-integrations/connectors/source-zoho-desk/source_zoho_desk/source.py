@@ -32,7 +32,6 @@ class SourceZohoDesk(AbstractSource):
         oauth_secret: str = config["client_secret"]
         oauth_refresh_token: str = config["refresh_token"]
         oauth_refresh_token_endpoint: str = config["token_refresh_endpoint"]
-        oauth_scopes: List[str] = config["oauth_scopes"]
         if oauth_id == "":
             return False, "oAuth ID cannot be an empty string."
         if oauth_secret == "":
@@ -41,8 +40,6 @@ class SourceZohoDesk(AbstractSource):
             return False, "oAuth refresh token cannot be an empty string."
         if oauth_refresh_token_endpoint == config["token_refresh_endpoint"] == "":
             return False, "oAuth refresh token endpoint cannot be an empty string."
-        if oauth_scopes == []:
-            return False, "oAuth scopes cannot be empty."
 
         return True, None
 

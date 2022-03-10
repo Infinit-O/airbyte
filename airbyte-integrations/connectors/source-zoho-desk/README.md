@@ -9,6 +9,16 @@ This connector requires that you acquire a refresh token manually through the us
 
 Follow the instructions in the Zoho Desk official documentation and provide the information requested in `spec.json` to use this connector.
 
+* Generate an authorization code utilizing the zoho dev console interface. Make sure to specify
+all the scopes listed in the point at the bottom of this section. Take note of your Client ID and Client Secret.
+* Exchange the authorization code, client ID, and client secret for your first access token, and a refresh token using an API client such as Postman / Insomnia
+* Take note of the refresh token - this is what the connector requires to function.
+* The access token received in the previous step is valid for 1 hour and can be used in conjunction with the API client to explore the API.
+* The refresh token may be used either in the API client or through Airbyte.
+
+Please make sure to use the following scopes:
+* Desk.basic.READ,Desk.tickets.READ,Desk.contacts.READ,Desk.settings.READ,Desk.community.READ,Desk.activities.events.READ
+
 ### Prerequisites
 **To iterate on this connector, make sure to complete this prerequisites section.**
 
