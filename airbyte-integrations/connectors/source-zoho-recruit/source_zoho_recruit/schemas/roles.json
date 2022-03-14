@@ -1,0 +1,11 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "display_label": {"type": "string"},
+        "share_with_peers": {"type": "boolean"},
+        "name": {"type": "string"},
+        "id": {"type": "string"},
+        "reporting_to": {"type": "object"}
+    }
+}
