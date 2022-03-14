@@ -21,7 +21,7 @@ ZohoRecruit.settings.READ
 ZohoRecruit.setup.operation.all,ZohoRecruit.settings.modules.read,ZohoRecruit.settings.fields.read,ZohoRecruit.settings.custom_views.read,ZohoRecruit.settings.layouts.read,ZohoRecruit.settings.related_lists.read,ZohoRecruit.modules.notes.READ,ZohoRecruit.settings.note_type.READ,ZohoRecruit.settings.roles.READ,ZohoRecruit.settings.profiles.READ,ZohoRecruit.org.all,ZohoRECRUIT.modules.all,ZohoRECRUIT.settings.tags.read,ZohoRecruit.users.READ
 
 # Ignore the above its bugged I'm trying to figure out which ones are bad.
-ZohoRecruit.setup.operation.READ,ZohoRecruit.settings.note_type.all,ZohoRECRUIT.settings.roles.read,ZohoRecruit.settings.profiles.read,ZohoRecruit.org.all
+ZohoRecruit.setup.operation.READ,ZohoRecruit.settings.note_type.all,ZohoRECRUIT.settings.roles.read,ZohoRecruit.settings.profiles.read,ZohoRecruit.org.all,ZohoRecruit.users.read
 
 
 # CURRENTLY BAD
@@ -29,3 +29,4 @@ ZohoRecruit.modules.notes.READ
 
 # NOTES:
 * https://recruit.zoho.com/recruit/v2/settings/roles will throw an exception when you don't have the correct scopes on your token. Other endpoints will (properly) report that you don't have the correct scope.
+* This isn't exactly game-breaking for us but data from https://recruit.zoho.com/recruit/v2/users uses "null" (a string containing the word 'null') as opposed to the proper JSON null value.

@@ -12,20 +12,6 @@ from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
 from airbyte_cdk.sources.streams.http.requests_native_auth import Oauth2Authenticator
 
-"""
-TODO: Most comments in this class are instructive and should be deleted after the source is implemented.
-
-This file provides a stubbed example of how to use the Airbyte CDK to develop both a source connector which supports full refresh or and an
-incremental syncs from an HTTP API.
-
-The various TODOs are both implementation hints and steps - fulfilling all the TODOs should be sufficient to implement one basic and one incremental
-stream from a source. This pattern is the same one used by Airbyte internally to implement connectors.
-
-The approach here is not authoritative, and devs are free to use their own judgement.
-
-There are additional required TODOs in the files within the integration_tests folder and the spec.json file.
-"""
-
 
 # Basic full refresh stream
 class ZohoRecruitStream(HttpStream, ABC):
@@ -142,6 +128,26 @@ class Org(ZohoRecruitStream):
         """
         yield from response.json().get("org", [])
 
+class Users(ZohoRecruitStream):
+    primary_key = "id"
+
+    def path(self, **kwargs):
+        return "users"
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        """
+        :return an iterable containisng each record in the response
+        """
+        yield from response.json().get("users", [])
+
+    def request_params(
+        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        """
+        Usually contains common params e.g. pagination size etc.
+        """
+        return {"type": "AllUsers"}
+
 # NOTE: SAving this for reference later. I need the stream_slices method later.
 class Employees():
     # TODO: Fill in the cursor_field. Required.
@@ -209,4 +215,5 @@ class SourceZohoRecruit(AbstractSource):
             Roles(authenticator=auth),
             Profiles(authenticator=auth),
             Org(authenticator=auth),
+            Users(authenticator=auth)
         ]
