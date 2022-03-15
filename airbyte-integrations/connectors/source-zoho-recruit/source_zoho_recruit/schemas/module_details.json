@@ -1,0 +1,33 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "global_search_supported": {"type": "boolean"},
+        "deletable": {"type": "boolean"},
+        "creatable": {"type": "boolean"},
+        "modified_time": {"type": "string"},
+        "plural_label": {"type": "string"},
+        "presence_sub_menu": {"type": "string"},
+        "id": {"type": "string"},
+        "convertable": {"type": "boolean"},
+        "editable": {"type": "boolean"},
+        "emailTemplate_support": {"type": "boolean"},
+        "profiles": {"type": "array"},
+        "filter_supported": {"type": "boolean"},
+        "display_field": {"type": "object"},
+        "web_link": {"type": "string"},
+        "sequence_number": {"type": "integer"},
+        "singular_label": {"type": "string"},
+        "viewable": {"type": "boolean"},
+        "api_supported": {"type": "boolean"},
+        "api_name": {"type": "string"},
+        "quick_create": {"type": "boolean"},
+        "modified_by": {"type": "string"},
+        "generated_type": {"type": "string"},
+        "scoring_supported": {"type": "boolean"},
+        "module_name": {"type": "string"},
+        "parent_module": {"type": "object"},
+        "related_list_properties": {"type": "object"},
+        "$properties": {"type": "array"}
+    }
+}

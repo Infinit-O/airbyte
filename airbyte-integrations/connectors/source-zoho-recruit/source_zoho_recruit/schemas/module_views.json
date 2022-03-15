@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "display_value": {"type": "string"},
+        "shared_type": {"type": "string"},
+        "criteria": {"type": "string"},
+        "system_name": {"type": "string"},
+        "shared_name": {"type": "string"},
+        "sort_by": {"type": "string"},
+        "offline": {"type": "boolean"},
+        "default": {"type": "boolean"},
+        "system_defined": {"type": "boolean"},
+        "name": {"type": "string"},
+        "id": {"type": "string"},
+        "category": {"type": "string"},
+        "fields": {"type": "array"},
+        "favorite": {"type": "string"},
+        "sort_order": {"type": "string"},
+        "is_search": {"type": "boolean"}
+    }
+}

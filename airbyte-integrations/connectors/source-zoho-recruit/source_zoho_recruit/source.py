@@ -3,13 +3,15 @@
 #
 
 
-from abc import ABC
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from abc import ABC, abstractmethod
+from tkinter import E
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple, Type
 
 import requests
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
-from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.models import SyncMode
+from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
 from airbyte_cdk.sources.streams.http.requests_native_auth import Oauth2Authenticator
 
 
@@ -67,9 +69,62 @@ class ZohoRecruitStream(HttpStream, ABC):
         """
         return {}
 
+class ZohoRecruitSubStream(ZohoRecruitStream):
+    @property
+    @abstractmethod
+    def path_template(self):
+        pass
+
+    @property
+    @abstractmethod
+    def parent_stream(self):
+        pass
+
+    @property
+    @abstractmethod
+    def api_field_name(self):
+        pass
+
+    @property
+    def bad_api_list(self):
+        pass
+    
+    @property
+    def envelope_name(self):
+        pass
+
+    def stream_slices(self, **kwargs):
+        items = self.parent_stream(authenticator=self._session.auth)
+        for item in items.read_records(sync_mode=SyncMode.full_refresh):
+            # NOTE: Zoho API throws an error when you try to get the module details
+            #       for the "home" module
+            #       apparently, it doesn't support a call to details
+            if self.bad_api_list and item["api_name"].lower() in self.bad_api_list:
+                continue
+            else:
+                yield {"module_api_name": item[self.api_field_name]}
+
+    def path(self, stream_slice, **kwargs):
+        streamslice = stream_slice or {}
+        return self.path_template.format(module_api_name=streamslice["module_api_name"])
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        """
+        :return an iterable containisng each record in the response
+        """
+        # NOTE: Workaround for the fact that Zoho APIs seem to return 204 no content
+        #       in place of an empty JSON response 
+        if response.status_code == 204:
+            yield from []
+        else:
+            yield from response.json().get(self.envelope_name, [])
 
 class Modules(ZohoRecruitStream):
     primary_key = "id"
+
+    @property
+    def use_cache(self):
+        return True
 
     def path(self, **kwargs):
         return "settings/modules"
@@ -79,6 +134,74 @@ class Modules(ZohoRecruitStream):
         :return an iterable containisng each record in the response
         """
         yield from response.json().get("modules", [])
+
+class ModuleDetails(ZohoRecruitSubStream):
+    primary_key = "id"
+    parent_stream = Modules
+    path_template = "settings/modules/{module_api_name}"
+    api_field_name= "api_name"
+    envelope_name = "modules"
+
+    unsupported_api_list = ["home", "analytics", "emails", "documents", "social", "zoho_marketplace"]
+    invalid_name_list = ["reports", "dashboards", "metrics",] 
+    bad_api_list = unsupported_api_list + invalid_name_list
+
+class ModuleFields(ZohoRecruitSubStream):
+    primary_key = "id"
+    parent_stream = Modules
+    path_template = "settings/fields?module={module_api_name}"
+    api_field_name = "api_name"
+    envelope_name = "fields"
+
+    unauthorized_api_list = ["referrals"]
+    unsupported_api_list = ["home", "analytics", "emails", "documents", "social", "zoho_marketplace"]
+    invalid_name_list = ["reports", "dashboards", "metrics",] 
+    empty_api_list = ["approvals"]
+    bad_api_list = unsupported_api_list + empty_api_list + unauthorized_api_list + invalid_name_list
+
+class ModuleViews(ZohoRecruitSubStream):
+    primary_key = "id"
+    parent_stream = Modules
+    path_template = "settings/custom_views/{module_id}?module={module_api_name}"
+    api_field_name = "api_name"
+    envelope_name = "custom_fields"
+
+    unauthorized_api_list = ["referrals"]
+    unsupported_api_list = ["home", "analytics", "emails", "documents", "social", "zoho_marketplace"]
+    invalid_name_list = ["reports", "dashboards", "metrics",] 
+    empty_api_list = ["approvals"]
+    bad_api_list = unsupported_api_list + empty_api_list + unauthorized_api_list + invalid_name_list
+
+    def stream_slices(self, **kwargs):
+        items = self.parent_stream(authenticator=self._session.auth)
+        for item in items.read_records(sync_mode=SyncMode.full_refresh):
+            if self.bad_api_list and item[self.api_field_name].lower() in self.bad_api_list:
+                continue
+            else:
+                yield {
+                    "module_api_name": item[self.api_field_name],
+                    "module_id": item["id"]
+                }
+
+    def path(self, stream_slice, **kwargs):
+        streamslice = stream_slice or {}
+        return self.path_template.format(
+            module_id=streamslice["module_id"],
+            module_api_name=streamslice["module_api_name"]
+        )
+
+class ModuleLayouts(ZohoRecruitSubStream):
+    primary_key = "id"
+    parent_stream = Modules
+    path_template = "settings/layouts?module={module_api_name}"
+    api_field_name = "api_name"
+    envelope_name = "layouts"
+
+    unauthorized_api_list = ["referrals"]
+    unsupported_api_list = ["home", "analytics", "emails", "documents", "social", "zoho_marketplace"]
+    invalid_name_list = ["reports", "dashboards", "metrics",] 
+    empty_api_list = ["approvals"]
+    bad_api_list = unsupported_api_list + empty_api_list + unauthorized_api_list + invalid_name_list
 
 class NoteTypes(ZohoRecruitStream):
     primary_key = "id"
@@ -211,6 +334,10 @@ class SourceZohoRecruit(AbstractSource):
         )
         return [
             Modules(authenticator=auth),
+            ModuleDetails(authenticator=auth),
+            ModuleFields(authenticator=auth),
+            ModuleViews(authenticator=auth),
+            ModuleLayouts(authenticator=auth),
             NoteTypes(authenticator=auth),
             Roles(authenticator=auth),
             Profiles(authenticator=auth),

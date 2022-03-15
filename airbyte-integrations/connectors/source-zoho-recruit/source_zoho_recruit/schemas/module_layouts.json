@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "created_time": {"type": "string"},
+        "modified_time": {"type": "string"},
+        "visible": {"type": "boolean"},
+        "name": {"type": "string"},
+        "modified_by": {"type": "object"},
+        "profiles": {"type": "array"},
+        "id": {"type": "string"},
+        "created_by": {"type": "object"},
+        "sections": {"type": "array"}
+    }
+}
