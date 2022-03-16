@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "sequence_number": {"type": "number"},
+        "list_labels": {"type": "string"},
+        "module": {"type": "string"},
+        "name": {"type": "string"},
+        "id": {"type": "string"},
+        "href": {"type": "string"},
+        "type": {"type": "string"}
+    }
+}

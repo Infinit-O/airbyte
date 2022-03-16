@@ -2,7 +2,70 @@
     "streams": [
         {
             "stream": {
-                "name": "modules",
+                "name": "module_settings",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "module_details",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "module_fields",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "module_layouts",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "module_records",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "module_records_deleted",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "module_settings",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "module_views",
                 "json_schema": {},
                 "supported_sync_modes": ["full_refresh"]
             },
@@ -21,6 +84,24 @@
         {
             "stream": {
                 "name": "roles",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "related_lists",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "tags",
                 "json_schema": {},
                 "supported_sync_modes": ["full_refresh"]
             },
