@@ -78,5 +78,6 @@ class SourceZohoDesk(AbstractSource):
             AvailableBadgeIcons(authenticator=auth),
             RecycleBin(authenticator=auth),
             Users(authenticator=auth),
-            BusinessHours(authenticator=auth)
+            BusinessHours(authenticator=auth),
+            Tasks(authenticator=auth),
         ]

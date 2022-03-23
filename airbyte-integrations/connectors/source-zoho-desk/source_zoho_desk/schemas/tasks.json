@@ -1,0 +1,30 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "name": "tasks",
+    "properties": {
+        "callId": {"type": "string"},
+        "modifiedTime": {"type": "string"},
+        "statusType": {"type": "string"},
+        "contactId": {"type": "string"},
+        "subject": {"type": "string"},
+        "completedTime": {"type": "string"},
+        "departmentId": {"type": "string"},
+        "dueDate": {"type": "string"},
+        "creatorId": {"type": "string"},
+        "activityTime": {"type": "string"},
+        "ownerId": {"type": "string"},
+        "priority": {"type": "string"},
+        "layoutId": {"type": "string"},
+        "isTrashed": {"type": "boolean"},
+        "isCommented": {"type": "boolean"},
+        "webUrl": {"type": "string"},
+        "createdTime": {"type": "string"},
+        "modifiedBy": {"type": "object"},
+        "id": {"type": "string"},
+        "isSpam": {"type": "string"},
+        "category": {"type": "string"},
+        "ticketId": {"type": "string"},
+        "status": {"type": "string"}
+    }
+}
