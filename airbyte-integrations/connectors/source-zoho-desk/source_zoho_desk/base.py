@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Mapping, Any, Optional, Iterable, MutableMapping, List
+from typing import Mapping, Any, Optional, Iterable, MutableMapping, List, Union
 
 import requests
 from airbyte_cdk.sources.streams.http import HttpStream
@@ -40,7 +40,13 @@ class ZohoDeskStream(HttpStream, ABC):
         #       endpoints will selectively override request_params() whenever that
         #       is the case.
         self.limit = 10 
-        self.start_from = 1  
+        self.start_from = 1
+    
+    # def backoff_time(self, response: requests.Response):
+    #     return 160 
+    @property
+    def max_retries(self) -> Union[int, None]:
+        return 50 
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
