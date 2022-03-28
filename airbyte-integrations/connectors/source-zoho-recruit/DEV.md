@@ -1,22 +1,3 @@
-# Required Scopes
-ZohoRecruit.settings.modules.READ
-ZohoRecruit.settings.fields.READ
-ZohoRecruit.settings.custom_views.READ
-ZohoRecruit.settings.layouts.READ
-ZohoRecruit.settings.related_lists.READ
-ZohoRecruit.settings.note_type.READ
-ZohoRecruit.settings.roles.READ
-ZohoRecruit.settings.profiles.READ
-ZohoRECRUIT.settings.tags.READ
-ZohoRecruit.setup.operation.ALL
-ZohoRecruit.modules.notes.READ
-ZohoRecruit.org.ALL
-ZohoRECRUIT.modules.ALL
-ZohoRecruit.users.READ
-
-# Maybe we can condense this?
-ZohoRecruit.settings.READ
-
 # Ignore the above its bugged I'm trying to figure out which ones are bad.
 ZohoRecruit.setup.operation.READ,ZohoRecruit.settings.note_type.all,ZohoRECRUIT.settings.roles.read,ZohoRecruit.settings.profiles.read,ZohoRecruit.org.all,ZohoRecruit.users.read,ZohoRecruit.settings.fields.read,ZohoRecruit.settings.custom_views.read,ZohoRecruit.settings.layouts.read,ZohoRecruit.settings.related_lists.read,ZohoRECRUIT.modules.read,ZohoRECRUIT.settings.tags.read
 
