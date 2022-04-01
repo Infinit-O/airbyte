@@ -15,11 +15,5 @@ def obfuscateApiKey(seed):
     print("Timestamp:", now, "\tKey", key)
 
 if __name__ == "__main__":
-    try:
-        api_key = sys.argv[1]
-    except IndexError:
-        print("First argument needs to be the API key itself.")
-        sys.exit()
-
-    print(obfuscateApiKey(api_key))
-    
+    key = input("Please enter the api key.")
+    obfuscateApiKey(key)
