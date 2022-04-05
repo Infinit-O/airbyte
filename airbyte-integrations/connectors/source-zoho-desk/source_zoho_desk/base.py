@@ -1,7 +1,9 @@
 from abc import ABC
+from re import I
 from typing import Mapping, Any, Optional, Iterable, MutableMapping, List, Union
 
 import requests
+import arrow
 from airbyte_cdk.sources.streams.http import HttpStream
 
 class ZohoDeskStream(HttpStream, ABC):
@@ -93,3 +95,52 @@ class ZohoDeskStream(HttpStream, ABC):
         :return an iterable containing each record in the response
         """
         yield from response.json().get("data")
+
+class ZohoDeskIncrementalStream(ZohoDeskStream):
+    @property
+    def cursor_field(self):
+        return "createdTime"
+
+    def get_updated_state(
+        self,
+        current_stream_state: MutableMapping[str, Any],
+        latest_record: Mapping[str, Any]
+    ) -> Mapping[str, Any]:
+        if current_stream_state == {}:
+            return {self.cursor_field: latest_record[self.cursor_field]}
+        else:
+            records = {}
+            records[current_stream_state[self.cursor_field]] = arrow.get(current_stream_state[self.cursor_field])
+            records[latest_record[self.cursor_field]] = arrow.get(latest_record[self.cursor_field])
+            latest_record = max(records.items(), key=lambda x: x[1])
+            return {self.cursor_field: latest_record[0]}
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        stream_state: Mapping[str, Any],
+        **kwargs
+    ) -> Iterable[Mapping]:
+        def __newer_than_latest(recorded_state: arrow.Arrow, latest_record: dict) -> bool:
+            latest_record_date = arrow.get(latest_record["createdTime"])
+            if recorded_state > latest_record_date:
+                return False
+            else:
+                return True
+        contents = response.json().get("data")
+        if not contents:
+            yield from []
+        else:
+            if stream_state:
+                stored_date = arrow.get(stream_state[self.cursor_field])
+                if __newer_than_latest(stored_date, contents[0]) is False:
+                    yield from []
+                else:
+                    only_the_newest = [x for x in contents if __newer_than_latest(stored_date, x)]
+                    yield from only_the_newest
+            else:
+                yield from contents
+
+        
+
+        

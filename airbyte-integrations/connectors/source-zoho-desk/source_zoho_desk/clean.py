@@ -1,5 +1,5 @@
-from typing import Mapping, Any
-from .base import ZohoDeskStream
+from typing import Mapping, Any, MutableMapping
+from .base import ZohoDeskStream, ZohoDeskIncrementalStream
 
 class Agents(ZohoDeskStream):
     primary_key = "id"
@@ -37,8 +37,24 @@ class Departments(ZohoDeskStream):
     ) -> str:
         return "departments"
 
-class Tickets(ZohoDeskStream):
+class Tickets(ZohoDeskIncrementalStream):
     primary_key = "id"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.limit = 100
+
+    def request_params(
+        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        """
+        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
+        Usually contains common params e.g. pagination size etc.
+        """
+        if next_page_token:
+            return {"limit": self.limit, "from": next_page_token["from"], "sortBy": "-createdTime"}
+        else:
+            return {"limit": self.limit, "sortBy": "-createdTime"}
 
     def path(
         self,
