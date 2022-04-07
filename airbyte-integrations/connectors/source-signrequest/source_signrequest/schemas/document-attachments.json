@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "url": {"type": "string"},
+        "uuid": {"type": "string"},
+        "name": {"type": "string"},
+        "file": {"type": "string"},
+        "file_from_content": {"type": "string"},
+        "file_from_content_name": {"type": "string"},
+        "file_from_url": {"type": "string"},
+        "document": {"type": "string"}
+    }
+}

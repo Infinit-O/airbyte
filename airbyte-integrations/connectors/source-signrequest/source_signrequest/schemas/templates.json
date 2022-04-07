@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "url": {"type": "string"},
+        "name": {"type": "string"},
+        "uuid": {"type": "string"},
+        "user": {"type": "object"},
+        "team": {"type": "object"},
+        "who": {"type": "string"},
+        "signers": {"type": "array"}
+    }
+}

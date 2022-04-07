@@ -111,12 +111,14 @@ class SignrequestStream(HttpStream, ABC):
         yield from raw.get("results")
 
 class SignrequestIncrementalStream(SignrequestStream):
-    save_checkpoint_interval = 10
-
     @property
     @abstractmethod
     def cursor_field(self) -> str:
         pass
+
+class AuditEvents(SignrequestStream):
+    primary_key = "user_uuid"
+    _path_name = "audit-events/"
 
 class TeamMembers(SignrequestStream):
     primary_key = "uuid"
@@ -135,6 +137,22 @@ class Events(SignrequestIncrementalStream):
 class Documents(SignrequestStream):
     primary_key = "uuid"
     _path_name = "documents/"
+
+class DocumentAttachments(SignrequestStream):
+    primary_key = "uuid"
+    _path_name = "document-attachments/"
+
+class Templates(SignrequestStream):
+    primary_key = "uuid"
+    _path_name = "templates/"
+
+class Signrequests(SignrequestStream):
+    primary_key = "uuid"
+    _path_name = "signrequests/"
+
+    # @property
+    # def cursor_field(self) -> str:
+    #     return ""
 
 # Source
 class SourceSignrequest(AbstractSource):
@@ -160,8 +178,12 @@ class SourceSignrequest(AbstractSource):
         token = config.get("access_token")
         auth = TokenAuthenticator(token=token, auth_method="Token")  # Oauth2Authenticator is also available if you need oauth support
         return [
-            TeamMembers(config=config, authenticator=auth),
-            Events(config=config, authenticator=auth),
+            AuditEvents(config=config, authenticator=auth),
             Documents(config=config, authenticator=auth),
+            DocumentAttachments(config=config, authenticator=auth),
+            Events(config=config, authenticator=auth),
+            Signrequests(config=config, authenticator=auth),
+            TeamMembers(config=config, authenticator=auth),
             Teams(config=config, authenticator=auth),
+            Templates(config=config, authenticator=auth),
         ]
