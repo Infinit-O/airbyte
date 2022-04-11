@@ -1,10 +1,10 @@
 #
 # Copyright (c) 2021 Airbyte, Inc., all rights reserved.
 #
-
-
 from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from urllib.parse import urljoin
+import time
 
 import requests
 from airbyte_cdk.sources import AbstractSource
@@ -56,7 +56,28 @@ class ZscalerStream(HttpStream, ABC):
     """
 
     # TODO: Fill in the url base. Required.
-    url_base = "https://example-api.com/v1/"
+    # https://zsapi.zscaler.net/api/v1/authenticatedSession
+
+    @property
+    def url_base(self):
+        return urljoin(self.config["base_url"], "/api/v1/")
+
+    def __init__(self, config, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Zscaler API requires that the api key be obfuscated.
+        obfuscated = self.obfuscateApiKey(self.config["api_key"])
+        login_body = {
+            "username": self.config["username"],
+            "password": self.config["password"],
+            "api_key": obfuscated["obfuscated_key"],
+            "timestamp": obfuscated["timestamp"]
+        }
+        login_url = urljoin(self.url_base, "authenticatedSession/")
+        # NOTE: This should handle auth for the whole run, as Requests
+        #       will automatically track and send cookies with each request 
+        #       after this one.
+        self._session.post(url=login_url, json=login_body)
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
@@ -90,6 +111,21 @@ class ZscalerStream(HttpStream, ABC):
         :return an iterable containing each record in the response
         """
         yield {}
+
+    def obfuscateApiKey(self, seed) -> Mapping[str, any]:
+        now = int(time.time() * 1000)
+        n = str(now)[-6:]
+        r = str(int(n) >> 1).zfill(6)
+        key = ""
+        for i in range(0, len(str(n)), 1):
+            key += seed[int(str(n)[i])]
+        for j in range(0, len(str(r)), 1):
+            key += seed[int(str(r)[j])+2]
+
+        return {
+            "timestamp": now,
+            "obfuscated_key": key
+        }
 
 
 class Customers(ZscalerStream):

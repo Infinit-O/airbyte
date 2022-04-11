@@ -15,5 +15,5 @@ def obfuscateApiKey(seed):
     print("Timestamp:", now, "\tKey", key)
 
 if __name__ == "__main__":
-    key = input("Please enter the api key.")
+    key = input("Please enter the api key: ")
     obfuscateApiKey(key)
