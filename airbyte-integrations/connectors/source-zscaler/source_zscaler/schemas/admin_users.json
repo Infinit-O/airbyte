@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {"type": "integer"},
+    "loginName": {"type": "string"},
+    "userName": {"type": "string"},
+    "email": {"type": "string"},
+    "role": {"type": "object"},
+    "comments": {"type": "string"},
+    "adminScope": {"type": "object"},
+    "isNotEditable": {"type": "boolean"},
+    "disabled": {"type": "boolean"},
+    "isAuditor": {"type": "boolean"},
+    "isPasswordLoginAllowed": {"type": "boolean"},
+    "isSecurityReportCommEnabled": {"type": "boolean"},
+    "isServiceUpdateCommEnabled": {"type": "boolean"},
+    "isProductUpdateCommEnabled": {"type": "boolean"},
+    "isPasswordExpired": {"type": "boolean"},
+    "isExecMobileAppEnabled": {"type": "boolean"},
+    "execMobileAppTokens": {"type": "boolean"}
+  }
+}
