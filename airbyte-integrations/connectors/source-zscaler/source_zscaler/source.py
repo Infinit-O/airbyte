@@ -113,7 +113,7 @@ class ZscalerStream(HttpStream, ABC):
         TODO: Override this method to define how a response is parsed.
         :return an iterable containing each record in the response
         """
-        yield {}
+        yield from response.json()
 
     def obfuscateApiKey(self, seed) -> Mapping[str, any]:
         """
@@ -144,7 +144,26 @@ class AdminUsers(ZscalerStream):
         return "id"
 
     def path(self, stream_state, stream_slice, next_page_token):
-        return "adminUsers"
+        return "adminUsers/"
+
+class DlpDictionaries(ZscalerStream):
+    primary_key = "id"
+
+    def path(self, stream_state, stream_slice, next_page_token):
+        return "dlpDictionaries/"
+
+class DlpEngines(ZscalerStream):
+    primary_key = "id"
+
+    def path(self, stream_state, stream_slice, next_page_token):
+        return "dlpEngines/"
+
+class DlpNotificationTemplates(ZscalerStream):
+    primary_key = "id"
+
+    def path(self, stream_state, stream_slice, next_page_token):
+        return "dlpNotificationTemplates/"
+
 
 # Source
 class SourceZscaler(AbstractSource):
@@ -167,4 +186,9 @@ class SourceZscaler(AbstractSource):
 
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
-        return [AdminUsers(config=config)]
+        return [
+            AdminUsers(config=config),
+            DlpDictionaries(config=config),
+            DlpEngines(config=config),
+            DlpNotificationTemplates(config=config),
+        ]
