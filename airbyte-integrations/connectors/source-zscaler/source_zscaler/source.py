@@ -12,10 +12,9 @@ from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
 from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
+from requests.auth import AuthBase
 
 """
-TODO: Most comments in this class are instructive and should be deleted after the source is implemented.
-
 This file provides a stubbed example of how to use the Airbyte CDK to develop both a source connector which supports full refresh or and an
 incremental syncs from an HTTP API.
 
@@ -27,12 +26,73 @@ The approach here is not authoritative, and devs are free to use their own judge
 There are additional required TODOs in the files within the integration_tests folder and the spec.json file.
 """
 
+class CookieAuthenticator(AuthBase):
+    def __init__(self, config):
+        self.username = config["username"]
+        self.password = config["password"]
+        self.raw_key = config["api_key"]
+        self.url_base = urljoin(config["base_url"], "/api/v1/")
+
+    def __call__(self, r):
+        # NOTE: I'm not totally sure which function Airbyte expects at this point
+        #       Airbyte SOURCE CODE says to use requests.auth.AuthBase now, which
+        #       Requests docs says needs to have __call__ defined, but
+        #       code snippets from the Airbyte team still use get_auth_header()
+        # NOTE: I've decided to just implement both.
+        # NOTE: Is it always JSESSIONID?
+        cookie_jar = self.login()
+        r.prepare_cookies(cookie_jar)
+        return r
+
+    def get_auth_header(self) -> Mapping[str, any]:
+        cookie_jar = self.login()
+        return {"Cookie": "; ".join([f"{k}={v}" for k, v in requests.dict_from_cookiejar(cookie_jar)])}
+
+    def login(self) -> Mapping[str, any]:
+        obfuscated = self.obfuscateApiKey(self.raw_key)
+        
+        body = {
+            "username": self.username,
+            "password": self.password,
+            "apiKey": obfuscated["obfuscated_key"],
+            "timestamp": obfuscated["timestamp"],
+        }
+
+        login_url = urljoin(self.url_base, "authenticatedSession")
+        resp = requests.post(login_url, json=body)
+        # NOTE: It's SUPER IMPORTANT THAT any non-200 response be discarded because
+        #       a JSESSIONID is generated regardless of whether or not authentication
+        #       succeeds. Passing this ID on in any future requests will cause them
+        #       to fail, as its technically an invalid session ID.
+        resp.raise_for_status()
+        return resp.cookies
+
+    def obfuscateApiKey(self, seed) -> Mapping[str, any]:
+        """
+        The Zscaler API requires that API keys be "obfuscated" in this manner. This snippet
+        of code was taken straight from their documentation.
+
+        :seed - str, represents the raw, unmodified API key from the admin console.
+
+        returns a dictionary containing a timestamp and the obfuscated key.
+        """
+        now = int(time.time() * 1000)
+        n = str(now)[-6:]
+        r = str(int(n) >> 1).zfill(6)
+        key = ""
+        for i in range(0, len(str(n)), 1):
+            key += seed[int(str(n)[i])]
+        for j in range(0, len(str(r)), 1):
+            key += seed[int(str(r)[j])+2]
+
+        return {
+            "timestamp": now,
+            "obfuscated_key": key
+        }
 
 # Basic full refresh stream
 class ZscalerStream(HttpStream, ABC):
     """
-    TODO remove this comment
-
     This class represents a stream output by the connector.
     This is an abstract base class meant to contain all the common functionality at the API level e.g: the API base URL, pagination strategy,
     parsing responses etc..
@@ -66,26 +126,24 @@ class ZscalerStream(HttpStream, ABC):
 
         self.config = config
 
-        # Zscaler API requires that the api key be obfuscated.
-        obfuscated = self.obfuscateApiKey(self.config["api_key"])
-        login_body = {
-            "username": self.config["username"],
-            "password": self.config["password"],
-            "apiKey": obfuscated["obfuscated_key"],
-            "timestamp": obfuscated["timestamp"]
-        }
-        login_url = urljoin(self.url_base, "authenticatedSession")
-        # NOTE: This should handle auth for the whole run, as Requests
-        #       will automatically track and send cookies with each request 
-        #       after this one.
-        resp = self._session.post(url=login_url, json=login_body)
-        # NOTE: Maybe raise_for_status() here?
-        resp.raise_for_status()
+        # # Zscaler API requires that the api key be obfuscated.
+        # obfuscated = self.obfuscateApiKey(self.config["api_key"])
+        # login_body = {
+        #     "username": self.config["username"],
+        #     "password": self.config["password"],
+        #     "apiKey": obfuscated["obfuscated_key"],
+        #     "timestamp": obfuscated["timestamp"]
+        # }
+        # login_url = urljoin(self.url_base, "authenticatedSession")
+        # # NOTE: This should handle auth for the whole run, as Requests
+        # #       will automatically track and send cookies with each request 
+        # #       after this one.
+        # resp = self._session.post(url=login_url, json=login_body)
+        # # NOTE: Maybe raise_for_status() here?
+        # resp.raise_for_status()
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
-        TODO: Override this method to define a pagination strategy. If you will not be using pagination, no action is required - just return None.
-
         This method should return a Mapping (e.g: dict) containing whatever information required to make paginated requests. This dict is passed
         to most other methods in this class to help you form headers, request bodies, query params, etc..
 
@@ -103,14 +161,12 @@ class ZscalerStream(HttpStream, ABC):
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
     ) -> MutableMapping[str, Any]:
         """
-        TODO: Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
         Usually contains common params e.g. pagination size etc.
         """
         return {}
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         """
-        TODO: Override this method to define how a response is parsed.
         :return an iterable containing each record in the response
         """
         yield from response.json()
@@ -186,9 +242,10 @@ class SourceZscaler(AbstractSource):
 
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
+        cookie_authenticator = CookieAuthenticator(config=config)
         return [
-            AdminUsers(config=config),
-            DlpDictionaries(config=config),
-            DlpEngines(config=config),
-            DlpNotificationTemplates(config=config),
+            AdminUsers(authenticator=cookie_authenticator, config=config),
+            DlpDictionaries(authenticator=cookie_authenticator, config=config),
+            DlpEngines(authenticator=cookie_authenticator, config=config),
+            DlpNotificationTemplates(authenticator=cookie_authenticator, config=config),
         ]
