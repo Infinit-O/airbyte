@@ -18,9 +18,9 @@ class ModuleSettings(ZohoRecruitStream):
     primary_key = "id"
     envelope_name = "modules"
 
-    @property
-    def use_cache(self):
-        return True
+    # @property
+    # def use_cache(self):
+    #     return True
 
     def path(self, **kwargs):
         return "settings/modules"
