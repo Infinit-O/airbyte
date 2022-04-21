@@ -66,8 +66,6 @@ class ZohoRecruitStream(HttpStream, ABC):
         """
         # NOTE: Workaround for the fact that Zoho APIs seem to return 204 no content
         #       in place of an empty JSON response. sigh.
-        import pdb
-        pdb.set_trace()
         if response.status_code == 204:
             yield from []
         else:
