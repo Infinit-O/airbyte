@@ -4,6 +4,7 @@ from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 import arrow
 import requests
 from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.sources.streams import IncrementalMixin
 
 class JumpcloudStream(HttpStream, ABC):
     """
@@ -199,7 +200,7 @@ class JumpcloudV2Stream(HttpStream, ABC):
             yield from contents
         
 # Basic incremental stream
-class JumpcloudV2IncrementalStream(JumpcloudV2Stream, ABC):
+class JumpcloudV2IncrementalStream(JumpcloudV2Stream, IncrementalMixin):
     state_checkpoint_interval = 10
 
     def __init__(self, *args, **kwargs):
@@ -207,6 +208,16 @@ class JumpcloudV2IncrementalStream(JumpcloudV2Stream, ABC):
 
         # NOTE: The SystemInsights endpoints are the only ones that support a limit of 1000.
         self.limit = 1000
+
+        self._state = {}
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, value):
+        self._state[self.cursor_field] = value
 
     @property
     def cursor_field(self) -> str:
@@ -224,17 +235,19 @@ class JumpcloudV2IncrementalStream(JumpcloudV2Stream, ABC):
         the current state and picks the 'most' recent cursor. This is how a stream's state is determined. Required for incremental.
         """
         if current_stream_state == {}:
+            self.state = latest_record[self.cursor_field]
             return {self.cursor_field: latest_record['collection_time']}
         else:
             records = {}
             records[current_stream_state[self.cursor_field]] = arrow.get(current_stream_state[self.cursor_field])
-            records[latest_record['collection_time']] = arrow.get(latest_record['collection_time'])
+            records[latest_record[self.cursor_field]] = arrow.get(latest_record[self.cursor_field])
             latest_record = max(records.items(), key=lambda x: x[1])
+            self.state = latest_record[0]
             return {self.cursor_field: latest_record[0]}
 
     def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
         def __newer_than_latest(recorded_state: arrow.Arrow, latest_record: dict) -> bool:
-            latest_record_date = arrow.get(latest_record["collection_time"])
+            latest_record_date = arrow.get(latest_record[self.cursor_field])
             if recorded_state > latest_record_date:
                 return False
             else:
