@@ -77,7 +77,7 @@ class JumpcloudStream(HttpStream, ABC):
         return {'x-api-key': self.config['api_key']}
 
     def request_params(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
+        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> MutableMapping[str, Any]:
         """
         Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
@@ -90,7 +90,7 @@ class JumpcloudStream(HttpStream, ABC):
         else:
             return {'limit': self.limit}
 
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
         """
         Override this method to define how a response is parsed.
 
@@ -173,7 +173,7 @@ class JumpcloudV2Stream(HttpStream, ABC):
         return {'x-api-key': self.config['api_key']}
 
     def request_params(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
+        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> MutableMapping[str, Any]:
         """
         Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
@@ -186,7 +186,7 @@ class JumpcloudV2Stream(HttpStream, ABC):
         else:
             return {"limit": self.limit}
 
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
         """
         Override this method to define how a response is parsed.
 
@@ -212,7 +212,7 @@ class JumpcloudV2IncrementalStream(JumpcloudV2Stream, IncrementalMixin):
         self._state = {}
 
     @property
-    def state(self):
+    def state(self) -> str:
         return self._state
 
     @state.setter
@@ -241,6 +241,12 @@ class JumpcloudV2IncrementalStream(JumpcloudV2Stream, IncrementalMixin):
             records = {}
             records[current_stream_state[self.cursor_field]] = arrow.get(current_stream_state[self.cursor_field])
             records[latest_record[self.cursor_field]] = arrow.get(latest_record[self.cursor_field])
+            # NOTE: So there's an issue with the way mypy expects the types for max() and how I've done it here
+            #       and I'm not sure how to resolve it.
+            #       Argument 1 is simply supposed to be "iterable" as opposed to strictly
+            #       Iterable[Mapping[str, Any]], I don't know if I just suck at type theory or if 
+            #       this is really a bug.
+            #       The code works fine in production.
             latest_record = max(records.items(), key=lambda x: x[1])
             self.state = latest_record[0]
             return {self.cursor_field: latest_record[0]}

@@ -41,7 +41,7 @@ class CustomEmailTemplates(JumpcloudV2Stream):
         """
         return "customemail/templates/"
 
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
         # NOTE: Stupid hack - customemail/templates/ does not support 'limit' and 'skip' params and will attempt to paginate
         #       endlessly, causing this stream to run forever.
         self.keep_going = False
@@ -59,7 +59,7 @@ class Directories(JumpcloudV2Stream):
         """
         return "directories/"
         
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
         # NOTE: Stupid hack - customemail/templates/ does not support 'limit' and 'skip' params and will attempt to paginate
         #       endlessly, causing this stream to run forever.
         self.keep_going = False
@@ -140,7 +140,7 @@ class Subscriptions(JumpcloudV2Stream):
         """
         return "subscriptions/"
 
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
         # NOTE: Stupid hack - Subscriptions does not support 'limit' and 'skip' params and will attempt to paginate
         #       endlessly, causing this stream to run forever.
         self.keep_going = False
