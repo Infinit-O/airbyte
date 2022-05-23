@@ -72,6 +72,9 @@ class ModuleLayouts(ZohoRecruitSubStream):
     api_field_name = "api_name"
     envelope_name = "layouts"
 
+class ModuleAssociatedRecords(ZohoRecruitSubStream):
+    pass
+
 class RelatedLists(ZohoRecruitSubStream):
     primary_key = "id"
     parent_stream = ModuleSettings
