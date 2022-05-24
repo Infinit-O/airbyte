@@ -37,6 +37,10 @@ class ZohoRecruitStream(HttpStream, ABC):
     def envelope_name(self):
         pass
 
+    @property
+    def max_retries(self):
+        return 100
+
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
         This method should return a Mapping (e.g: dict) containing whatever information required to make paginated requests. This dict is passed

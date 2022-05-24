@@ -60,10 +60,11 @@ class ModuleViews(ZohoRecruitSubStream):
 
     def path(self, stream_slice, **kwargs):
         streamslice = stream_slice or {}
-        return self.path_template.format(
+        endpath = self.path_template.format(
             module_id=streamslice["module_id"],
             module_api_name=streamslice["module_api_name"]
         )
+        return endpath
 
 class ModuleLayouts(ZohoRecruitSubStream):
     primary_key = "id"
@@ -72,8 +73,6 @@ class ModuleLayouts(ZohoRecruitSubStream):
     api_field_name = "api_name"
     envelope_name = "layouts"
 
-class ModuleAssociatedRecords(ZohoRecruitSubStream):
-    pass
 
 class RelatedLists(ZohoRecruitSubStream):
     primary_key = "id"
@@ -88,6 +87,55 @@ class ModuleRecords(ZohoRecruitSubStream):
     path_template = "{module_api_name}"
     api_field_name = "api_name"
     envelope_name = "data"
+
+# NOTE: Important note about the AssociatedRecords stream - it is a list of
+#       JSON objects that does not have a defined schema. The schema in the
+#       schemas/ directory reflects that, and is completely empty.
+class AssociatedRecords(ZohoRecruitSubStream):
+    primary_key = "id"
+    parent_stream = ModuleSettings
+    other_parent_stream = ModuleRecords
+    path_template = "{module_api_name}/{record_id}/associate"
+    api_field_name = "api_name"
+    envelope_name = "data"
+
+    # NOTE: This one's a triple whammy - we need the module_api_name, the records
+    #       for EACH module_api_name, and then the IDs from each of the records
+    def stream_slices(self, **kwargs):
+        ps = self.parent_stream(authenticator=self._session.auth)
+        ps_records = [
+            x
+            for x in ps.read_records(sync_mode=SyncMode.full_refresh)
+            if x[self.api_field_name].lower() not in self.bad_api_list
+        ]
+
+        ops = self.other_parent_stream(authenticator=self._session.auth)
+        api_record_mapping = {}
+        for api in ps_records:
+            name = api[self.api_field_name]
+            actual_records = [
+                x
+                for x in ops.read_records(
+                    stream_slice={"module_api_name": api[self.api_field_name]},
+                    sync_mode=SyncMode.full_refresh
+                )
+            ]
+            api_record_mapping[name] = actual_records
+        
+        for mapping in api_record_mapping.items():
+            for item in mapping[1]:
+                yield {
+                    'module_api_name': mapping[0],
+                    'record_id': item["id"]
+                }
+
+    def path(self, stream_slice, **kwargs):
+        streamslice = stream_slice or {}
+        endpath = self.path_template.format(
+            record_id=streamslice["record_id"],
+            module_api_name=streamslice["module_api_name"]
+        )
+        return endpath
 
 class ModuleRecordsDeleted(ZohoRecruitSubStream):
     primary_key = "id"
@@ -188,6 +236,7 @@ class SourceZohoRecruit(AbstractSource):
             token_refresh_endpoint=config["refresh_endpoint"]
         )
         return [
+            AssociatedRecords(authenticator=auth),
             ModuleSettings(authenticator=auth),
             ModuleDetails(authenticator=auth),
             ModuleFields(authenticator=auth),
