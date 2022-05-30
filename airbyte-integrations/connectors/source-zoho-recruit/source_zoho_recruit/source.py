@@ -137,6 +137,31 @@ class AssociatedRecords(ZohoRecruitSubStream):
         )
         return endpath
 
+    def parse_response(
+        self,
+        response: requests.Response,
+        *,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> Iterable[Mapping]:
+        """
+        :return an iterable containisng each record in the response
+        """
+        # NOTE: Workaround for the fact that Zoho APIs seem to return 204 no content
+        #       in place of an empty JSON response. sigh.
+        if response.status_code == 204:
+            yield from []
+        else:
+            # NOTE: Adding the candidate_id because Zoho Recruit doesn't have any way
+            #       to associate these records "externally".
+            contents = response.json().get(self.envelope_name, [])
+            if contents:
+                for item in contents:
+                    item["candidate_id"] = stream_slice["record_id"]
+                    item["origin_url"] = response.request.url
+            yield from contents
+
 class ModuleRecordsDeleted(ZohoRecruitSubStream):
     primary_key = "id"
     parent_stream = ModuleSettings
@@ -161,7 +186,7 @@ class Tags(ZohoRecruitSubStream):
         if response.status_code == 204:
             yield from []
         else:
-            yield response.json()
+            yield response.json()["tags"]
 
 class NoteTypes(ZohoRecruitStream):
     primary_key = "id"
@@ -236,7 +261,7 @@ class SourceZohoRecruit(AbstractSource):
             token_refresh_endpoint=config["refresh_endpoint"]
         )
         return [
-            AssociatedRecords(authenticator=auth),
+            # AssociatedRecords(authenticator=auth),
             ModuleSettings(authenticator=auth),
             ModuleDetails(authenticator=auth),
             ModuleFields(authenticator=auth),

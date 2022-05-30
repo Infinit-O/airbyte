@@ -32,8 +32,12 @@ class ZohoRecruitStream(HttpStream, ABC):
 
     url_base = "https://recruit.zoho.com/recruit/v2/"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._page = 1
+
     @property
-    @abstractmethod
     def envelope_name(self):
         pass
 
@@ -54,6 +58,19 @@ class ZohoRecruitStream(HttpStream, ABC):
         :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
                 If there are no more pages in the result, return None.
         """
+        # NOTE: 204 is NO CONTENT
+        if response.status_code == 204:
+            return None
+
+        content = response.json() 
+        if "info" in content.keys():
+            if content["info"]["more_records"] is True:
+                self._page += 1
+                return {
+                    "next_page": self._page 
+                }
+            else:
+                return None
         return None
 
     def request_params(
@@ -62,7 +79,37 @@ class ZohoRecruitStream(HttpStream, ABC):
         """
         Usually contains common params e.g. pagination size etc.
         """
-        return {}
+        if next_page_token:
+            return {"page": self._page}
+        else:
+            return {}
+
+    # NOTE: https://recruit.zoho.com/recruit/v2/Interviews/627435000002191518/associate
+    #       returns an error that says "the given relation name is invalid"
+    #       this is just a small hack to get around that because I will have no idea
+    #       up front which "relation names" are "invalid".
+    @property
+    def raise_on_http_errors(self) -> bool:
+        return False
+
+    # NOTE: Overridden to optimize connector for Zoho Recruit's specific backoff time,
+    #       which is specified in the x-ratelimit-limit header. 
+    def backoff_time(self, response: requests.Response) -> Optional[float]:
+        """
+        Override this method to dynamically determine backoff time e.g: by reading the X-Retry-After header.
+
+        This method is called only if should_backoff() returns True for the input request.
+
+        :param response:
+        :return how long to backoff in seconds. The return value may be a floating point number for subsecond precision. Returning None defers backoff
+        to the default backoff behavior (e.g using an exponential algorithm).
+        """
+        try:
+            reset_time = response.headers["x-ratelimit-limit"]
+        except KeyError:
+            return None
+
+        return float(reset_time)
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         """
@@ -73,4 +120,5 @@ class ZohoRecruitStream(HttpStream, ABC):
         if response.status_code == 204:
             yield from []
         else:
-            yield from response.json().get(self.envelope_name, [])
+            contents = response.json().get(self.envelope_name, [])
+            yield from contents

@@ -1,21 +1,20 @@
 from abc import abstractmethod
+import requests
+from typing import Optional, Mapping, Any, MutableMapping
 
 from airbyte_cdk.models import SyncMode
 from .base import ZohoRecruitStream
 
 class ZohoRecruitSubStream(ZohoRecruitStream):
     @property
-    @abstractmethod
     def path_template(self):
         pass
 
     @property
-    @abstractmethod
     def parent_stream(self):
         pass
 
     @property
-    @abstractmethod
     def api_field_name(self):
         pass
 
