@@ -7,9 +7,11 @@
     "required": ["TODO"],
     "additionalProperties": false,
     "properties": {
-      "TODO: This schema defines the configuration required for the source. This usually involves metadata such as database and/or authentication information.": {
-        "type": "string",
-        "description": "describe me"
+      "username": {
+        "type": "string"
+      },
+      "password": {
+        "type": "string"
       }
     }
   }

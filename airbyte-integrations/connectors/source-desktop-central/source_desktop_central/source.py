@@ -5,16 +5,17 @@
 
 from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from base64 import urlsafe_b64encode
+from urllib.parse import urljoin
 
 import requests
+import pyotp
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
-from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
+from airbyte_cdk.sources.streams.http.auth import HttpAuthenticator
 
 """
-TODO: Most comments in this class are instructive and should be deleted after the source is implemented.
-
 This file provides a stubbed example of how to use the Airbyte CDK to develop both a source connector which supports full refresh or and an
 incremental syncs from an HTTP API.
 
@@ -26,6 +27,34 @@ The approach here is not authoritative, and devs are free to use their own judge
 There are additional required TODOs in the files within the integration_tests folder and the spec.json file.
 """
 
+class OTPAuthenticator(HttpAuthenticator):
+    def __init__(self, username=None, password=None, base_url=None, *args, **kwargs):
+        self.username = username
+        self.password = password
+        self.base_url = base_url
+        self.LOGIN_URL = "/api/1.4/desktop/authentication"
+        self.TWO_FACTOR_URL = "/api/1.4/desktop/authentication/otpValidate"
+
+    def login(self):
+        # NOTE: Auth with Desktop Central occurs in 2 steps
+        #       First, pass username and b64encoded password to auth endpoint
+        #       Second, validate with OTP if needed
+        b64_password = urlsafe_b64encode(bytes(self.password))
+        request_body = {
+            "username": self.username,
+            "password": b64_password,
+            "auth_type": "local_authentication"
+        }
+        target_url = urljoin(self.base_url, self.LOGIN_URL)
+        resp = requests.post(target_url, json=request_body).json()
+        resp.raise_for_status()
+        two_factor = resp["message_response"]["authentication"]["two_factor_data"]
+
+        if two_factor["OTP_Validation_Required"] is True:
+            uuid = two_factor["unique_userID"]
+            pass
+        else:
+            pass
 
 # Basic full refresh stream
 class DesktopCentralStream(HttpStream, ABC):
@@ -56,7 +85,7 @@ class DesktopCentralStream(HttpStream, ABC):
     """
 
     # TODO: Fill in the url base. Required.
-    url_base = "https://example-api.com/v1/"
+    url_base = ""
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
@@ -193,6 +222,11 @@ class SourceDesktopCentral(AbstractSource):
         :param logger:  logger object
         :return Tuple[bool, any]: (True, None) if the input config can be used to connect to the API successfully, (False, error) otherwise.
         """
+        try:
+            username = config["username"]
+            password = config["password"]
+        except KeyError:
+            return False, "Username / Password missing from config file, please check and try again."
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
@@ -202,5 +236,5 @@ class SourceDesktopCentral(AbstractSource):
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
         # TODO remove the authenticator if not required.
-        auth = TokenAuthenticator(token="api_key")  # Oauth2Authenticator is also available if you need oauth support
+        auth = OTPAuthenticator(username=config["username"], password=config["password"])
         return [Customers(authenticator=auth), Employees(authenticator=auth)]
