@@ -261,7 +261,7 @@ class SourceZohoRecruit(AbstractSource):
             token_refresh_endpoint=config["refresh_endpoint"]
         )
         return [
-            # AssociatedRecords(authenticator=auth),
+            AssociatedRecords(authenticator=auth),
             ModuleSettings(authenticator=auth),
             ModuleDetails(authenticator=auth),
             ModuleFields(authenticator=auth),
