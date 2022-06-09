@@ -5,6 +5,7 @@ from abc import abstractmethod
 from typing import Any, Iterable, List, Mapping, MutableMapping, Tuple
 
 import requests
+import pendulum
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.models import SyncMode
@@ -110,6 +111,7 @@ class AssociatedRecords(ZohoRecruitSubStream):
         ]
 
         ops = self.other_parent_stream(authenticator=self._session.auth)
+        today = pendulum.today()
         api_record_mapping = {}
         for api in ps_records:
             name = api[self.api_field_name]
@@ -119,6 +121,7 @@ class AssociatedRecords(ZohoRecruitSubStream):
                     stream_slice={"module_api_name": api[self.api_field_name]},
                     sync_mode=SyncMode.full_refresh
                 )
+                if pendulum.parse(x["Created_Time"]) > today
             ]
             api_record_mapping[name] = actual_records
         
@@ -155,6 +158,7 @@ class AssociatedRecords(ZohoRecruitSubStream):
         else:
             # NOTE: Adding the candidate_id because Zoho Recruit doesn't have any way
             #       to associate these records "externally".
+            # NOTE: origin_url is for debugging purposes.
             contents = response.json().get(self.envelope_name, [])
             if contents:
                 for item in contents:
