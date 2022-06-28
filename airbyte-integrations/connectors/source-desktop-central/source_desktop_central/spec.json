@@ -4,13 +4,19 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Desktop Central Spec",
     "type": "object",
-    "required": ["TODO"],
+    "required": ["username", "password", "otp_key", "base_url"],
     "additionalProperties": false,
     "properties": {
       "username": {
         "type": "string"
       },
       "password": {
+        "type": "string"
+      },
+      "otp_key": {
+        "type": "string"
+      },
+      "base_url": {
         "type": "string"
       }
     }

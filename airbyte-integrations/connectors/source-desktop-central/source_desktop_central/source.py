@@ -2,9 +2,8 @@
 # Copyright (c) 2021 Airbyte, Inc., all rights reserved.
 #
 
-
 from abc import ABC
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple, Union
 from base64 import urlsafe_b64encode
 from urllib.parse import urljoin
 
@@ -28,33 +27,53 @@ There are additional required TODOs in the files within the integration_tests fo
 """
 
 class OTPAuthenticator(HttpAuthenticator):
-    def __init__(self, username=None, password=None, base_url=None, *args, **kwargs):
+    def __init__(self, username=None, password=None, base_url=None, otp_key=None, *args, **kwargs):
         self.username = username
         self.password = password
         self.base_url = base_url
         self.LOGIN_URL = "/api/1.4/desktop/authentication"
         self.TWO_FACTOR_URL = "/api/1.4/desktop/authentication/otpValidate"
+        self._totp = pyotp.TOTP(otp_key)
+        self._auth_token = self.login()
 
     def login(self):
         # NOTE: Auth with Desktop Central occurs in 2 steps
         #       First, pass username and b64encoded password to auth endpoint
         #       Second, validate with OTP if needed
-        b64_password = urlsafe_b64encode(bytes(self.password))
+        b64_password = str(urlsafe_b64encode(bytes(self.password, "utf-8")), "utf-8")
         request_body = {
             "username": self.username,
             "password": b64_password,
             "auth_type": "local_authentication"
         }
         target_url = urljoin(self.base_url, self.LOGIN_URL)
-        resp = requests.post(target_url, json=request_body).json()
+        resp = requests.post(target_url, json=request_body, verify=False)
         resp.raise_for_status()
-        two_factor = resp["message_response"]["authentication"]["two_factor_data"]
+
+        resp = resp.json()
+
+        try:
+            two_factor = resp["message_response"]["authentication"]["two_factor_data"]
+        except KeyError:
+            two_factor = resp["message_response"]["authentication"]["auth_data"]["auth_token"]
 
         if two_factor["OTP_Validation_Required"] is True:
-            uuid = two_factor["unique_userID"]
-            pass
-        else:
-            pass
+            mfa_url = urljoin(self.base_url, self.TWO_FACTOR_URL)
+            uid = two_factor["unique_userID"]
+            otp = self._totp.now()
+            payload = {
+                "uid": uid,
+                "otp": otp
+            }
+            resp2 = requests.post(mfa_url, json=payload, verify=False)
+            resp_data = resp2.json()
+            token = resp2.json()["message_response"]["authentication"]["auth_data"]["auth_token"]
+            return token
+
+        return token
+
+    def get_auth_header(self) -> Mapping[str, Any]:
+        return {"Authorization": self._auth_token}
 
 # Basic full refresh stream
 class DesktopCentralStream(HttpStream, ABC):
@@ -83,14 +102,39 @@ class DesktopCentralStream(HttpStream, ABC):
 
     See the reference docs for the full list of configurable options.
     """
+    @property
+    def envelope_name(self):
+        return ""
 
-    # TODO: Fill in the url base. Required.
-    url_base = ""
+    @property
+    def url_base(self):
+        return self.config["base_url"]
+
+    def __init__(self, config, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.config = config
+
+    @property
+    def max_retries(self) -> Union[int, None]:
+        """
+        Override if needed. Specifies maximum amount of retries for backoff policy. Return None for no limit.
+        """
+        return 100
+
+    def backoff_time(self, response: requests.Response) -> Optional[float]:
+        """
+        Override this method to dynamically determine backoff time e.g: by reading the X-Retry-After header.
+
+        This method is called only if should_backoff() returns True for the input request.
+
+        :param response:
+        :return how long to backoff in seconds. The return value may be a floating point number for subsecond precision. Returning None defers backoff
+        to the default backoff behavior (e.g using an exponential algorithm).
+        """
+        return 160
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
-        TODO: Override this method to define a pagination strategy. If you will not be using pagination, no action is required - just return None.
-
         This method should return a Mapping (e.g: dict) containing whatever information required to make paginated requests. This dict is passed
         to most other methods in this class to help you form headers, request bodies, query params, etc..
 
@@ -102,7 +146,35 @@ class DesktopCentralStream(HttpStream, ABC):
         :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
                 If there are no more pages in the result, return None.
         """
+        envelope = response.json()["message_response"]
+
+        check1 = "total" in envelope.keys()
+        check2 = "limit" in envelope.keys()
+        check3 = "page" in envelope.keys()
+        
+        if (check1 and check2) and check3:
+            return {
+                "total": envelope["total"],
+                "limit": envelope["limit"],
+                "page": envelope["page"]
+            }
+
         return None
+
+    def request_kwargs(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> Mapping[str, Any]:
+        """
+        Override to return a mapping of keyword arguments to be used when creating the HTTP request.
+        Any option listed in https://docs.python-requests.org/en/latest/api/#requests.adapters.BaseAdapter.send for can be returned from
+        this method. Note that these options do not conflict with request-level options such as headers, request params, etc..
+        """
+
+        # NOTE: SSL Cert Verification disabled because the source has a self-signed certificate
+        return {"verify": False}
 
     def request_params(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
@@ -111,110 +183,120 @@ class DesktopCentralStream(HttpStream, ABC):
         TODO: Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
         Usually contains common params e.g. pagination size etc.
         """
-        return {}
+        if next_page_token:
+            # NOTE: Handles the case where there's only one page of data
+            total = int(next_page_token["total"])
+            limit = int(next_page_token["limit"])
+            page = int(next_page_token["page"])
+            if total < limit:
+                return {}
+            else:
+                # check how many records we've already collected
+                already_collected = limit * page
+                # and if we're still under the total keep goign
+                if already_collected < total:
+                    next_page = page + 1
+                    return {"page": next_page, "pagelimit": limit}
+                else:
+                    return {}
+        else:
+            return {}
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         """
-        TODO: Override this method to define how a response is parsed.
+        Override this method to define how a response is parsed.
         :return an iterable containing each record in the response
         """
-        yield {}
+        yield from response.json()["message_response"][self.envelope_name]
 
 
-class Customers(DesktopCentralStream):
-    """
-    TODO: Change class name to match the table/data source this stream corresponds to.
-    """
-
-    # TODO: Fill in the primary key. Required. This is usually a unique field in the stream, like an ID or a timestamp.
-    primary_key = "customer_id"
+class Computers(DesktopCentralStream):
+    primary_key = "resource_id"
+    envelope_name = "computers"
 
     def path(
         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> str:
         """
-        TODO: Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
         should return "customers". Required.
         """
-        return "customers"
+        return "api/1.3/som/computers"
 
+class ScanComputers(DesktopCentralStream):
+    primary_key = "resource_id"
+    envelope_name = "scancomputers"
 
-# Basic incremental stream
-class IncrementalDesktopCentralStream(DesktopCentralStream, ABC):
-    """
-    TODO fill in details of this class to implement functionality related to incremental syncs for your connector.
-         if you do not need to implement incremental sync for any streams, remove this class.
-    """
-
-    # TODO: Fill in to checkpoint stream reads after N records. This prevents re-reading of data if the stream fails for any reason.
-    state_checkpoint_interval = None
-
-    @property
-    def cursor_field(self) -> str:
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
         """
-        TODO
-        Override to return the cursor field used by this stream e.g: an API entity might always use created_at as the cursor field. This is
-        usually id or date based. This field's presence tells the framework this in an incremental stream. Required for incremental.
-
-        :return str: The name of the cursor field.
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
         """
-        return []
+        return "api/1.4/inventory/scancomputers"
 
-    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
+class Summary(DesktopCentralStream):
+    # NOTE: This endpoint does not actually have a primary key it's just a summary
+    #       of stats, and not a list of resources
+    primary_key = "na"
+    envelope_name = "summary"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
         """
-        Override to determine the latest state after reading the latest record. This typically compared the cursor_field from the latest record and
-        the current state and picks the 'most' recent cursor. This is how a stream's state is determined. Required for incremental.
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
         """
-        return {}
+        return "api/1.4/som/summary"
 
-
-class Employees(IncrementalDesktopCentralStream):
-    """
-    TODO: Change class name to match the table/data source this stream corresponds to.
-    """
-
-    # TODO: Fill in the cursor_field. Required.
-    cursor_field = "start_date"
-
-    # TODO: Fill in the primary key. Required. This is usually a unique field in the stream, like an ID or a timestamp.
-    primary_key = "employee_id"
-
-    def path(self, **kwargs) -> str:
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         """
-        TODO: Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/employees then this should
-        return "single". Required.
+        Override this method to define how a response is parsed.
+        :return an iterable containing each record in the response
         """
-        return "employees"
+        summary = response.json()["message_response"][self.envelope_name]
+        yield from [summary]
 
-    def stream_slices(self, stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Optional[Mapping[str, any]]]:
+class AllSummary(DesktopCentralStream):
+    primary_key = "na"
+    envelope_name = "allsummary"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
         """
-        TODO: Optionally override this method to define this stream's slices. If slicing is not needed, delete this method.
-
-        Slices control when state is saved. Specifically, state is saved after a slice has been fully read.
-        This is useful if the API offers reads by groups or filters, and can be paired with the state object to make reads efficient. See the "concepts"
-        section of the docs for more information.
-
-        The function is called before reading any records in a stream. It returns an Iterable of dicts, each containing the
-        necessary data to craft a request for a slice. The stream state is usually referenced to determine what slices need to be created.
-        This means that data in a slice is usually closely related to a stream's cursor_field and stream_state.
-
-        An HTTP request is made for each returned slice. The same slice can be accessed in the path, request_params and request_header functions to help
-        craft that specific request.
-
-        For example, if https://example-api.com/v1/employees offers a date query params that returns data for that particular day, one way to implement
-        this would be to consult the stream state object for the last synced date, then return a slice containing each date from the last synced date
-        till now. The request_params function would then grab the date from the stream_slice and make it part of the request by injecting it into
-        the date query param.
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
         """
-        raise NotImplementedError("Implement stream slices or delete this method!")
+        return "api/1.4/inventory/allsummary"
 
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        """
+        Override this method to define how a response is parsed.
+        :return an iterable containing each record in the response
+        """
+        summary = response.json()["message_response"][self.envelope_name]
+        yield from [summary]
+
+class RemoteOffice(DesktopCentralStream):
+    primary_key = "resource_id"
+    envelope_name = "remoteoffice"
+    
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "api/1.4/som/remoteoffice"
 
 # Source
 class SourceDesktopCentral(AbstractSource):
     def check_connection(self, logger, config) -> Tuple[bool, any]:
         """
-        TODO: Implement a connection check to validate that the user-provided config can be used to connect to the underlying API
-
         See https://github.com/airbytehq/airbyte/blob/master/airbyte-integrations/connectors/source-stripe/source_stripe/source.py#L232
         for an example.
 
@@ -225,8 +307,10 @@ class SourceDesktopCentral(AbstractSource):
         try:
             username = config["username"]
             password = config["password"]
+            key = config["otp_key"]
+            base_url = config["base_url"]
         except KeyError:
-            return False, "Username / Password missing from config file, please check and try again."
+            return False, "Username / Password / OTP_key missing from config file, please check and try again."
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
@@ -236,5 +320,15 @@ class SourceDesktopCentral(AbstractSource):
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
         # TODO remove the authenticator if not required.
-        auth = OTPAuthenticator(username=config["username"], password=config["password"])
-        return [Customers(authenticator=auth), Employees(authenticator=auth)]
+        auth = OTPAuthenticator(
+            username=config["username"],
+            password=config["password"],
+            otp_key=config["otp_key"],
+            base_url=config["base_url"]
+        )
+        return [
+            AllSummary(authenticator=auth, config=config),
+            Computers(authenticator=auth, config=config),
+            Summary(authenticator=auth, config=config),
+            RemoteOffice(authenticator=auth, config=config),
+        ]
