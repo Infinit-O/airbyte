@@ -1,0 +1,26 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "manufacturer_id": {"type": "number"},
+        "detected_time": {"type": "number"},
+        "comments": {"type": "string"},
+        "total_copies": {"type": "string"},
+        "manufacturer_name": {"type": "string"},
+        "display_name": {"type": "string"},
+        "sw_family": {"type": "number"},
+        "managed_installations": {"type": "number"},
+        "remaining_copies": {"type": "string"},
+        "software_id": {"type": "number"},
+        "sw_category_name": {"type": "string"},
+        "software_compliance_description": {"type": "string"},
+        "installed_format": {"type": "string"},
+        "compliant_status": {"type": "string"},
+        "software_name": {"type": "string"},
+        "software_version": {"type": "string"},
+        "sw_type": {"type": "number"},
+        "is_usage_prohibited": {"type": "number"},
+        "network_installations": {"type": "number"},
+        "managed_sw_id": {"type": "number"}
+    }
+}

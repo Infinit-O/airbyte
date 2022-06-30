@@ -1,0 +1,12 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "hardware_name": {"type": "string"},
+        "manufacturer_name": {"type": "string"},
+        "hw_type_description": {"type": "string"},
+        "network_installations": {"type": "number"},
+        "hardware_id": {"type": "number"},
+        "managed_installations": {"type": "number"}
+    }
+}
