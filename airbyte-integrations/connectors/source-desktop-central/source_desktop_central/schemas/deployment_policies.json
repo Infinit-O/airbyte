@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "creation_time": {"type": "number"},
+        "usertodefaultdeploytemplaterel.dc_user_id": {"type": "string"},
+        "scriptaction.platform_id": {"type": "string"},
+        "usertodeploytemplaterel.template_id": {"type": "number"},
+        "usertodeploytemplaterel.modified_by": {"type": "number"},
+        "template_name": {"type": "string"},
+        "is_template_alive": true,
+        "usertodefaultdeploytemplaterel.template_id": {"type": "string"},
+        "modified_time": {"type": "number"},
+        "set_as_default": false,
+        "user_id": {"type": "number"},
+        "template_id": {"type": "number"},
+        "modifieduser.user_id": {"type": "number"},
+        "customer_id": {"type": "number"},
+        "modifieduser.first_name": {"type": "string"},
+        "first_name": {"type": "string"},
+        "dc_user_id": {"type": "number"}
+    }
+}

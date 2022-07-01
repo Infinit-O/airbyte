@@ -91,6 +91,8 @@ class DesktopCentralStream(HttpStream, ABC):
                 return None
             else:
                 # NOTE: (2/2) otherwise we return a token containing pagination details.
+                # NOTE: The exact "last page" needs to be calculated to make sure we don't
+                #       accidentally "circle around" and scrape the first page again by accident.
                 if self.last_page < 0:
                     self.last_page = int(envelope["total"] / self.universal_page_limit) + 1
                 return {
@@ -114,7 +116,8 @@ class DesktopCentralStream(HttpStream, ABC):
         """
 
         # NOTE: SSL Cert Verification disabled because the source has a self-signed certificate
-        return {"verify": False}
+        return {}
+        # return {"verify": False}
 
     def request_params(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None

@@ -1,0 +1,266 @@
+{
+    "streams": [
+        {
+            "stream": {
+                "name": "all_patch_details",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "all_patches",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "all_summary",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "all_summary",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "all_summary",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "approval_settings",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "computer_summary",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "computers",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },        
+        {
+            "stream": {
+                "name": "db_update_status",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },        
+        {
+            "stream": {
+                "name": "deployment_policies",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "discover",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "discover",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "filter_params",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "hardware_installations",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "hardware",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "health_policy",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "license_software",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },        
+        {
+            "stream": {
+                "name": "patch_summary",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "remote_office",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "scan_computers",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "scan_details",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "software_installations",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },        
+        {
+            "stream": {
+                "name": "software_metering_summary",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "software_on_computer",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "software",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "summary",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "supported_patches",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "system_report",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "view_config",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        }
+    ]
+}
+

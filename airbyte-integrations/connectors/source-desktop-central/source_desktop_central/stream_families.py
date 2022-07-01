@@ -82,3 +82,30 @@ class SoftwareOnComputer(DesktopCentralSubstream):
     foreign_key = "resource_id"
     envelope_name = "installedsoftware"
     path_template = "api/1.4/inventory/installedsoftware?resid={entity_id}"
+
+class SystemReport(DesktopCentralSubstream):
+    parent_stream = Computers
+    primary_key = "patch_id"
+    foreign_key = "resource_id"
+    envelope_name = "systemreport"
+    path_template = "api/1.4/patch/systemreport?resid={entity_id}"
+
+class AllPatches(DesktopCentralStream):
+    primary_key = "patch_id"
+    envelope_name = "allpatches"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "api/1.4/patch/allpatches"
+
+class AllPatchDetails(DesktopCentralSubstream):
+    parent_stream = AllPatches
+    primary_key = "resource_id"
+    foreign_key = "patch_id"
+    envelope_name = "allpatchdetails"
+    path_template = "api/1.4/patch/allpatchdetails?patchid={entity_id}"
