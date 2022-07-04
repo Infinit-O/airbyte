@@ -21,23 +21,25 @@ from .stream_families import (
     SystemReport,
 )
 from .streams import (
-    AllSummary,
     AllSystems,
-    ApprovalSettings,
-    DbUpdateStatus,
     DeploymentPolicies,
-    Discover,
-    FilterParams,
-    HealthPolicy,
     LicenseSoftware,
     PatchSummary,
     RemoteOffice,
     ScanComputers,
     ScanDetails,
-    Summary,
     SupportedPatches,
     SoftwareMeteringSummary,
     ViewConfig,
+)
+from .stream_summaries import (
+    AllSummary,
+    ApprovalSettings,
+    DbUpdateStatus,
+    Discover,
+    FilterParams,
+    HealthPolicy,
+    Summary,
 )
 
 """

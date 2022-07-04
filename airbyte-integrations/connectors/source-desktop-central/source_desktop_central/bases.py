@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Any, Iterable, Mapping, MutableMapping, Optional, Union, List
+from time import sleep
 
 import requests
 from airbyte_cdk.models import SyncMode
 from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.sources.utils.sentry import AirbyteSentry
 
 class DesktopCentralStream(HttpStream, ABC):
     """
@@ -103,22 +105,6 @@ class DesktopCentralStream(HttpStream, ABC):
         else:
             return None
 
-    def request_kwargs(
-        self,
-        stream_state: Mapping[str, Any],
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None,
-    ) -> Mapping[str, Any]:
-        """
-        Override to return a mapping of keyword arguments to be used when creating the HTTP request.
-        Any option listed in https://docs.python-requests.org/en/latest/api/#requests.adapters.BaseAdapter.send for can be returned from
-        this method. Note that these options do not conflict with request-level options such as headers, request params, etc..
-        """
-
-        # NOTE: SSL Cert Verification disabled because the source has a self-signed certificate
-        return {}
-        # return {"verify": False}
-
     def request_params(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
     ) -> MutableMapping[str, Any]:
@@ -141,13 +127,80 @@ class DesktopCentralStream(HttpStream, ABC):
         Override this method to define how a response is parsed.
         :return an iterable containing each record in the response
         """
-        # import pdb
-        # pdb.set_trace()
         data = response.json()
-        items = data["message_response"][self.envelope_name]
+
+        try:
+            items = data["message_response"][self.envelope_name]
+        except KeyError:
+            print(data)
+            raise
+
         for item in items:
             item["url"] = response.request.url
-        yield from items 
+        yield from items
+
+    def read_records(
+        self,
+        sync_mode: SyncMode,
+        cursor_field: List[str] = None,
+        stream_slice: Mapping[str, Any] = None,
+        stream_state: Mapping[str, Any] = None,
+    ) -> Iterable[Mapping[str, Any]]:
+        stream_state = stream_state or {}
+        pagination_complete = False
+
+        next_page_token = None
+        with AirbyteSentry.start_transaction("read_records", self.name), AirbyteSentry.start_transaction_span("read_records"):
+            while not pagination_complete:
+                request_headers = self.request_headers(
+                    stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token
+                )
+                request = self._create_prepared_request(
+                    path=self.path(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token),
+                    headers=dict(request_headers, **self.authenticator.get_auth_header()),
+                    params=self.request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token),
+                    json=self.request_body_json(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token),
+                    data=self.request_body_data(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token),
+                )
+                request_kwargs = self.request_kwargs(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
+
+                sleep(2)
+                if self.use_cache:
+                    # use context manager to handle and store cassette metadata
+                    with self.cache_file as cass:
+                        self.cassete = cass
+                        # vcr tries to find records based on the request, if such records exist, return from cache file
+                        # else make a request and save record in cache file
+                        response = self._send_request(request, request_kwargs)
+
+                else:
+                    response = self._send_request(request, request_kwargs)
+                yield from self.parse_response(response, stream_state=stream_state, stream_slice=stream_slice)
+
+                next_page_token = self.next_page_token(response)
+                if not next_page_token:
+                    pagination_complete = True
+
+            # Always return an empty generator just in case no records were ever yielded
+            yield from []
+
+class SummaryOverride(DesktopCentralStream):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        """
+        Override this method to define how a response is parsed.
+        :return an iterable containing each record in the response
+        """
+        data = response.json()
+        try:
+            summary = data["message_response"][self.envelope_name]
+        except KeyError:
+            print(data)
+            raise
+        summary["url"] = response.request.url
+        yield from [summary]
 
 class DesktopCentralSubstream(DesktopCentralStream):
     @property
@@ -177,10 +230,15 @@ class DesktopCentralSubstream(DesktopCentralStream):
         if self.stop_paginating:
             yield from []
         data = response.json()
-        items = data["message_response"][self.envelope_name]
+        try:
+            items = data["message_response"][self.envelope_name]
+        except KeyError:
+            print(data)
+            raise
         # NOTE: I think this might be faster on average than doing a list comprehension
         #       to update the items because it will yield BEFORE doing the next one
         #       i.e it updates then yields one-at-a-time.
         for item in items:
             item[self.foreign_key] = kwargs["stream_slice"][self.foreign_key]
+            item["url"] = response.request.url
             yield item
