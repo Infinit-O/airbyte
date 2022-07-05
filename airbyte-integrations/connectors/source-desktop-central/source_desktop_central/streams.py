@@ -124,6 +124,7 @@ class SoftwareMeteringSummary(DesktopCentralStream):
         Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
         should return "customers". Required.
         """
+        return "api/1.4/inventory/swmeteringsummary"
 
 class SupportedPatches(DesktopCentralStream):
     # NOTE: Important note about this stream - as of today there isn't any data in our hosted

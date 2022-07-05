@@ -66,16 +66,6 @@ class ComputerSummary(DesktopCentralSubstream):
     envelope_name = "compdetailssummary"
     path_template = "api/1.4/inventory/compdetailssummary?resid={entity_id}"
 
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
-        """
-        Override this method to define how a response is parsed.
-        :return an iterable containing each record in the response
-        """
-        # NOTE: This endpoint, like the other "summary" endpoints will only ever return a single object, rather
-        #       than a list, so we handle it like this to keep airbyte from complaining
-        summary = response.json()["message_response"][self.envelope_name]
-        yield from [summary]
-
 class SoftwareOnComputer(DesktopCentralSubstream):
     parent_stream = Computers
     primary_key = "software_id"

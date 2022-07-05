@@ -79,7 +79,10 @@ class DesktopCentralStream(HttpStream, ABC):
         :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
                 If there are no more pages in the result, return None.
         """
-        envelope = response.json()["message_response"]
+        try:
+            envelope = response.json()["message_response"]
+        except KeyError:
+            return None
 
         if self.stop_paginating:
             return None
@@ -129,11 +132,7 @@ class DesktopCentralStream(HttpStream, ABC):
         """
         data = response.json()
 
-        try:
-            items = data["message_response"][self.envelope_name]
-        except KeyError:
-            print(data)
-            raise
+        items = data["message_response"][self.envelope_name]
 
         for item in items:
             item["url"] = response.request.url
@@ -164,7 +163,8 @@ class DesktopCentralStream(HttpStream, ABC):
                 )
                 request_kwargs = self.request_kwargs(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
 
-                sleep(2)
+                sleep(1.75)
+
                 if self.use_cache:
                     # use context manager to handle and store cassette metadata
                     with self.cache_file as cass:
@@ -194,11 +194,7 @@ class SummaryOverride(DesktopCentralStream):
         :return an iterable containing each record in the response
         """
         data = response.json()
-        try:
-            summary = data["message_response"][self.envelope_name]
-        except KeyError:
-            print(data)
-            raise
+        summary = data["message_response"][self.envelope_name]
         summary["url"] = response.request.url
         yield from [summary]
 
@@ -227,18 +223,31 @@ class DesktopCentralSubstream(DesktopCentralStream):
         Override this method to define how a response is parsed.
         :return an iterable containing each record in the response
         """
+        # import pdb
+        # pdb.set_trace()
         if self.stop_paginating:
             yield from []
         data = response.json()
+
+        # NOTE: In the computer_summary stream, computers that don't have the DesktopCentral
+        #       agent installed will instead have a row that contains an error message, without
+        #       "message_response" in it. This try/except block is meant to get around that (1/2)
         try:
             items = data["message_response"][self.envelope_name]
         except KeyError:
-            print(data)
-            raise
-        # NOTE: I think this might be faster on average than doing a list comprehension
-        #       to update the items because it will yield BEFORE doing the next one
-        #       i.e it updates then yields one-at-a-time.
-        for item in items:
-            item[self.foreign_key] = kwargs["stream_slice"][self.foreign_key]
-            item["url"] = response.request.url
-            yield item
+            items = data
+
+        # NOTE: (2/2) the computer_summary stream also returns a single dictionary as opposed to
+        #       a LIST of dictionaries, so we handle that here.
+        if isinstance(items, dict):
+            items[self.foreign_key] = kwargs["stream_slice"][self.foreign_key]
+            items["url"] = response.request.url
+            yield from [items]
+        else:
+            # NOTE: I think this might be faster on average than doing a list comprehension
+            #       to update the items because it will yield BEFORE doing the next one
+            #       i.e it updates then yields one-at-a-time.
+            for item in items:
+                item[self.foreign_key] = kwargs["stream_slice"][self.foreign_key]
+                item["url"] = response.request.url
+                yield item

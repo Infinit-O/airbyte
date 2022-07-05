@@ -72,6 +72,14 @@ class SourceDesktopCentral(AbstractSource):
             base_url = config["base_url"]
         except KeyError:
             return False, "Username / Password / OTP_key missing from config file, please check and try again."
+
+        auth = OTPAuthenticator(
+            username=config["username"],
+            password=config["password"],
+            otp_key=config["otp_key"],
+            base_url=config["base_url"]
+        )
+
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
