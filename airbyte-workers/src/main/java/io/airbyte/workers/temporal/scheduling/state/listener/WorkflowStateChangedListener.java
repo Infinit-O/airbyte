@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2022 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.workers.temporal.scheduling.state.listener;
@@ -27,7 +27,16 @@ public interface WorkflowStateChangedListener {
     DELETED,
     RUNNING,
     SKIPPED_SCHEDULING,
-    UPDATED
+    UPDATED,
+    FAILED,
+    RESET,
+    CONTINUE_AS_RESET,
+    RETRY_FAILED_ACTIVITY,
+    QUARANTINED,
+    SUCCESS,
+    CANCELLED_FOR_RESET,
+    RESET_WITH_SCHEDULING,
+    DONE_WAITING,
   }
 
   @Value
