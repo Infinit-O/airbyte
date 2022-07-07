@@ -86,7 +86,6 @@ class SourceDesktopCentral(AbstractSource):
         """
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
-        # TODO remove the authenticator if not required.
         auth = OTPAuthenticator(
             username=config["username"],
             password=config["password"],

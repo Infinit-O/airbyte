@@ -8,15 +8,21 @@
     "additionalProperties": false,
     "properties": {
       "username": {
+        "order": 0,
         "type": "string"
       },
       "password": {
-        "type": "string"
+        "order": 1,
+        "type": "string",
+        "airbyte_secret": true
       },
       "otp_key": {
-        "type": "string"
+        "order": 2,
+        "type": "string",
+        "airbyte_secret": true
       },
       "base_url": {
+        "order": 3,
         "type": "string"
       }
     }

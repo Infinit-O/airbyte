@@ -27,7 +27,7 @@ class OTPAuthenticator(HttpAuthenticator):
             "auth_type": "local_authentication"
         }
         target_url = urljoin(self.base_url, self.LOGIN_URL)
-        resp = requests.post(target_url, json=request_body, verify=False)
+        resp = requests.post(target_url, json=request_body)
         resp.raise_for_status()
 
         resp = resp.json()
@@ -45,7 +45,7 @@ class OTPAuthenticator(HttpAuthenticator):
                 "uid": uid,
                 "otp": otp
             }
-            resp2 = requests.post(mfa_url, json=payload, verify=False)
+            resp2 = requests.post(mfa_url, json=payload)
             resp_data = resp2.json()
             token = resp_data["message_response"]["authentication"]["auth_data"]["auth_token"]
             return token

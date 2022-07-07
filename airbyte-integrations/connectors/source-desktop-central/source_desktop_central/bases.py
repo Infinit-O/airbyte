@@ -108,6 +108,7 @@ class DesktopCentralStream(HttpStream, ABC):
         else:
             return None
 
+
     def request_params(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
     ) -> MutableMapping[str, Any]:
@@ -223,8 +224,6 @@ class DesktopCentralSubstream(DesktopCentralStream):
         Override this method to define how a response is parsed.
         :return an iterable containing each record in the response
         """
-        # import pdb
-        # pdb.set_trace()
         if self.stop_paginating:
             yield from []
         data = response.json()
