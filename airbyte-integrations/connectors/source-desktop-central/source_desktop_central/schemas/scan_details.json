@@ -22,7 +22,7 @@
         "scan_remarks_args": {"type": "string"},
         "os_platform_id": {"type": "number"},
         "owner": {"type": "string"},
-        "scan_status": {"type": "string"},
+        "scan_status": {"type": ["integer", "string"]},
         "scan_remarks": {"type": "string"},
         "os_platform": {"type": "number"},
         "patch_status_image": {"type": "string"},
@@ -44,9 +44,9 @@
         "location": {"type": "string"},
         "computer_live_status": {"type": "number"},
         "resource_name": {"type": "string"},
-        "last_scan_time": {"type": "string"},
+        "last_scan_time": {"type": ["string", "integer"]},
         "patchmgmtosinfo.resource_id": {"type": "number"},
-        "last_successful_scan": {"type": "string"},
+        "last_successful_scan": {"type": ["string", "integer"]},
         "computer_status_update_time": {"type": "number"}
     }
 }
