@@ -36,6 +36,14 @@ class DesktopCentralStream(HttpStream, ABC):
         return ""
 
     @property
+    def pacing(self) -> float:
+        """ 
+        Returns the number of seconds to wait before sending a request. Used for pacing requests to strict APIs. It can
+        be a floating point value for precision, and will be passed to sleep() when called.
+        """
+        return 1.75
+
+    @property
     def url_base(self):
         return self.config["base_url"]
 
@@ -139,51 +147,10 @@ class DesktopCentralStream(HttpStream, ABC):
             item["url"] = response.request.url
         yield from items
 
-    def read_records(
-        self,
-        sync_mode: SyncMode,
-        cursor_field: List[str] = None,
-        stream_slice: Mapping[str, Any] = None,
-        stream_state: Mapping[str, Any] = None,
-    ) -> Iterable[Mapping[str, Any]]:
-        stream_state = stream_state or {}
-        pagination_complete = False
-
-        next_page_token = None
-        with AirbyteSentry.start_transaction("read_records", self.name), AirbyteSentry.start_transaction_span("read_records"):
-            while not pagination_complete:
-                request_headers = self.request_headers(
-                    stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token
-                )
-                request = self._create_prepared_request(
-                    path=self.path(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token),
-                    headers=dict(request_headers, **self.authenticator.get_auth_header()),
-                    params=self.request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token),
-                    json=self.request_body_json(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token),
-                    data=self.request_body_data(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token),
-                )
-                request_kwargs = self.request_kwargs(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
-
-                sleep(1.75)
-
-                if self.use_cache:
-                    # use context manager to handle and store cassette metadata
-                    with self.cache_file as cass:
-                        self.cassete = cass
-                        # vcr tries to find records based on the request, if such records exist, return from cache file
-                        # else make a request and save record in cache file
-                        response = self._send_request(request, request_kwargs)
-
-                else:
-                    response = self._send_request(request, request_kwargs)
-                yield from self.parse_response(response, stream_state=stream_state, stream_slice=stream_slice)
-
-                next_page_token = self.next_page_token(response)
-                if not next_page_token:
-                    pagination_complete = True
-
-            # Always return an empty generator just in case no records were ever yielded
-            yield from []
+    def _send(self, request: requests.PreparedRequest, request_kwargs: Mapping[str, Any]) -> requests.Response:
+        sleep(self.pacing)
+        resp = super()._send(request, request_kwargs)
+        return resp
 
 class SummaryOverride(DesktopCentralStream):
     def __init__(self, *args, **kwargs):
