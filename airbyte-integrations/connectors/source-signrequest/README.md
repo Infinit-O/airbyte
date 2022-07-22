@@ -1,3 +1,6 @@
+# EVENTS
+["sending_error", "sent" ,"declined", "cancelled", "signed", "signer_signed","signer_email_bounced"]
+https://http-trigger-v1-automation.infinit.services/0e0f198e-44cb-452b-9de8-d9867cbfe564-242
 # Signrequest Source
 
 This is the repository for the Signrequest source connector, written in Python.

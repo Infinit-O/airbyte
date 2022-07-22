@@ -9,8 +9,10 @@ from math import inf
 from urllib.parse import urljoin, urlparse
 
 import requests
+import pendulum
+
 from airbyte_cdk.sources import AbstractSource
-from airbyte_cdk.sources.streams import Stream
+from airbyte_cdk.sources.streams import Stream, IncrementalMixin
 from airbyte_cdk.sources.streams.http import HttpStream
 from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
 
@@ -62,7 +64,6 @@ class SignrequestStream(HttpStream, ABC):
     def __init__(self, config, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.config = config
-        pass
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
@@ -110,11 +111,66 @@ class SignrequestStream(HttpStream, ABC):
         raw = response.json()
         yield from raw.get("results")
 
-class SignrequestIncrementalStream(SignrequestStream):
+class SignrequestIncrementalStream(SignrequestStream, IncrementalMixin):
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, value):
+        self._state = value
+
     @property
     @abstractmethod
     def cursor_field(self) -> str:
         pass
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._state = {}
+
+    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]):
+        if current_stream_state == {}:
+            self.state = latest_record[self.cursor_field]
+            return {self.cursor_field: latest_record[self.cursor_field]}
+        else:
+            records = {}
+            records[current_stream_state[self.cursor_field]] = pendulum.parse(current_stream_state[self.cursor_field])
+            records[latest_record[self.cursor_field]] = pendulum.parse(latest_record[self.cursor_field])
+            # NOTE: So there's an issue with the way mypy expects the types for max() and how I've done it here
+            #       and I'm not sure how to resolve it.
+            #       Argument 1 is simply supposed to be "iterable" as opposed to strictly
+            #       Iterable[Mapping[str, Any]], I don't know if I just suck at type theory or if 
+            #       this is really a bug.
+            #       The code works fine in production.
+            latest_record = max(records.items(), key=lambda x: x[1])
+            self.state = latest_record[0]
+            return {self.cursor_field: latest_record[0]}
+
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
+        """
+        Override this method to define how a response is parsed.
+        :return an iterable containing each record in the response
+        """
+        def __newer_than_latest(recorded_state: pendulum.DateTime, latest_record: dict) -> bool:
+            latest_record_date = pendulum.parse(latest_record[self.cursor_field])
+            recorded_state = pendulum.parse(recorded_state[self.cursor_field])
+            if recorded_state > latest_record_date:
+                return False
+            else:
+                return True
+
+        raw = response.json()
+        results = raw.get("results")
+
+        if stream_state:
+            if __newer_than_latest(stream_state, results[0]):
+                yield from []
+            else:
+                only_the_newest = [x for x in results if __newer_than_latest(stream_state, x)]
+                yield from only_the_newest
+        else:
+            yield from results
 
 class AuditEvents(SignrequestStream):
     primary_key = "user_uuid"
