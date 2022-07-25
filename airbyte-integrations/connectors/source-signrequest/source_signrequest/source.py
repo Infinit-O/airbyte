@@ -152,7 +152,7 @@ class SignrequestIncrementalStream(SignrequestStream, IncrementalMixin):
         Override this method to define how a response is parsed.
         :return an iterable containing each record in the response
         """
-        def __newer_than_latest(recorded_state: pendulum.DateTime, latest_record: dict) -> bool:
+        def __newer_than_latest(recorded_state: dict, latest_record: dict) -> bool:
             latest_record_date = pendulum.parse(latest_record[self.cursor_field])
             recorded_state = pendulum.parse(recorded_state[self.cursor_field])
             if recorded_state > latest_record_date:
@@ -162,8 +162,6 @@ class SignrequestIncrementalStream(SignrequestStream, IncrementalMixin):
 
         raw = response.json()
         results = raw.get("results")
-        # import pdb
-        # pdb.set_trace()
         if stream_state:
             if not __newer_than_latest(stream_state, results[0]):
                 yield from []
