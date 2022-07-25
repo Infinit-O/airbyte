@@ -27,6 +27,8 @@ A total of 70 post requests need to be sent to enable webhooks for all teams, an
 """
 import argparse
 import json
+from urllib.parse import urljoin
+from copy import deepcopy
 
 import requests
 
@@ -36,11 +38,57 @@ ap.add_argument("outfile", help="relative path to where you want the output file
 
 args = ap.parse_args()
 
+def prep_request(request: dict, event_type: str) -> dict:
+    API_WEBHOOK = "/api/v1/webhooks/"
+    CALLBACK_URL = "https://http-trigger-v1-automation.infinit.services/0e0f198e-44cb-452b-9de8-d9867cbfe564-242"
+
+    operating_copy = deepcopy(request)
+    operating_copy["target_url"] = urljoin(operating_copy["url_base"], API_WEBHOOK)
+    operating_copy["headers"] = {
+        "Authorization": f"Token {operating_copy['access_token']}"
+    }
+    operating_copy["body"] = {
+        "event_type": event_type,
+        "callback_url": CALLBACK_URL
+    }
+
+    return operating_copy
+
+def send_request(request_data: dict) -> dict:
+    target = request_data["target_url"]
+    body = request_data["body"]
+    headers = request_data["headers"]
+    print(f"Sending to: {target}, {body}, {headers}")
+    resp = requests.post(url=target, json=body, headers=headers)
+    resp.raise_for_status()
+    return {
+        'status': resp.status_code,
+        'body': resp.json()
+    }
+
+
 if __name__ == "__main__":
+    EVENT_TYPES = [
+        "sending_error",
+        "sent",
+        "declined",
+        "cancelled",
+        "signed",
+        "signer_signed",
+        "signer_email_bounced"
+    ]
+    print("Opening credfile...")
     with open(args.credfile, "r") as F:
         cred_data: list[dict] = json.loads(F.read())
 
-    # NOTE: LOGIC GOES HERE
+    print("Preparing requests...")
+    prepared_requests = [prep_request(x, y) for x in cred_data for y in EVENT_TYPES]
 
-    with open(args.outfile, "r") as F:
-        pass
+    print("Sending requests...")
+    responses = [send_request(x) for x in prepared_requests]
+
+    print("Writing responses...")    
+    with open(args.outfile, "w") as F:
+        F.write(json.dumps(responses))
+
+    print("Done!")

@@ -162,9 +162,10 @@ class SignrequestIncrementalStream(SignrequestStream, IncrementalMixin):
 
         raw = response.json()
         results = raw.get("results")
-
+        # import pdb
+        # pdb.set_trace()
         if stream_state:
-            if __newer_than_latest(stream_state, results[0]):
+            if not __newer_than_latest(stream_state, results[0]):
                 yield from []
             else:
                 only_the_newest = [x for x in results if __newer_than_latest(stream_state, x)]
