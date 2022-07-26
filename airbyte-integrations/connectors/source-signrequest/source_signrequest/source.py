@@ -118,7 +118,7 @@ class SignrequestIncrementalStream(SignrequestStream, IncrementalMixin):
 
     @state.setter
     def state(self, value):
-        self._state = value
+        self._state[self.cursor_field] = value
 
     @property
     @abstractmethod
@@ -131,7 +131,7 @@ class SignrequestIncrementalStream(SignrequestStream, IncrementalMixin):
 
     def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]):
         if current_stream_state == {}:
-            self.state = latest_record[self.cursor_field]
+            self.state = {self.cursor_field: latest_record[self.cursor_field]}
             return {self.cursor_field: latest_record[self.cursor_field]}
         else:
             records = {}
@@ -155,7 +155,7 @@ class SignrequestIncrementalStream(SignrequestStream, IncrementalMixin):
         def __newer_than_latest(recorded_state: dict, latest_record: dict) -> bool:
             latest_record_date = pendulum.parse(latest_record[self.cursor_field])
             recorded_state = pendulum.parse(recorded_state[self.cursor_field])
-            if recorded_state > latest_record_date:
+            if recorded_state >= latest_record_date:
                 return False
             else:
                 return True
