@@ -112,6 +112,10 @@ class SignrequestStream(HttpStream, ABC):
         yield from raw.get("results")
 
 class SignrequestIncrementalStream(SignrequestStream, IncrementalMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._state = {}
+
     @property
     def state(self):
         return self._state
@@ -125,13 +129,9 @@ class SignrequestIncrementalStream(SignrequestStream, IncrementalMixin):
     def cursor_field(self) -> str:
         pass
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._state = {}
-
     def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]):
         if current_stream_state == {}:
-            self.state = {self.cursor_field: latest_record[self.cursor_field]}
+            self.state = latest_record[self.cursor_field]
             return {self.cursor_field: latest_record[self.cursor_field]}
         else:
             records = {}
