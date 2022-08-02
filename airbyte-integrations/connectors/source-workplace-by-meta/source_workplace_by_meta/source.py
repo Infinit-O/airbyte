@@ -13,7 +13,7 @@ from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
 from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
 
-from .community import Admins
+from .community import Admins, CommunityGroups
 
 """
 This file provides a stubbed example of how to use the Airbyte CDK to develop both a source connector which supports full refresh or and an
@@ -95,4 +95,5 @@ class SourceWorkplaceByMeta(AbstractSource):
         auth = FBParamAuthenticator(token=config.get("access_token"))  # Oauth2Authenticator is also available if you need oauth support
         return [
             Admins(authenticator=auth),
+            CommunityGroups(authenticator=auth),
         ]

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {"type": "string"},
+    "cover": {"type": "object"},
+    "cover_url": {"type": "string"},
+    "description": {"type": "string"},
+    "icon": {"type": "string"},
+    "is_workspace_defalt": {"type": "boolean"},
+    "is_community": {"type": "boolean"},
+    "name": {"type": "string"},
+    "owner": {"type": "object"},
+    "privacy": {"type": "string"},
+    "updated_time": {"type": "string"},
+    "archived": {"type": "boolean"},
+    "post_requires_admin_approval": {"type": "boolean"},
+    "purpose": {"type": "string"},
+    "post_permissions": {"type": "string"},
+    "join_setting": {"type": "string"},
+    "sorting_setting": {"type": "string"},
+    "is_official_group": {"type": "boolean"}
+  }
+}
