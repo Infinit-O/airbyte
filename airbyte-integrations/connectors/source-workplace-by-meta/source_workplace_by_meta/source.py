@@ -1,19 +1,28 @@
 #
 # Copyright (c) 2022 Airbyte, Inc., all rights reserved.
 #
+from abc import abstractmethod
+from typing import Any, List, Mapping, Tuple
 
-
-from abc import ABC, abstractmethod
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
-
-import requests
 from requests.auth import AuthBase
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
-from airbyte_cdk.sources.streams.http import HttpStream
-from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
 
-from .community import Admins, CommunityGroups
+from .community import (
+    CommunityAdmins,
+    CommunityBadges,
+    CommunityFormerMembers,
+    CommunityGroups,
+    CommunityKnowledgeLibraryCategories,
+    CommunityKnowledgeQuickLinks,
+    CommunityMembers,
+    CommunityEvents,
+)
+from .groups import (
+    Groups,
+    GroupAdmins,
+    IndividualGroup,
+)
 
 """
 This file provides a stubbed example of how to use the Airbyte CDK to develop both a source connector which supports full refresh or and an
@@ -27,9 +36,7 @@ The approach here is not authoritative, and devs are free to use their own judge
 There are additional required TODOs in the files within the integration_tests folder and the spec.yaml file.
 """
 
-
 # Basic full refresh stream
-
 class AbstractParamsAuthenticator(AuthBase):
     """Abstract class for an header-based authenticators that add a header to outgoing HTTP requests."""
 
@@ -91,9 +98,17 @@ class SourceWorkplaceByMeta(AbstractSource):
 
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
-        # TODO remove the authenticator if not required.
         auth = FBParamAuthenticator(token=config.get("access_token"))  # Oauth2Authenticator is also available if you need oauth support
         return [
-            Admins(authenticator=auth),
+            CommunityAdmins(authenticator=auth),
+            CommunityBadges(authenticator=auth),
+            CommunityEvents(authenticator=auth),
+            CommunityFormerMembers(authenticator=auth),
             CommunityGroups(authenticator=auth),
+            CommunityMembers(authenticator=auth),
+            CommunityKnowledgeLibraryCategories(authenticator=auth),
+            CommunityKnowledgeQuickLinks(authenticator=auth),
+            Groups(authenticator=auth),
+            GroupAdmins(authenticator=auth),
+            IndividualGroup(authenticator=auth),
         ]

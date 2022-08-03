@@ -1,0 +1,52 @@
+class MemberFieldsMixin():
+    fields = [
+        "id",
+        "first_name",
+        "last_name",
+        "email",
+        "title",
+        "organization",
+        "division",
+        "department",
+        "primary_phone",
+        "primary_address",
+        "picture",
+        "link",
+        "locale",
+        "name",
+        "name_format",
+        "updated_time",
+        "account_invite_time",
+        "account_claim_time",
+        "external_id",
+        "start_date",
+        "about",
+        "cost_center",
+        "claim_link",
+        "access_code",
+        "work_locale",
+        # "frontline", this requires "manage_frontline" and "manage_profile" permissions.
+        "active"
+    ]
+
+class GroupFieldsMixin():
+    fields = [
+        "id",
+        "cover",
+        "cover_url",
+        "description",
+        "icon",
+        "is_workspace_default",
+        "is_community",
+        "name",
+        "owner",
+        "privacy",
+        "updated_time",
+        "archived",
+        "post_requires_admin_approval",
+        "purpose",
+        "post_permissions",
+        "join_setting",
+        "sorting_setting",
+        "is_official_group",
+    ]

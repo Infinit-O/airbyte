@@ -1,9 +1,9 @@
-from typing import Optional, Mapping, Any, MutableMapping, Iterable
-from abc import ABC
+from typing import Optional, Mapping, Any, MutableMapping, Iterable, List
+from abc import ABC, abstractmethod
 
 import requests
-
 from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.models import SyncMode
 
 class WorkplaceByMetaStream(HttpStream, ABC):
     """
@@ -68,3 +68,44 @@ class WorkplaceByMetaStream(HttpStream, ABC):
         # pdb.set_trace()
         data = response.json()
         yield from data["data"]
+
+class WorkplaceByMetaSubstream(WorkplaceByMetaStream):
+    @property
+    @abstractmethod
+    def path_template(self):
+        pass
+
+    @property
+    @abstractmethod
+    def parent_stream(self):
+        pass
+
+    # NOTE: This should always be "id" in this case, but just in case...
+    @property
+    @abstractmethod
+    def foreign_key(self):
+        pass
+    
+    def stream_slices(self,
+        *,
+        sync_mode: SyncMode,
+        cursor_field: List[str] = None,
+        stream_state: Mapping[str, Any] = None
+    ) -> Iterable[Optional[Mapping[str, Any]]]:
+        active_parent = self.parent_stream(authenticator=self._session.auth)
+        for item in active_parent.read_records(SyncMode.full_refresh):
+            yield {self.foreign_key: item[self.foreign_key]}
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        streamslice = {} or stream_slice
+        return self.path_template.format(entity_id=streamslice[self.foreign_key])
