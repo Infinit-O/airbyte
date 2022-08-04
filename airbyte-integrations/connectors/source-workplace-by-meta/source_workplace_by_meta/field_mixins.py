@@ -25,7 +25,7 @@ class MemberFieldsMixin():
         "claim_link",
         "access_code",
         "work_locale",
-        # "frontline", this requires "manage_frontline" and "manage_profile" permissions.
+        "frontline",
         "active"
     ]
 
@@ -49,4 +49,55 @@ class GroupFieldsMixin():
         "join_setting",
         "sorting_setting",
         "is_official_group",
+    ]
+
+class GroupMemberFieldsMixin():
+    fields = [
+        "id",
+        "first_name",
+        "last_name",
+        "email",
+        "title",
+        "organization",
+        "division",
+        "department",
+        "primary_phone",
+        "primary_address",
+        "picture",
+        "link",
+        "locale",
+        "name",
+        "name_format",
+        "updated_time",
+        "account_invite_time",
+        "account_claim_time",
+        "external_id",
+        "start_date",
+        "about",
+        "cost_center",
+        "claim_link",
+        "access_code",
+        "work_locale",
+        "frontline",
+        "active"
+    ]
+
+class EventFieldsMixin():
+    fields = [
+        "id",
+        "attending_count",
+        "cover",
+        "declined_count",
+        "description",
+        "end_time",
+        "event_times",
+        "guest_list_enabled",
+        "interested_count",
+        "is_cancelled",
+        "maybe_count",
+        "name",
+        "owner",
+        "parent_group",
+        "place",
+        "updated_time",
     ]

@@ -1,0 +1,18 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "id": {"type": "string"},
+        "can_delete": {"type": "boolean"},
+        "can_edit": {"type": "boolean"},
+        "created_time": {"type": "string", "format": "date-time"},
+        "embedded_urls": {"type": "array"},
+        "from": {"type": "object"},
+        "icon": {"type": "string"},
+        "link": {"type": "string"},
+        "message": {"type": "string"},
+        "revision": {"type": "string"},
+        "subject": {"type": "string"},
+        "updated_time": {"type": "string", "format": "date-time"}
+    }
+}

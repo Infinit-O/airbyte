@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "id": {"type": "string"},
+        "backdated_time": {"type": "string", "format": "date-time"},
+        "backdated_granularity": {"type": "string"},
+        "can_upload": {"type": "boolean"},
+        "count": {"type": "number"},
+        "cover_photo": {"type": "object"},
+        "created_time": {"type": "string", "format": "date-time"},
+        "description": {"type": "string"},
+        "event": {"type": "object"},
+        "from": {"type": "object"},
+        "link": {"type": "string"},
+        "location": {"type": "string"},
+        "name": {"type": "string"},
+        "place": {"type": "object"},
+        "privacy": {"type": "string"},
+        "type": {"type": "string"},
+        "updated_time": {"type": "string", "format": "date-time"}
+    }
+}

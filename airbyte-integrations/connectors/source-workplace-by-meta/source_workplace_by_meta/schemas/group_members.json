@@ -1,0 +1,28 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "id": {"type": "string"},
+        "first_name": {"type": "string"},
+        "last_name": {"type": "string"},
+        "email": {"type": "string"},
+        "title": {"type": "string"},
+        "department": {"type": "string"},
+        "employee_number": {"type": "string"},
+        "primary_phone": {"type": "string"},
+        "primary_address": {"type": "string"},
+        "picture": {"type": "string"},
+        "link": {"type": "string"},
+        "locale": {"type": "string"},
+        "name": {"type": "string"},
+        "name_format": {"type": "string"},
+        "account_invite_time": {"type": "string", "format": "date-time"},
+        "account_claim_time": {"type": "string", "format": "date-time"},
+        "about": {"type": "string"},
+        "frontline": {"type": "object"},
+        "administrator": {"type": "boolean"},
+        "joined": {"type": "string", "format": "date-time"},
+        "moderator": {"type": "boolean"},
+        "added_by": {"type": "object"}
+    }
+}

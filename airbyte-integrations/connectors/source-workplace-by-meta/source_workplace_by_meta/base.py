@@ -67,6 +67,8 @@ class WorkplaceByMetaStream(HttpStream, ABC):
         # import pdb
         # pdb.set_trace()
         data = response.json()
+        for item in data["data"]:
+            item["url"] = response.request.url
         yield from data["data"]
 
 class WorkplaceByMetaSubstream(WorkplaceByMetaStream):
@@ -109,3 +111,18 @@ class WorkplaceByMetaSubstream(WorkplaceByMetaStream):
         """
         streamslice = {} or stream_slice
         return self.path_template.format(entity_id=streamslice[self.foreign_key])
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        """
+        Override this method to define how a response is parsed.
+        :return an iterable containing each record in the response
+        """
+        data = response.json()
+        if len(data["data"]) == 0:
+            yield from []
+        else:
+            for item in data["data"]:
+                item["url"] = response.request.url
+                item["parent_id"] = kwargs.get("stream_slice")[self.foreign_key]
+
+            yield from data["data"]

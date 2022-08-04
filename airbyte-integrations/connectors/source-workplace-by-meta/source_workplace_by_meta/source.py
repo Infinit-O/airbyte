@@ -21,6 +21,16 @@ from .community import (
 from .groups import (
     Groups,
     GroupAdmins,
+    GroupAlbums,
+    GroupAutoMembershipRules,
+    GroupDocs,
+    GroupEvents,
+    GroupFeed,
+    GroupFiles,
+    GroupMembers,
+    GroupMemberRequests,
+    GroupModerators,
+    GroupPinnedPosts,
     IndividualGroup,
 )
 
@@ -99,6 +109,7 @@ class SourceWorkplaceByMeta(AbstractSource):
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
         auth = FBParamAuthenticator(token=config.get("access_token"))  # Oauth2Authenticator is also available if you need oauth support
+
         return [
             CommunityAdmins(authenticator=auth),
             CommunityBadges(authenticator=auth),
@@ -110,5 +121,15 @@ class SourceWorkplaceByMeta(AbstractSource):
             CommunityKnowledgeQuickLinks(authenticator=auth),
             Groups(authenticator=auth),
             GroupAdmins(authenticator=auth),
+            GroupAlbums(authenticator=auth),
+            GroupAutoMembershipRules(authenticator=auth),
+            GroupDocs(authenticator=auth),
+            GroupEvents(authenticator=auth),
+            GroupFeed(authenticator=auth),
+            GroupFiles(authenticator=auth),
+            GroupMembers(authenticator=auth),
+            GroupMemberRequests(authenticator=auth),
+            GroupModerators(authenticator=auth),
+            GroupPinnedPosts(authenticator=auth),
             IndividualGroup(authenticator=auth),
         ]

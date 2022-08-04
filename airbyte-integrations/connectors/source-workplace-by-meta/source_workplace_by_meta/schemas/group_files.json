@@ -1,0 +1,12 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "download_link": {"type": "string"},
+        "from": {"type": "object"},
+        "group": {"type": "object"},
+        "id": {"type": "string"},
+        "message": {"type": "string"},
+        "updated_time": {"type": "string", "format": "date-time"}
+    }
+}

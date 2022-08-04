@@ -1,7 +1,7 @@
 from typing import Mapping, Any
 
 from .base import WorkplaceByMetaStream
-from .field_mixins import MemberFieldsMixin, GroupFieldsMixin
+from .field_mixins import MemberFieldsMixin, GroupFieldsMixin, EventFieldsMixin
 
 class CommunityAdmins(WorkplaceByMetaStream, MemberFieldsMixin):
     """
@@ -12,9 +12,9 @@ class CommunityAdmins(WorkplaceByMetaStream, MemberFieldsMixin):
     def path(
         self,
         *,
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None,
+        stream_state,
+        stream_slice,
+        next_page_token,
     ) -> str:
         """
         Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
@@ -32,11 +32,10 @@ class CommunityGroups(WorkplaceByMetaStream, GroupFieldsMixin):
     def path(
         self,
         *,
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None,
+        stream_state,
+        stream_slice,
+        next_page_token,
     ) -> str:
-
         """
         Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
         should return "customers". Required.
@@ -49,9 +48,9 @@ class CommunityMembers(WorkplaceByMetaStream, MemberFieldsMixin):
     def path(
         self,
         *,
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None,
+        stream_state,
+        stream_slice,
+        next_page_token,
     ) -> str:
         """
         Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
@@ -60,25 +59,18 @@ class CommunityMembers(WorkplaceByMetaStream, MemberFieldsMixin):
         return "community/members/"
 
 
-class CommunityEvents(WorkplaceByMetaStream):
+class CommunityEvents(WorkplaceByMetaStream, EventFieldsMixin):
     primary_key = "id"
     # NOTE: Do NOT pass "location" in the fields for this stream because its reported as
     #       deprecated and will cause an error. 
-    fields = [
-        "description",
-        "end_time",
-        "name",
-        "start_time",
-    ]
 
     def path(
         self,
         *,
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None,
+        stream_state,
+        stream_slice,
+        next_page_token,
     ) -> str:
-
         """
         Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
         should return "customers". Required.
@@ -91,11 +83,10 @@ class CommunityBadges(WorkplaceByMetaStream):
     def path(
         self,
         *,
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None,
+        stream_state,
+        stream_slice,
+        next_page_token,
     ) -> str:
-
         """
         Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
         should return "customers". Required.
@@ -109,11 +100,10 @@ class CommunityKnowledgeLibraryCategories(WorkplaceByMetaStream):
     def path(
         self,
         *,
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None,
+        stream_state,
+        stream_slice,
+        next_page_token,
     ) -> str:
-
         """
         Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
         should return "customers". Required.
@@ -129,11 +119,10 @@ class CommunityKnowledgeQuickLinks(WorkplaceByMetaStream):
     def path(
         self,
         *,
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None,
+        stream_state,
+        stream_slice,
+        next_page_token,
     ) -> str:
-
         """
         Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
         should return "customers". Required.
@@ -146,11 +135,10 @@ class CommunityFormerMembers(WorkplaceByMetaStream, MemberFieldsMixin):
     def path(
         self,
         *,
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None,
+        stream_state,
+        stream_slice,
+        next_page_token,
     ) -> str:
-
         """
         Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
         should return "customers". Required.
