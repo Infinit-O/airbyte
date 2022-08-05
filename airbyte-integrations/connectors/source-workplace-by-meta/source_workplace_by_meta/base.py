@@ -122,7 +122,6 @@ class WorkplaceByMetaSubstream(WorkplaceByMetaStream):
             yield from []
         else:
             for item in data["data"]:
-                item["url"] = response.request.url
                 item["parent_id"] = kwargs.get("stream_slice")[self.foreign_key]
 
             yield from data["data"]

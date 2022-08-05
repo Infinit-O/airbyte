@@ -51,6 +51,29 @@ class GroupFieldsMixin():
         "is_official_group",
     ]
 
+class PostFieldsMixin():
+    fields = [
+        "id",
+        "created_time",
+        "formatting",
+        "from",
+        "icon",
+        "link",
+        "message",
+        "name",
+        "object_id",
+        "permalink_url",
+        "picture",
+        "place",
+        "poll",
+        "properties",
+        "status_type",
+        "story",
+        "to",
+        "updated_time",
+        "with_tags"
+    ]
+
 class GroupMemberFieldsMixin():
     fields = [
         "id",

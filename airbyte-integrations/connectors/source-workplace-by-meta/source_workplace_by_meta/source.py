@@ -33,6 +33,19 @@ from .groups import (
     GroupPinnedPosts,
     IndividualGroup,
 )
+from .company import (
+    CompanyMembers,
+    CompanyInactiveMembers,
+    IndividualMember,
+    MemberEvents,
+    MemberFeed,
+    MemberGroups,
+    MemberManagers,
+    MemberPhotos,
+    MemberPhones,
+    MemberSkills,
+    MemberBadges,
+)
 
 """
 This file provides a stubbed example of how to use the Airbyte CDK to develop both a source connector which supports full refresh or and an
@@ -119,6 +132,8 @@ class SourceWorkplaceByMeta(AbstractSource):
             CommunityMembers(authenticator=auth),
             CommunityKnowledgeLibraryCategories(authenticator=auth),
             CommunityKnowledgeQuickLinks(authenticator=auth),
+            CompanyMembers(authenticator=auth),
+            CompanyInactiveMembers(authenticator=auth),
             Groups(authenticator=auth),
             GroupAdmins(authenticator=auth),
             GroupAlbums(authenticator=auth),
@@ -132,4 +147,13 @@ class SourceWorkplaceByMeta(AbstractSource):
             GroupModerators(authenticator=auth),
             GroupPinnedPosts(authenticator=auth),
             IndividualGroup(authenticator=auth),
+            IndividualMember(authenticator=auth),
+            MemberEvents(authenticator=auth),
+            MemberFeed(authenticator=auth),
+            MemberGroups(authenticator=auth),
+            MemberManagers(authenticator=auth),
+            MemberPhones(authenticator=auth),
+            MemberPhotos(authenticator=auth),
+            MemberSkills(authenticator=auth),
+            MemberBadges(authenticator=auth),
         ]

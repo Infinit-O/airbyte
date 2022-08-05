@@ -7,6 +7,7 @@ from .field_mixins import (
     MemberFieldsMixin,
     EventFieldsMixin,
     GroupMemberFieldsMixin,
+    PostFieldsMixin,
 )
 
 class Groups(WorkplaceByMetaStream, GroupFieldsMixin):
@@ -123,32 +124,11 @@ class GroupEvents(WorkplaceByMetaSubstream, EventFieldsMixin):
     parent_stream = Groups
     path_template = "{entity_id}/events"
 
-class GroupFeed(WorkplaceByMetaSubstream):
+class GroupFeed(WorkplaceByMetaSubstream, PostFieldsMixin):
     primary_key = "id"
     foreign_key = "id"
     parent_stream = Groups
     path_template = "{entity_id}/feed"
-    fields = [
-        "id",
-        "created_time",
-        "formatting",
-        "from",
-        "icon",
-        "link",
-        "message",
-        "name",
-        "object_id",
-        "permalink_url",
-        "picture",
-        "place",
-        "poll",
-        "properties",
-        "status_type",
-        "story",
-        "to",
-        "updated_time",
-        "with_tags"
-    ]
 
 class GroupFiles(WorkplaceByMetaSubstream):
     primary_key = "id"
@@ -169,8 +149,7 @@ class GroupMemberRequests(WorkplaceByMetaSubstream):
     foreign_key = "id"
     parent_stream = Groups
     path_template = "{entity_id}/member_requests"
-    fields = [
-    ]
+    fields = []
 
 # NOTE: It's worth noting here that the fields exposed by this
 #       edge are a subset of the fields used by other edges 

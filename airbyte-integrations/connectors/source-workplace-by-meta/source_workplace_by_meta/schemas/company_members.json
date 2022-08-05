@@ -1,0 +1,33 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "id": {"type": "string"},
+        "first_name": {"type": "string"},
+        "last_name": {"type": "string"},
+        "email": {"type": "string"},
+        "title": {"type": "string"},
+        "organization": {"type": "string"},
+        "division": {"type": "string"},
+        "department": {"type": "string"},
+        "primary_phone": {"type": "string"},
+        "primary_address": {"type": "string"},
+        "picture": {"type": "string"},
+        "link": {"type": "string"},
+        "locale": {"type": "string"},
+        "name": {"type": "string"},
+        "name_format": {"type": "string"},
+        "updated_time": {"type": "string", "format": "date-time"},
+        "account_invite_time": {"type": "string", "format": "date-time"},
+        "account_claim_time": {"type": "string", "format": "date-time"},
+        "external_id": {"type": "string"},
+        "start_date": {"type": "string", "format": "date-time"},
+        "about": {"type": "string"},
+        "cost_center": {"type": "string"},
+        "claim_link": {"type": "string"},
+        "access_code": {"type": "string"},
+        "work_locale": {"type": "string"},
+        "frontline": {"type": "object"},
+        "active": {"type": "boolean"}
+  }
+}

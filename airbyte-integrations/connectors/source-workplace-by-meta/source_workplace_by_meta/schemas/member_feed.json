@@ -1,0 +1,25 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "id": {"type": "string"},
+        "created_time": {"type": "string", "format": "date-time"},
+        "formatting": {"type": "string"},
+        "from": {"type": "object"},
+        "icon": {"type": "string"},
+        "link": {"type": "string"},
+        "message": {"type": "string"},
+        "name": {"type": "string"},
+        "object_id": {"type": "string"},
+        "permalink_url": {"type": "string"},
+        "picture": {"type": "string"},
+        "place": {"type": "object"},
+        "poll": {"type": "object"},
+        "properties": {"type": "object"},
+        "status_type": {"type": "string"},
+        "story": {"type": "string"},
+        "to": {"type": "array"},
+        "updated_time": {"type": "string"},
+        "with_tags": {"type": "array"}
+    }
+}
