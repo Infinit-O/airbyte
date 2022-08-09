@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "id": {"type": "string"},
+        "attending_count": {"type": "number"},
+        "cover": {"type": "string"},
+        "declined_count": {"type": "number"},
+        "description": {"type": "string"},
+        "end_time": {"type": "string", "format": "date-time"},
+        "event_times": {"type": "array"},
+        "guest_list_enabled": {"type": "boolean"},
+        "interested_count": {"type": "number"},
+        "is_cancelled": {"type": "boolean"},
+        "maybe_count": {"type": "number"},
+        "name": {"type": "string"},
+        "owner": {"type": "object"},
+        "parent_group": {"type": "object"},
+        "place": {"type": "string"},
+        "updated_time": {"type": "string", "format": "date-time"}
+    }
+}

@@ -11,12 +11,16 @@ from airbyte_cdk.sources.streams import Stream
 from .community import (
     CommunityAdmins,
     CommunityBadges,
+    CommunityEvents,
     CommunityFormerMembers,
     CommunityGroups,
     CommunityKnowledgeLibraryCategories,
     CommunityKnowledgeQuickLinks,
     CommunityMembers,
-    CommunityEvents,
+    CommunityPeopleSets,
+    CommunitySurveys,
+    IndividualPeopleSet,
+    IndividualSurvey,
 )
 from .groups import (
     Groups,
@@ -45,6 +49,14 @@ from .company import (
     MemberPhones,
     MemberSkills,
     MemberBadges,
+    ReportedContent,
+)
+from .posts import (
+    IndividualPost
+)
+from .events import (
+    IndividualEvent,
+    EventAdmins,
 )
 
 """
@@ -132,8 +144,11 @@ class SourceWorkplaceByMeta(AbstractSource):
             CommunityMembers(authenticator=auth),
             CommunityKnowledgeLibraryCategories(authenticator=auth),
             CommunityKnowledgeQuickLinks(authenticator=auth),
+            CommunityPeopleSets(authenticator=auth),
+            CommunitySurveys(authenticator=auth),
             CompanyMembers(authenticator=auth),
             CompanyInactiveMembers(authenticator=auth),
+            EventAdmins(authenticator=auth),
             Groups(authenticator=auth),
             GroupAdmins(authenticator=auth),
             GroupAlbums(authenticator=auth),
@@ -146,8 +161,12 @@ class SourceWorkplaceByMeta(AbstractSource):
             GroupMemberRequests(authenticator=auth),
             GroupModerators(authenticator=auth),
             GroupPinnedPosts(authenticator=auth),
+            IndividualEvent(authenticator=auth),
             IndividualGroup(authenticator=auth),
             IndividualMember(authenticator=auth),
+            IndividualPeopleSet(authenticator=auth),
+            IndividualPost(authenticator=auth),
+            IndividualSurvey(authenticator=auth),
             MemberEvents(authenticator=auth),
             MemberFeed(authenticator=auth),
             MemberGroups(authenticator=auth),
@@ -156,4 +175,5 @@ class SourceWorkplaceByMeta(AbstractSource):
             MemberPhotos(authenticator=auth),
             MemberSkills(authenticator=auth),
             MemberBadges(authenticator=auth),
+            ReportedContent(authenticator=auth),
         ]

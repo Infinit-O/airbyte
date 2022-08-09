@@ -51,7 +51,7 @@ class MemberEvents(WorkplaceByMetaSubstream, EventFieldsMixin):
     parent_stream = CompanyMembers
     path_template = "{entity_id}/events"
 
-class MemberFeed(WorkplaceByMetaSubstream):
+class MemberFeed(WorkplaceByMetaSubstream, MemberFieldsMixin):
     primary_key = "id"
     foreign_key = "id"
     parent_stream = CompanyMembers
@@ -115,3 +115,16 @@ class IndividualMember(WorkplaceByMetaSubstream, MemberFieldsMixin):
 
     def parse_response(self, response, **kwargs) -> Iterable[Mapping]:
         yield from [response.json()]
+
+class ReportedContent(WorkplaceByMetaStream):
+    primary_key = "id"
+    fields = []
+
+    def path(
+        self,
+        *,
+        stream_state,
+        stream_slice,
+        next_page_token,
+    ) -> str:
+        return "/company/reported_content"

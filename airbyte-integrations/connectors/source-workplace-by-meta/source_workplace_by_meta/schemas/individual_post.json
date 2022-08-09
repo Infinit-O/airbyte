@@ -19,7 +19,6 @@
         "status_type": {"type": "string"},
         "story": {"type": "string"},
         "to": {"type": "array"},
-        "type": {"type": "string"},
         "updated_time": {"type": "string"},
         "with_tags": {"type": "array"}
     }

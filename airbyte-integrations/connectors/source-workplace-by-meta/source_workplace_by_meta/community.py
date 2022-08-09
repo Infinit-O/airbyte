@@ -1,6 +1,6 @@
 from typing import Mapping, Any
 
-from .base import WorkplaceByMetaStream
+from .base import WorkplaceByMetaStream, WorkplaceByMetaSubstream
 from .field_mixins import MemberFieldsMixin, GroupFieldsMixin, EventFieldsMixin
 
 class CommunityAdmins(WorkplaceByMetaStream, MemberFieldsMixin):
@@ -79,6 +79,7 @@ class CommunityEvents(WorkplaceByMetaStream, EventFieldsMixin):
 
 class CommunityBadges(WorkplaceByMetaStream):
     primary_key = "id"
+    fields = []
 
     def path(
         self,
@@ -144,3 +145,64 @@ class CommunityFormerMembers(WorkplaceByMetaStream, MemberFieldsMixin):
         should return "customers". Required.
         """
         return "community/former_members/"
+
+class CommunityPeopleSets(WorkplaceByMetaStream):
+    primary_key = "id"
+    fields = []
+
+    def path(
+        self,
+        *,
+        stream_state,
+        stream_slice,
+        next_page_token,
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "community/people_sets/"
+
+class IndividualPeopleSet(WorkplaceByMetaSubstream):
+    primary_key = "id"
+    foreign_key = "id"
+    parent_stream = CommunityPeopleSets
+    path_template = "{entity_id}"
+
+class CommunitySurveys(WorkplaceByMetaStream):
+    primary_key = "id"
+    fields = [
+        "id",
+        "title",
+        "is_test",
+        "invite_message",
+        "questions",
+        "scheduling_config",
+    ]
+
+    def path(
+        self,
+        *,
+        stream_state,
+        stream_slice,
+        next_page_token,
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "community/surveys/"
+
+class IndividualSurvey(WorkplaceByMetaSubstream):
+    primary_key = "id"
+    foreign_key = "id"
+    parent_stream = CommunitySurveys
+    path_template = "{entity_id}"
+    fields = [
+        "id",
+        "title",
+        "is_test",
+        "invite_message",
+        "questions",
+        "scheduling_config",
+    ]
