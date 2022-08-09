@@ -51,9 +51,6 @@ from .company import (
     MemberBadges,
     ReportedContent,
 )
-from .posts import (
-    IndividualPost
-)
 from .events import (
     IndividualEvent,
     EventAdmins,
@@ -125,6 +122,10 @@ class SourceWorkplaceByMeta(AbstractSource):
         :param logger:  logger object
         :return Tuple[bool, any]: (True, None) if the input config can be used to connect to the API successfully, (False, error) otherwise.
         """
+        try:
+            x = config["access_token"]
+        except KeyError:
+            raise
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
@@ -165,7 +166,6 @@ class SourceWorkplaceByMeta(AbstractSource):
             IndividualGroup(authenticator=auth),
             IndividualMember(authenticator=auth),
             IndividualPeopleSet(authenticator=auth),
-            IndividualPost(authenticator=auth),
             IndividualSurvey(authenticator=auth),
             MemberEvents(authenticator=auth),
             MemberFeed(authenticator=auth),
