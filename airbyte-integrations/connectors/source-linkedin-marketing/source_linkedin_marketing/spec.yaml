@@ -4,20 +4,26 @@ connectionSpecification:
   title: Linkedin Marketing Spec
   type: object
   required:
-    - access_token
     - refresh_token
     - refresh_url
     - org_id
   additionalProperties: false
   properties:
     # 'TODO: This schema defines the configuration required for the source. This usually involves metadata such as database and/or authentication information.':
-    access_token:
+    client_id:
       type: string
-      description: Access token, preferably the one generated through the Linkedin UI
+      description: Obtained from the Linkedin UI, required for token refresh.
+    client_secret:
+      type: string
+      description: Obtained from the Linkedin UI, required for token refresh.
     refresh_token:
       type: string
+      description: Refresh token, it comes with the access_token generated through the LinkedIn UI.
     refresh_url:
       type: string
     org_id:
       type: string
       description: This is the organization page ID, take it from the URL of your company's page.
+    linkedin_version:
+      type: string
+      description: Linkedin API version to use, eg 202208. See their docs for more details

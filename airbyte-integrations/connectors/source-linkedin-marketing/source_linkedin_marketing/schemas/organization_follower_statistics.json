@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "followerCountsByAssociationType": {"type": "object"},
+        "followerCountsByCountry": {"type": "object"},
+        "followerCountsByFunction": {"type": "object"},
+        "followerCountsByIndustry": {"type": "object"},
+        "followerCountsByRegion": {"type": "object"},
+        "followerCountsBySenority": {"type": "object"},
+        "followerCountsByStaffRange": {"type": "object"}
+    }
+}
