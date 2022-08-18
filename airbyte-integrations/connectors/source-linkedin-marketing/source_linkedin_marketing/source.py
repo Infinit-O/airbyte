@@ -1,10 +1,8 @@
 #
 # Copyright (c) 2022 Airbyte, Inc., all rights reserved.
 #
-from typing import Any, Iterable, List, Mapping, MutableMapping, Tuple, Optional
+from typing import Any, List, Mapping, MutableMapping, Tuple
 
-import requests
-from airbyte_cdk.models import SyncMode
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http.auth import Oauth2Authenticator
@@ -15,13 +13,20 @@ from .bases import LinkedinMarketingStream
 class LinkedinStandardDataStream(LinkedinMarketingStream):
     url_base = "https://api.linkedin.com/v2/"
 
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
         """
-        Override this method to define how a response is parsed.
-        :return an iterable containing each record in the response
+        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
+        Usually contains common params e.g. pagination size etc.
         """
-        data = response.json()
-        yield from data
+        return {
+            "locale.language": "en",
+            "locale.country": "US"
+        }
 
 
 class LinkedinAPIStream(LinkedinMarketingStream):
@@ -60,19 +65,153 @@ class OrganizationFollowerStatistics(LinkedinAPIStream):
         return "organizationalEntityFollowerStatistics"
 
 
-class StandardRegionData(LinkedinStandardDataStream):
-    parent_stream = OrganizationFollowerStatistics
+class OrganizationShareStatistics(LinkedinAPIStream):
+    primary_key = "id"
 
-    def stream_slices(
+    def request_params(
         self,
-        sync_mode: SyncMode,
-        cursor_field: List[str] = None,
-        stream_state: Mapping[str, Any] = None
-    ) -> Iterable[Optional[Mapping[str, Any]]]:
-        ps = self.parent_stream(authenticator=self._session.auth, config=self.config)
-        for record in ps.read_records():
-            pass
-    pass
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        """
+        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
+        Usually contains common params e.g. pagination size etc.
+        """
+        return {
+            "q": "organizationalEntity",
+            "organizationalEntity": f"urn:li:organization:{self.config['org_id']}"
+        }
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url
+        is https://example-api.com/v1/customers then this should return "customers". Required.
+        """
+        return "organizationalEntityShareStatistics"
+
+
+class OrganizationPageStatistics(LinkedinAPIStream):
+    primary_key = "id"
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        """
+        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
+        Usually contains common params e.g. pagination size etc.
+        """
+        return {
+            "q": "organization",
+            "organization": f"urn:li:organization:{self.config['org_id']}"
+        }
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url
+        is https://example-api.com/v1/customers then this should return "customers". Required.
+        """
+        return "organizationPageStatistics"
+
+
+class StandardRegionData(LinkedinStandardDataStream):
+    primary_key = "id"
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url
+        is https://example-api.com/v1/customers then this should return "customers". Required.
+        """
+        return "regions/"
+
+
+class StandardCountryData(LinkedinStandardDataStream):
+    primary_key = "$URN"
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url
+        is https://example-api.com/v1/customers then this should return "customers". Required.
+        """
+        return "countries/"
+
+
+class StandardFunctionData(LinkedinStandardDataStream):
+    primary_key = "id"
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url
+        is https://example-api.com/v1/customers then this should return "customers". Required.
+        """
+        return "functions/"
+
+
+class StandardIndustryData(LinkedinStandardDataStream):
+    primary_key = "id"
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url
+        is https://example-api.com/v1/customers then this should return "customers". Required.
+        """
+        return "industries/"
+
+
+class StandardSeniorityData(LinkedinStandardDataStream):
+    primary_key = "id"
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url
+        is https://example-api.com/v1/customers then this should return "customers". Required.
+        """
+        return "seniorities/"
 
 
 # Source
@@ -101,5 +240,12 @@ class SourceLinkedinMarketing(AbstractSource):
             refresh_token=config["refresh_token"]
         )
         return [
-            OrganizationFollowerStatistics(authenticator=auth, config=config)
+            OrganizationFollowerStatistics(authenticator=auth, config=config),
+            OrganizationPageStatistics(authenticator=auth, config=config),
+            OrganizationShareStatistics(authenticator=auth, config=config),
+            StandardCountryData(authenticator=auth, config=config),
+            StandardFunctionData(authenticator=auth, config=config),
+            StandardIndustryData(authenticator=auth, config=config),
+            StandardRegionData(authenticator=auth, config=config),
+            StandardSeniorityData(authenticator=auth, config=config),
         ]
