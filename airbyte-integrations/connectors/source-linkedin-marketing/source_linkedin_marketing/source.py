@@ -227,6 +227,21 @@ class SourceLinkedinMarketing(AbstractSource):
         :param logger:  logger object
         :return Tuple[bool, any]: (True, None) if the input config can be used to connect to the API successfully, (False, error) otherwise.
         """
+        required_keys = [
+            "client_id",
+            "client_secret",
+            "refresh_token",
+            "refresh_url",
+            "org_id",
+            "linkedin_version"
+        ]
+
+        for x in required_keys:
+            if x not in config.keys():
+                return False, f"Missing {x} from config file."
+            if not config[x]:
+                return False, f"Value for key {x} is blank in config file, please check and try again."
+
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
