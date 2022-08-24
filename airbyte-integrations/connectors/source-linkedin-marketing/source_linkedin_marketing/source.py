@@ -2,12 +2,22 @@
 # Copyright (c) 2022 Airbyte, Inc., all rights reserved.
 #
 from typing import Any, List, Mapping, MutableMapping, Tuple
+import time
 
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http.auth import Oauth2Authenticator
 
 from .bases import LinkedinMarketingStream
+
+
+class CustomAuthWithDelay(Oauth2Authenticator):
+
+    def get_auth_header(self) -> Mapping[str, Any]:
+        """ This method overridden to add a delay, at the suggestion of LinkedIn dev support. """
+        token = self.get_access_token()
+        time.sleep(15)
+        return {"Authorization": f"Bearer {token}"}
 
 
 class LinkedinStandardDataStream(LinkedinMarketingStream):
@@ -248,7 +258,7 @@ class SourceLinkedinMarketing(AbstractSource):
         """
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
-        auth = Oauth2Authenticator(
+        auth = CustomAuthWithDelay(
             token_refresh_endpoint=config["refresh_url"],
             client_id=config["client_id"],
             client_secret=config["client_secret"],
