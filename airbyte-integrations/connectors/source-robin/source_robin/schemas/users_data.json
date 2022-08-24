@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {"type": "number"},
+    "name": {"type": "string"},
+    "given_name": {"type": "string"},
+    "family_name": {"type": "string"},
+    "slug": {"type": "string"},
+    "avatar": {"type": "string"},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"},
+    "timezone": {"type": "string"},
+    "working_hours": {"type": "object"},
+    "primary_email": {"type": "object"},
+    "user_status": {"type": "object"},
+    "is_pending": {"type": "boolean"},
+    "disabled_at": {"type": "string"},
+    "is_support": {"type": "boolean"},
+    "cost_center": {"type": "string"},
+    "department": {"type": "string"},
+    "division": {"type": "string"},
+    "account": {"type": "object"},
+    "user": {"type": "object"}
+  }
+}

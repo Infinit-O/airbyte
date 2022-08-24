@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+
+    "id": {"type": "number"},
+    "account_id": {"type": "number"},
+    "name": {"type": "string"},
+    "owner_types": {"type": "array"},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"}
+  }
+}
