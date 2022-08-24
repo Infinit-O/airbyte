@@ -8,11 +8,19 @@
     "given_name": {"type": "string"},
     "slug": {"type": "string"},
     "avatar": {"type": "string"},
-    "time_zone": {"type": "string"},
+    "timezone": {"type": "string"},
     "created_at": {"type": "string"},
     "updated_at": {"type": "string"},
     "is_pending": {"type": "boolean"},
     "primary_email": {"type": "object"},
-    "working_hours": {"type": "object"}
+    "working_hours": {"type": "object"},
+    "user_status": {"type": "object"},
+    "disabled_at": {"type": "string"},
+    "is_support": {"type": "boolean"},
+    "cost_center": {"type": "string"},
+    "department": {"type": "string"},
+    "division": {"type": "string"},
+    "account": {"type": "object"},
+    "user": {"type": "object"}
   }
 }
