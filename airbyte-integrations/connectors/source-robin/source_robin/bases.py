@@ -108,6 +108,11 @@ class RobinChildStream(RobinStream):
     def foreign_key(self):
         pass
 
+    @property
+    @abstractmethod
+    def foreign_key_name(self):
+        pass
+
     def stream_slices(
         self,
         sync_mode: SyncMode,
@@ -116,4 +121,4 @@ class RobinChildStream(RobinStream):
     ) -> Iterable[Optional[Mapping[str, Any]]]:
         ps = self.parent_stream(authenticator=self._authenticator, config=self.config)
         for x in ps.read_records(SyncMode.full_refresh):
-            yield {self.foreign_key: x["id"]}
+            yield {self.foreign_key_name: x[self.foreign_key]}

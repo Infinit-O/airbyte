@@ -13,7 +13,7 @@ from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
 from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
 
-from .bases import RobinStream
+from .bases import RobinStream, RobinChildStream
 
 """
 This file provides a stubbed example of how to use the Airbyte CDK to develop both a source connector which supports full refresh or and an
@@ -98,20 +98,12 @@ class OrganizationLocations(RobinStream):
         return f"organizations/{self.config['org_id']}/locations"
 
 
-class OrganizationUsersData(RobinStream):
+class OrganizationUsersData(RobinChildStream):
     parent_stream = OrganizationUsers
     path_template = "organizations/{organization_id}/users/{entity_id}"
+    foreign_key = "id"
+    foreign_key_name = "user_id"
     primary_key = "id"
-
-    def stream_slices(
-        self,
-        sync_mode: SyncMode,
-        cursor_field: List[str] = None,
-        stream_state: Mapping[str, Any] = None
-    ) -> Iterable[Optional[Mapping[str, Any]]]:
-        ps = self.parent_stream(authenticator=self._authenticator, config=self.config)
-        for x in ps.read_records(SyncMode.full_refresh):
-            yield {"user_id": x["id"]}
 
     def path(
         self,
@@ -135,20 +127,13 @@ class OrganizationUsersData(RobinStream):
         resp = response.json()
         yield from [resp["data"]]
 
-class Users(RobinStream):
+
+class Users(RobinChildStream):
     parent_stream = OrganizationUsers
     path_template = "users/{entity_id}"
+    foreign_key = "id"
+    foreign_key_name = "user_id"
     primary_key = "id"
-
-    def stream_slices(
-        self,
-        sync_mode: SyncMode,
-        cursor_field: List[str] = None,
-        stream_state: Mapping[str, Any] = None
-    ) -> Iterable[Optional[Mapping[str, Any]]]:
-        ps = self.parent_stream(authenticator=self._authenticator, config=self.config)
-        for x in ps.read_records(SyncMode.full_refresh):
-            yield {"user_id": x["id"]}
 
     def path(
         self,
@@ -173,20 +158,12 @@ class Users(RobinStream):
         yield from [resp["data"]]
 
 
-class UsersPresence(RobinStream):
+class UsersPresence(RobinChildStream):
     parent_stream = OrganizationUsers
     path_template = "users/{entity_id}/presence"
+    foreign_key = "id"
+    foreign_key_name = "user_id"
     primary_key = "id"
-
-    def stream_slices(
-        self,
-        sync_mode: SyncMode,
-        cursor_field: List[str] = None,
-        stream_state: Mapping[str, Any] = None
-    ) -> Iterable[Optional[Mapping[str, Any]]]:
-        ps = self.parent_stream(authenticator=self._authenticator, config=self.config)
-        for x in ps.read_records(SyncMode.full_refresh):
-            yield {"user_id": x["id"]}
 
     def path(
         self,
@@ -219,20 +196,12 @@ class UsersPresence(RobinStream):
             self.logger.debug(f"len(presence_data) = {len(presence_data)}")
             yield from []
 
-class UsersEvents(RobinStream):
+class UsersEvents(RobinChildStream):
     parent_stream = OrganizationUsers
     path_template = "users/{entity_id}/events"
+    foreign_key = "id"
+    foreign_key_name = "user_id"
     primary_key = "id"
-
-    def stream_slices(
-        self,
-        sync_mode: SyncMode,
-        cursor_field: List[str] = None,
-        stream_state: Mapping[str, Any] = None
-    ) -> Iterable[Optional[Mapping[str, Any]]]:
-        ps = self.parent_stream(authenticator=self._authenticator, config=self.config)
-        for x in ps.read_records(SyncMode.full_refresh):
-            yield {"user_id": x["id"]}
 
     def path(
         self,
