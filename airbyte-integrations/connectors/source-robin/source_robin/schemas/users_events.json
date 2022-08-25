@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {"type": "integer"},
+    "organizer_id": {"type": "integer"},
+    "organizer_email": {"type": "string"},
+    "creator_id": {"type": "integer"},
+    "creator_email": {"type": "string"},
+    "space_id": {"type": "integer"},
+    "title": {"type": "string"},
+    "description": {"type": "string"},
+    "location": {"type": "string"},
+    "remote_event_id": {"type": "string"},
+    "remote_type": {"type": "string"},
+    "creation_type": {"type": "string"},
+    "uid": {"type": "string"},
+    "started_at": {"type": "string"},
+    "ended_at": {"type": "string"},
+    "start": {"type": "object"},
+    "end": {"type": "object"},
+    "series_id": null,
+    "recurrence_id": null,
+    "status": {"type": "string"},
+    "recurrence": {"type": "array"},
+    "is_all_day": {"type": "boolean"},
+    "visibility": {"type": "string"},
+    "invitees": {"type": "array"}
+  }
+}
