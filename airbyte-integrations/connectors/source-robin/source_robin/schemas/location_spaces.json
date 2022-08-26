@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {"type": "number"},
+    "location_id": {"type": "number"},
+    "level_id": {"type": "number"},
+    "name": {"type": "string"},
+    "description": {"type": "string"},
+    "image": {"type": "string"},
+    "discovery_radius": {"type": "number"},
+    "capacity": {"type": "number"},
+    "type": {"type": "string"},
+    "is_accessible": {"type": "boolean"},
+    "is_managed": {"type": "boolean"},
+    "is_disabled": {"type": "boolean"},
+    "updated_at": {"type": "string"},
+    "created_at": {"type": "string"},
+    "behaviors": {"type": "array"}
+  }
+}

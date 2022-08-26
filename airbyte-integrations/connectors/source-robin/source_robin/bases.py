@@ -122,3 +122,33 @@ class RobinChildStream(RobinStream):
         ps = self.parent_stream(authenticator=self._authenticator, config=self.config)
         for x in ps.read_records(SyncMode.full_refresh):
             yield {self.foreign_key_name: x[self.foreign_key]}
+
+    def path(
+        self,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        user_id = stream_slice[self.foreign_key_name]
+        return self.path_template.format(entity_id=user_id)
+
+    def parse_response(self, response: requests.Response, **kwargs):
+        entity_id = kwargs["stream_slice"][self.foreign_key_name]
+
+        self.logger.debug(f"Grabbing data for {self.parent_stream} {self.foreign_key_name} {entity_id}")
+        if self.data_is_single_object:
+            yield from self._parse_single_object(response, **kwargs)
+        else:
+            yield from self._parse_array_of_objects(response, **kwargs)
+
+    def _parse_single_object(self, response: requests.Response, **kwargs):
+        data = response.json()
+        yield from [data]
+
+    def _parse_array_of_objects(self, response, **kwargs):
+        data = response.json()["data"]
+        yield from data
