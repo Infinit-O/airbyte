@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {"type": "integer"},
+    "name": {"type": "string"},
+    "space_id": {"type": "integer"},
+    "zone_id": {"type": "integer"},
+    "is_reservable": {"type": "boolean"},
+    "is_disabled": {"type": "boolean"},
+    "disabled_at": {"type": "string"},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"}
+  }
+}

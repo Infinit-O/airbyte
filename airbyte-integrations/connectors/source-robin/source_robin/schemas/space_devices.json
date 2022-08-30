@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "account_id": {"type": "integer"},
+    "device_manifest_id": {"type": "integer"},
+    "name": {"type": "string"},
+    "last_reported_at": {"type": "string"},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"}
+  }
+}

@@ -55,10 +55,18 @@ class SourceRobin(AbstractSource):
             OrganizationLocations(authenticator=auth, config=config),
             OrganizationUsers(authenticator=auth, config=config),
             OrganizationUsersData(authenticator=auth, config=config),
+            Spaces(authenticator=auth, config=config),
+            SpaceAmenities(authenticator=auth, config=config),
+            SpaceDevices(authenticator=auth, config=config),
+            SpacePresence(authenticator=auth, config=config),
+            SpaceSeats(authenticator=auth, config=config),
+            SpaceState(authenticator=auth, config=config),
+            SpaceZones(authenticator=auth, config=config),
             Users(authenticator=auth, config=config),
             # NOTE: UserEvents is disabled because I need more information
             #       on param format! needs either "before" or "after", but
             #       I don't know what it's supposed to look like.
+            # NOTE: Other "events" streams are disabled for the same reason.
             # UsersEvents(authenticator=auth, config=config),
             UsersPresence(authenticator=auth, config=config),
         ]

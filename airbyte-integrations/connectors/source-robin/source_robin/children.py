@@ -1,6 +1,7 @@
-from typing import Mapping, Any, Iterable
+from typing import Any, Iterable, List, Mapping, Optional
 
 import requests
+from airbyte_cdk.models import SyncMode
 
 from .bases import RobinChildStream
 from .parents import OrganizationUsers, OrganizationLocations
@@ -45,7 +46,6 @@ class UsersPresence(RobinChildStream):
     primary_key = "id"
     data_is_single_object = False
 
-    # NOTE: REFACTOR ALL THIS LATER!!!
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         """
         Override this method to define how a response is parsed.
@@ -111,3 +111,75 @@ class LocationPresence(RobinChildStream):
     foreign_key = "id"
     foreign_key_name = "presence_id"
     data_is_single_object = False
+
+class Spaces(RobinChildStream):
+    # NOTE: This is a special case; spaces are
+    #       from the LocationSpaces stream, but
+    #       LocationSpaces are themselves drawn from
+    #       the OrganizationLocations stream.
+    #       Child streams cannot themselves be parent streams
+    #       I'm limited by how Airbyte chooses to model
+    #       APIs
+    parent_stream = LocationSpaces
+    path_template = "spaces/{entity_id}"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "space_id"
+    data_is_single_object = True
+
+    def stream_slices(
+        self,
+        sync_mode: SyncMode,
+        cursor_field: List[str] = None,
+        stream_state: Mapping[str, Any] = None
+    ) -> Iterable[Optional[Mapping[str, Any]]]:
+        ls = self.parent_stream(authenticator=self._authenticator, config=self.config)
+        ls_slices = ls.stream_slices(SyncMode.full_refresh, cursor_field, stream_state)
+
+        for slice in ls_slices:
+            for record in ls.read_records(SyncMode.full_refresh, stream_slice=slice):
+                yield {
+                    self.foreign_key_name: record[self.foreign_key]
+                }
+
+class SpaceAmenities(Spaces):
+    path_template = "spaces/{entity_id}/amenities"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "amenity_id"
+    data_is_single_object = False
+
+class SpacePresence(Spaces):
+    path_template = "spaces/{entity_id}/presence"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "presence_id"
+    data_is_single_object = False
+
+class SpaceDevices(Spaces):
+    path_template = "spaces/{entity_id}/devices"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "device_id"
+    data_is_single_object = False
+
+class SpaceState(Spaces):
+    path_template = "spaces/{entity_id}/state"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "state_id"
+    data_is_single_object = True
+
+class SpaceSeats(Spaces):
+    path_template = "spaces/{entity_id}/seats"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "seat_id"
+    data_is_single_object = False 
+
+class SpaceZones(Spaces):
+    path_template = "spaces/{entity_id}/zones"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "zone_id"
+    data_is_single_object = False 

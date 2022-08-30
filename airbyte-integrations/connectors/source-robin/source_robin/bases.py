@@ -120,6 +120,7 @@ class RobinChildStream(RobinStream):
         stream_state: Mapping[str, Any] = None
     ) -> Iterable[Optional[Mapping[str, Any]]]:
         ps = self.parent_stream(authenticator=self._authenticator, config=self.config)
+        pss = None
         for x in ps.read_records(SyncMode.full_refresh):
             yield {self.foreign_key_name: x[self.foreign_key]}
 
@@ -134,21 +135,30 @@ class RobinChildStream(RobinStream):
         should return "customers". Required.
         """
         user_id = stream_slice[self.foreign_key_name]
-        return self.path_template.format(entity_id=user_id)
+        final_path = self.path_template.format(entity_id=user_id)
+        self.logger.debug(f"Path formed for: {self.path_template.format(entity_id=user_id)}")
+        return final_path
 
     def parse_response(self, response: requests.Response, **kwargs):
         entity_id = kwargs["stream_slice"][self.foreign_key_name]
 
         self.logger.debug(f"Grabbing data for {self.parent_stream} {self.foreign_key_name} {entity_id}")
         if self.data_is_single_object:
+            self.logger.debug("Data is in a single object.")
             yield from self._parse_single_object(response, **kwargs)
         else:
+            self.logger.debug("Data is in an array.")
             yield from self._parse_array_of_objects(response, **kwargs)
 
     def _parse_single_object(self, response: requests.Response, **kwargs):
+        slice = kwargs["stream_slice"]
         data = response.json()
+        data["fk_id"] = slice[self.foreign_key_name]
         yield from [data]
 
     def _parse_array_of_objects(self, response, **kwargs):
         data = response.json()["data"]
-        yield from data
+        slice = kwargs["stream_slice"]
+        for record in data:
+            record["fk_id"] = slice[self.foreign_key_name]
+            yield record
