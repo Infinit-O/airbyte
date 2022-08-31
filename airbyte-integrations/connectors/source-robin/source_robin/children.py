@@ -1,3 +1,4 @@
+from re import I
 from typing import Any, Iterable, List, Mapping, Optional
 
 import requests
@@ -137,7 +138,9 @@ class Spaces(RobinChildStream):
         ls_slices = ls.stream_slices(SyncMode.full_refresh, cursor_field, stream_state)
 
         for slice in ls_slices:
+            self.logger.debug(f"slice-> {slice}")
             for record in ls.read_records(SyncMode.full_refresh, stream_slice=slice):
+                self.logger.debug(f"record-> {record}")
                 yield {
                     self.foreign_key_name: record[self.foreign_key]
                 }
@@ -183,3 +186,27 @@ class SpaceZones(Spaces):
     foreign_key = "id"
     foreign_key_name = "zone_id"
     data_is_single_object = False 
+
+class SeatAmenities(SpaceSeats):
+    path_template = "seats/{entity_id}/amenities"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "seat_id"
+    data_is_single_object = False
+    raise_on_http_errors = False
+
+class Zones(SpaceZones):
+    path_template = "zones/{entity_id}"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "id"
+    data_is_a_single_object = False
+    raise_on_http_errors = False
+
+class ZoneSeats(SpaceZones):
+    path_template = "zones/{entity_id}/seats"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "id"
+    data_is_a_single_object = False
+    raise_on_http_errors = False

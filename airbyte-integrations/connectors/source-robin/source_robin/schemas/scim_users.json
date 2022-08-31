@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "externalId": {"type": "string"},
+    "id": {"type": "string"},
+    "active": {"type": "boolean"},
+    "addresses": {"type": "array"},
+    "displayName": {"type": "string"},
+    "emails": {"type": "array"},
+    "ims": {"type": "array"},
+    "locale": {"type": "string"},
+    "name": {"type": "object"},
+    "nickName": {"type": "string"},
+    "phoneNumbers": {"type": "array"},
+    "photos": {"type": "array"},
+    "preferredLanguage": {"type": "string"},
+    "profileUrl": {"type": "string"},
+    "timezone": {"type": "string"},
+    "title": {"type": "string"},
+    "userName": {"type": "string"},
+    "userType": {"type": "string"},
+    "x509Certificates": {"type": "array"},
+    "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {"type": "object"},
+    "schemas": {"type": "array"},
+    "meta": {"type": "object"},
+    "groups": {"type": "array"} 
+  }
+}

@@ -122,6 +122,8 @@ class RobinChildStream(RobinStream):
         ps = self.parent_stream(authenticator=self._authenticator, config=self.config)
         pss = None
         for x in ps.read_records(SyncMode.full_refresh):
+            s_slice = {self.foreign_key_name: x[self.foreign_key]}
+            self.logger.debug(f"slice -> {s_slice}")
             yield {self.foreign_key_name: x[self.foreign_key]}
 
     def path(
