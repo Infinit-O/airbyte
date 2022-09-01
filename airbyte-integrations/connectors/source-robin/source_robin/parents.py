@@ -1,4 +1,6 @@
-from typing import Any, Iterable, Mapping, MutableMapping, Optional
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional
+from airbyte_cdk.models import SyncMode
+from abc import abstractmethod
 
 import requests
 
@@ -90,23 +92,10 @@ class DeviceManifests(RobinStream):
         return f"device-manifests/"
 
 
-class SCIMUsers(RobinStream):
+class SCIMBaseStream(RobinStream):
     # NOTE: The SCIM endpoints have a completely different JSON envelope structure
-    #       and a completely different pagination scheme! So I need to RE-DO the spider here.
+    #       and a completely different pagination scheme! So I need to RE-DO the spider base here.
     primary_key = "id"
-
-    def path(
-        self,
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        """
-        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
-        should return "customers". Required.
-        """
-        return f"scim-2/Users/"
-
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
         This method should return a Mapping (e.g: dict) containing whatever information required to make paginated requests. This dict is passed
@@ -121,9 +110,12 @@ class SCIMUsers(RobinStream):
                 If there are no more pages in the result, return None.
         """
         data = response.json()
-        total_results = data["totalResults"]
-        start_index = data["startIndex"]
-        items_per_page = data["itemsPerPage"]
+        try:
+            total_results = data["totalResults"]
+            start_index = data["startIndex"]
+            items_per_page = data["itemsPerPage"]
+        except KeyError:
+            return None
         self.logger.debug(f"index {start_index} of {total_results} @ {items_per_page} per page.")
 
         if (start_index + items_per_page) < total_results:
@@ -160,3 +152,97 @@ class SCIMUsers(RobinStream):
         """
         resp = response.json()
         yield from resp["Resources"]
+
+class SCIMChildStream(SCIMBaseStream):
+    @property
+    @abstractmethod
+    def parent_stream(self):
+        pass
+
+    @property
+    @abstractmethod
+    def path_template(self):
+        pass
+
+    @property
+    @abstractmethod
+    def foreign_key(self):
+        pass
+
+    @property
+    @abstractmethod
+    def foreign_key_name(self):
+        pass
+
+    def path(
+        self,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        user_id = stream_slice[self.foreign_key_name]
+        final_path = self.path_template.format(entity_id=user_id)
+        self.logger.debug(f"Path formed for: {self.path_template.format(entity_id=user_id)}")
+        return final_path
+
+    def stream_slices(
+        self,
+        sync_mode: SyncMode,
+        cursor_field: List[str] = None,
+        stream_state: Mapping[str, Any] = None
+    ) -> Iterable[Optional[Mapping[str, Any]]]:
+        ps = self.parent_stream(authenticator=self._authenticator, config=self.config)
+        for x in ps.read_records(SyncMode.full_refresh):
+            s_slice = {self.foreign_key_name: x[self.foreign_key]}
+            self.logger.debug(f"slice -> {s_slice}")
+            yield {self.foreign_key_name: x[self.foreign_key]}
+
+class SCIMUsers(SCIMBaseStream):
+    primary_key = "id"
+
+    def path(
+        self,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return f"scim-2/Users/"
+
+class SCIMSpecificUser(SCIMChildStream):
+    parent_stream = SCIMUsers
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "user_id"
+    path_template = "scim-2/Users/{entity_id}"
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        **kwargs
+    ):
+        data = response.json()
+        yield from [data]
+
+class SCIMGroups(SCIMBaseStream):
+    primary_key = "id"
+
+    def path(
+        self,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return f"scim-2/Groups/"
+
