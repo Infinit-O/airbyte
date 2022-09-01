@@ -58,6 +58,7 @@ class SourceRobin(AbstractSource):
             OrganizationUsersData(authenticator=auth, config=config),
             SCIMGroups(authenticator=auth, config=config),
             SCIMSpecificUser(authenticator=auth, config=config),
+            SCIMSpecificGroup(authenticator=auth, config=config),
             SCIMUsers(authenticator=auth, config=config),
             Spaces(authenticator=auth, config=config),
             SpaceAmenities(authenticator=auth, config=config),

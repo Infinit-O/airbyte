@@ -110,12 +110,15 @@ class SCIMBaseStream(RobinStream):
                 If there are no more pages in the result, return None.
         """
         data = response.json()
+        
+        # NOTE: This is a bit messy; I'd like to fix it up later properly, but for now it will do
         try:
             total_results = data["totalResults"]
             start_index = data["startIndex"]
             items_per_page = data["itemsPerPage"]
         except KeyError:
             return None
+
         self.logger.debug(f"index {start_index} of {total_results} @ {items_per_page} per page.")
 
         if (start_index + items_per_page) < total_results:
@@ -246,3 +249,17 @@ class SCIMGroups(SCIMBaseStream):
         """
         return f"scim-2/Groups/"
 
+class SCIMSpecificGroup(SCIMChildStream):
+    parent_stream = SCIMGroups
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "user_id"
+    path_template = "scim-2/Groups/{entity_id}"
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        **kwargs
+    ):
+        data = response.json()
+        yield from [data]
