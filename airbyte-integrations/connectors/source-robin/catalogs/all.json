@@ -11,6 +11,42 @@
         },
         {
             "stream": {
+                "name": "device_manifests",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "location_presence",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "location_spaces",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "locations",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
                 "name": "organization_locations",
                 "json_schema": {},
                 "supported_sync_modes": ["full_refresh"]
@@ -38,6 +74,60 @@
         },
         {
             "stream": {
+                "name": "scim_groups",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "scim_specific_group",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },        
+        {
+            "stream": {
+                "name": "scim_specific_user",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "scim_users",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "seat_amenities",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "space_amenities",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
                 "name": "users",
                 "json_schema": {},
                 "supported_sync_modes": ["full_refresh"]
@@ -47,7 +137,88 @@
         },
         {
             "stream": {
+                "name": "space_devices",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "space_presence",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "space_seats",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "space_state",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "space_zones",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "spaces",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
                 "name": "users_presence",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "users",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "zone_seats",
+                "json_schema": {},
+                "supported_sync_modes": ["full_refresh"]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "overwrite"
+        },
+        {
+            "stream": {
+                "name": "zones",
                 "json_schema": {},
                 "supported_sync_modes": ["full_refresh"]
             },

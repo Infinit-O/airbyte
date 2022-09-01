@@ -77,10 +77,12 @@ class RobinStream(HttpStream, ABC):
         Usually contains common params e.g. pagination size etc.
         """
         if next_page_token:
+            self.logger.info(f"moving to page {next_page_token['next_page']}")
             return {
                 "page": next_page_token["next_page"]
             }
         else:
+            self.logger.info("No next_page_token available.")
             return {}
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:

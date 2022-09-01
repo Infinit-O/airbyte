@@ -1,5 +1,5 @@
 from re import I
-from typing import Any, Iterable, List, Mapping, Optional
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional
 
 import requests
 from airbyte_cdk.models import SyncMode
@@ -144,6 +144,17 @@ class Spaces(RobinChildStream):
                 yield {
                     self.foreign_key_name: record[self.foreign_key]
                 }
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        params = super().request_params(stream_state, stream_slice, next_page_token)
+        self.logger.info("Stream 'spaces' has special handling for request_params. Adding 'include' param for calendar data.")
+        params["include"] = "calendar"
+        return params
 
 class SpaceAmenities(Spaces):
     path_template = "spaces/{entity_id}/amenities"
