@@ -64,30 +64,28 @@ class UsersPresence(RobinChildStream):
             self.logger.debug(f"len(presence_data) = {len(presence_data)}")
             yield from []
 
-class UsersEvents(RobinChildStream):
-    parent_stream = OrganizationUsers
-    path_template = "users/{entity_id}/events"
-    foreign_key = "id"
-    foreign_key_name = "user_id"
+class OrganizationLocationEvents(RobinChildStream):
+    parent_stream = OrganizationLocations
+    path_template = "locations/{entity_id}/events"
     primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "location_id"
     data_is_single_object = False
 
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
         """
-        Override this method to define how a response is parsed.
-        :return an iterable containing each record in the response
+        Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
+        Usually contains common params e.g. pagination size etc.
         """
-        resp = response.json()
-        slice = kwargs["stream_slice"]
-        presence_data = resp["data"]
-        if presence_data:
-            for x in presence_data:
-                x["user_id"] = slice["user_id"]
-                yield x
-        else:
-            self.logger.info(f"No events records available for user: {slice['user_id']}")
-            self.logger.debug(f"len(events) = {len(presence_data)}")
-            yield from []
+        params = super().request_params(stream_state, stream_slice, next_page_token)
+        params["before"] = "2999-01-01T00:00:00Z"
+        params["after"] = "2021-01-01T00:00:00Z"
+        return params
 
 class Locations(RobinChildStream):
     parent_stream = OrganizationLocations
@@ -162,6 +160,33 @@ class SpaceAmenities(Spaces):
     foreign_key = "id"
     foreign_key_name = "amenity_id"
     data_is_single_object = False
+
+
+# class Events(RobinChildStream):
+#     parent_stream = UsersEvents
+#     path_template = "events/{entity_id}"
+#     primary_key = "id"
+#     foreign_key = "id"
+#     foreign_key_name = "event_id"
+#     date_is_a_single_object = False
+#     raise_on_http_errors = False
+
+#     def stream_slices(
+#         self,
+#         sync_mode: SyncMode,
+#         cursor_field: List[str] = None,
+#         stream_state: Mapping[str, Any] = None
+#     ) -> Iterable[Optional[Mapping[str, Any]]]:
+#         ls = self.parent_stream(authenticator=self._authenticator, config=self.config)
+#         ls_slices = ls.stream_slices(SyncMode.full_refresh, cursor_field, stream_state)
+
+#         for slice in ls_slices:
+#             self.logger.debug(f"slice-> {slice}")
+#             for record in ls.read_records(SyncMode.full_refresh, stream_slice=slice):
+#                 self.logger.debug(f"record-> {record}")
+#                 yield {
+#                     self.foreign_key_name: record[self.foreign_key]
+#                 }
 
 class SpacePresence(Spaces):
     path_template = "spaces/{entity_id}/presence"

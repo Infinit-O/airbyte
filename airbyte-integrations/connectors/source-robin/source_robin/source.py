@@ -49,11 +49,13 @@ class SourceRobin(AbstractSource):
         return [
             Amenities(authenticator=auth, config=config),
             DeviceManifests(authenticator=auth, config=config),
+            # Events(authenticator=auth, config=config),
             Locations(authenticator=auth, config=config),
             LocationSpaces(authenticator=auth, config=config),
             LocationPresence(authenticator=auth, config=config),
             Organization(authenticator=auth, config=config),
             OrganizationLocations(authenticator=auth, config=config),
+            OrganizationLocationEvents(authenticator=auth, config=config),
             OrganizationUsers(authenticator=auth, config=config),
             OrganizationUsersData(authenticator=auth, config=config),
             SCIMGroups(authenticator=auth, config=config),
@@ -73,7 +75,6 @@ class SourceRobin(AbstractSource):
             #       on param format! needs either "before" or "after", but
             #       I don't know what it's supposed to look like.
             # NOTE: Other "events" streams are disabled for the same reason.
-            # UsersEvents(authenticator=auth, config=config),
             UsersPresence(authenticator=auth, config=config),
             Zones(authenticator=auth, config=config),
             ZoneSeats(authenticator=auth, config=config),
