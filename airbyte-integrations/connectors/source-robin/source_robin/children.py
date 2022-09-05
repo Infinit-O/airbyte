@@ -162,31 +162,31 @@ class SpaceAmenities(Spaces):
     data_is_single_object = False
 
 
-# class Events(RobinChildStream):
-#     parent_stream = UsersEvents
-#     path_template = "events/{entity_id}"
-#     primary_key = "id"
-#     foreign_key = "id"
-#     foreign_key_name = "event_id"
-#     date_is_a_single_object = False
-#     raise_on_http_errors = False
+class Events(RobinChildStream):
+    parent_stream = OrganizationLocationEvents
+    path_template = "events/{entity_id}"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "event_id"
+    data_is_single_object = True
+    raise_on_http_errors = False
 
-#     def stream_slices(
-#         self,
-#         sync_mode: SyncMode,
-#         cursor_field: List[str] = None,
-#         stream_state: Mapping[str, Any] = None
-#     ) -> Iterable[Optional[Mapping[str, Any]]]:
-#         ls = self.parent_stream(authenticator=self._authenticator, config=self.config)
-#         ls_slices = ls.stream_slices(SyncMode.full_refresh, cursor_field, stream_state)
+    def stream_slices(
+        self,
+        sync_mode: SyncMode,
+        cursor_field: List[str] = None,
+        stream_state: Mapping[str, Any] = None
+    ) -> Iterable[Optional[Mapping[str, Any]]]:
+        ls = self.parent_stream(authenticator=self._authenticator, config=self.config)
+        ls_slices = ls.stream_slices(SyncMode.full_refresh, cursor_field, stream_state)
 
-#         for slice in ls_slices:
-#             self.logger.debug(f"slice-> {slice}")
-#             for record in ls.read_records(SyncMode.full_refresh, stream_slice=slice):
-#                 self.logger.debug(f"record-> {record}")
-#                 yield {
-#                     self.foreign_key_name: record[self.foreign_key]
-#                 }
+        for slice in ls_slices:
+            self.logger.debug(f"slice-> {slice}")
+            for record in ls.read_records(SyncMode.full_refresh, stream_slice=slice):
+                self.logger.debug(f"record-> {record}")
+                yield {
+                    self.foreign_key_name: record[self.foreign_key]
+                }
 
 class SpacePresence(Spaces):
     path_template = "spaces/{entity_id}/presence"

@@ -49,7 +49,7 @@ class SourceRobin(AbstractSource):
         return [
             Amenities(authenticator=auth, config=config),
             DeviceManifests(authenticator=auth, config=config),
-            # Events(authenticator=auth, config=config),
+            Events(authenticator=auth, config=config),
             Locations(authenticator=auth, config=config),
             LocationSpaces(authenticator=auth, config=config),
             LocationPresence(authenticator=auth, config=config),
