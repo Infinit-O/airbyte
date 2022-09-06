@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {"type": "string"},
+    "group_seat_reservation_id": {"type": "string"},
+    "seat_id": {"type": "integer"},
+    "reserver_id": {"type": "integer"},
+    "type": {"type": "string"},
+    "title": {"type": "string"},
+    "start": {"type": "object"},
+    "end": {"type": "object"},
+    "recurrence": {"type": "string"},
+    "series_id": {"type": "string"},
+    "recurrence_id": {"type": "string"},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"},
+    "reservee": {"type": "object"},
+    "confirmation": {"type": "object"} 
+  }
+}

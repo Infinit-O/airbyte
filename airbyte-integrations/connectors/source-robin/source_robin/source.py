@@ -37,6 +37,14 @@ class SourceRobin(AbstractSource):
         :param logger:  logger object
         :return Tuple[bool, any]: (True, None) if the input config can be used to connect to the API successfully, (False, error) otherwise.
         """
+        api_key = config["api_key"]
+        org_id = config["org_id"]
+        if not api_key:
+            return False, "API Key can't be blank."
+        
+        if not org_id:
+            return False, "Organization ID can't be blank."
+
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
@@ -58,6 +66,9 @@ class SourceRobin(AbstractSource):
             OrganizationLocationEvents(authenticator=auth, config=config),
             OrganizationUsers(authenticator=auth, config=config),
             OrganizationUsersData(authenticator=auth, config=config),
+            Reservations(authenticator=auth, config=config),
+            ReservationConfirmations(authenticator=auth, config=config),
+            ReservationInstances(authenticator=auth, config=config),
             SCIMGroups(authenticator=auth, config=config),
             SCIMSpecificUser(authenticator=auth, config=config),
             SCIMSpecificGroup(authenticator=auth, config=config),

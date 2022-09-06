@@ -122,11 +122,17 @@ class RobinChildStream(RobinStream):
         stream_state: Mapping[str, Any] = None
     ) -> Iterable[Optional[Mapping[str, Any]]]:
         ps = self.parent_stream(authenticator=self._authenticator, config=self.config)
-        pss = None
-        for x in ps.read_records(SyncMode.full_refresh):
-            s_slice = {self.foreign_key_name: x[self.foreign_key]}
-            self.logger.debug(f"slice -> {s_slice}")
-            yield {self.foreign_key_name: x[self.foreign_key]}
+        pss = [x for x in ps.stream_slices(sync_mode=SyncMode.full_refresh)]
+        if not pss:
+            for x in ps.read_records(SyncMode.full_refresh):
+                s_slice = {self.foreign_key_name: x[self.foreign_key]}
+                self.logger.debug(f"slice -> {s_slice}")
+                yield {self.foreign_key_name: x[self.foreign_key]}
+        else:
+            for p_slice in pss:
+                for slice in ps.read_records(SyncMode.full_refresh, stream_slice=p_slice):
+                    self.logger.debug(f"slice -> {p_slice}")
+                    yield {self.foreign_key_name: slice[self.foreign_key]}
 
     def path(
         self,
@@ -156,13 +162,15 @@ class RobinChildStream(RobinStream):
 
     def _parse_single_object(self, response: requests.Response, **kwargs):
         slice = kwargs["stream_slice"]
+        foreign_key_name = f"{self.foreign_key_name}_custom"
         data = response.json()
-        data["fk_id"] = slice[self.foreign_key_name]
+        data[foreign_key_name] = slice[self.foreign_key_name]
         yield from [data]
 
     def _parse_array_of_objects(self, response, **kwargs):
         data = response.json()["data"]
+        foreign_key_name = f"{self.foreign_key_name}_custom"
         slice = kwargs["stream_slice"]
         for record in data:
-            record["fk_id"] = slice[self.foreign_key_name]
+            record[foreign_key_name] = slice[self.foreign_key_name]
             yield record

@@ -126,23 +126,6 @@ class Spaces(RobinChildStream):
     foreign_key_name = "space_id"
     data_is_single_object = True
 
-    def stream_slices(
-        self,
-        sync_mode: SyncMode,
-        cursor_field: List[str] = None,
-        stream_state: Mapping[str, Any] = None
-    ) -> Iterable[Optional[Mapping[str, Any]]]:
-        ls = self.parent_stream(authenticator=self._authenticator, config=self.config)
-        ls_slices = ls.stream_slices(SyncMode.full_refresh, cursor_field, stream_state)
-
-        for slice in ls_slices:
-            self.logger.debug(f"slice-> {slice}")
-            for record in ls.read_records(SyncMode.full_refresh, stream_slice=slice):
-                self.logger.debug(f"record-> {record}")
-                yield {
-                    self.foreign_key_name: record[self.foreign_key]
-                }
-
     def request_params(
         self,
         stream_state: Mapping[str, Any],
@@ -154,13 +137,54 @@ class Spaces(RobinChildStream):
         params["include"] = "calendar"
         return params
 
+class Reservations(RobinChildStream):
+    parent_stream = OrganizationLocations
+    path_template = "reservations/seats"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "location_id"
+    data_is_single_object = False
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        params = super().request_params(stream_state, stream_slice, next_page_token)
+        self.logger.info("Stream 'spaces' has special handling for request_params. Adding 'include' param for calendar data.")
+        params["location_ids"] = stream_slice[self.foreign_key_name]
+        return params
+
+class ReservationConfirmations(RobinChildStream):
+    parent_stream = Reservations
+    path_template = "reservations/seats/{entity_id}/confirmation"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "reservation_id"
+    data_is_single_object = True
+    # NOTE: 404 in Robin means that there's no data for the given <x>. Not necessarily
+    #       that <x> is invalid, but that there's no data for it. Small distinction, but
+    #       its important IMO.
+    raise_on_http_errors = False
+
+class ReservationInstances(RobinChildStream):
+    parent_stream = Reservations
+    path_template = "reservations/seats/{entity_id}/instances"
+    primary_key = "id"
+    foreign_key = "id"
+    foreign_key_name = "reservation_id"
+    data_is_single_object = False
+    # NOTE: When reservation_id isn't recurring, it returns a 400.
+    #       the 400 does not mean that the reservation_id is bad. 
+    raise_on_http_errors = False
+
 class SpaceAmenities(Spaces):
     path_template = "spaces/{entity_id}/amenities"
     primary_key = "id"
     foreign_key = "id"
     foreign_key_name = "amenity_id"
     data_is_single_object = False
-
 
 class Events(RobinChildStream):
     parent_stream = OrganizationLocationEvents
@@ -170,23 +194,6 @@ class Events(RobinChildStream):
     foreign_key_name = "event_id"
     data_is_single_object = True
     raise_on_http_errors = False
-
-    def stream_slices(
-        self,
-        sync_mode: SyncMode,
-        cursor_field: List[str] = None,
-        stream_state: Mapping[str, Any] = None
-    ) -> Iterable[Optional[Mapping[str, Any]]]:
-        ls = self.parent_stream(authenticator=self._authenticator, config=self.config)
-        ls_slices = ls.stream_slices(SyncMode.full_refresh, cursor_field, stream_state)
-
-        for slice in ls_slices:
-            self.logger.debug(f"slice-> {slice}")
-            for record in ls.read_records(SyncMode.full_refresh, stream_slice=slice):
-                self.logger.debug(f"record-> {record}")
-                yield {
-                    self.foreign_key_name: record[self.foreign_key]
-                }
 
 class SpacePresence(Spaces):
     path_template = "spaces/{entity_id}/presence"
