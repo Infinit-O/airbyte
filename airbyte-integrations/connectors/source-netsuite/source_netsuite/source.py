@@ -7,23 +7,58 @@ from abc import ABC
 from base64 import urlsafe_b64decode
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 
+import jwt
+import pendulum
 import requests
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
 from airbyte_cdk.sources.streams.http.requests_native_auth.abstract_oauth import AbstractOauth2Authenticator
-"""
-This file provides a stubbed example of how to use the Airbyte CDK to develop both a source connector which supports full refresh or and an
-incremental syncs from an HTTP API.
 
-The various TODOs are both implementation hints and steps - fulfilling all the TODOs should be sufficient to implement one basic and one incremental
-stream from a source. This pattern is the same one used by Airbyte internally to implement connectors.
+class NetsuiteOauth2Authenticator(AbstractOauth2Authenticator):
+    # NOTE: Netsuite's OAuth2 implementation for server-to-server
+    #       communication calls for a public/private keypair and
+    #       has the following attributes:
+    #       - there is no refresh token, nor any way to refresh an access token
+    #       - on first issue the server must provide a 'client assertion'
+    #       that is a JWT bearing certain properties and signed by the
+    #       private half of the keypair.
+    #       - the access token thus granted lasts only one hour.
+    #       - "refreshing" thus is just getting a new token
+    def __init__(self, client_id: str, certificate_id: str, private_key: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-The approach here is not authoritative, and devs are free to use their own judgement.
+        self.client_id = client_id
+        self.certificate_id = certificate_id
+        self.private_key = private_key
 
-There are additional required TODOs in the files within the integration_tests folder and the spec.yaml file.
-"""
+    def __decode_private_key(self) -> str:
+        bytes_private_key = bytes(self.private_key, "utf-8")
+        decoded_key = urlsafe_b64decode(bytes_private_key)
+        return str(decoded_key) 
 
+    def __generate_signed_jwt(self) -> str:
+        headers = {
+            "kid": self.certificate_id
+        }
+
+        iat = int(pendulum.now().timestamp())
+        exp = int(iat + 3600)
+        payload = {
+            "iss": self.client_id,
+            "scope": "rest_webservices",
+            "aud": f"https://{self.account_id}.suitetalk.api.netsuite.com/services/rest/record/v1",
+            "iat": iat,
+            "exp": exp
+        }
+
+        decoded_private_key: str = self.__decode_private_key()
+        encoded = jwt.encode(payload, decoded_private_key, algorithm="RS256", headers=headers)
+
+        return encoded
+
+    def get_refresh_token(self) -> str:
+        pass
 
 # Basic full refresh stream
 class NetsuiteStream(HttpStream, ABC):
@@ -121,6 +156,7 @@ class SourceNetsuite(AbstractSource):
         raw_private_key = str(urlsafe_b64decode(bytes_key))
         if not ("BEGIN PRIVATE KEY" in raw_private_key) or not ("END PRIVATE KEY" in raw_private_key):
             return False, "Private key can't be decoded! Check that it was correctly encoded in Base64."
+
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
@@ -128,5 +164,9 @@ class SourceNetsuite(AbstractSource):
 
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
-        # auth = TokenAuthenticator(token="api_key")  # Oauth2Authenticator is also available if you need oauth support
+        auth = NetsuiteOauth2Authenticator(
+            config["client_id"],
+            config["certificate_id"],
+            config["private_key"]
+        )
         return []
