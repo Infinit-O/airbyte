@@ -14,13 +14,12 @@ with open("secrets/config.json", "r") as F:
 with open("secrets/private_key.pem", "r") as F:
     private_key = F.read()
 
-iat = int(pendulum.now().timestamp())
-exp = int(iat + 3600)
-
 headers = {
     "kid": secrets["certificate_id"] 
 }
 
+iat = int(pendulum.now().timestamp())
+exp = int(iat + 3600)
 payload = {
     "iss": secrets["client_id"],
     "scope": "rest_webservices",
@@ -28,7 +27,10 @@ payload = {
     "iat": iat,
     "exp": exp
 }
-
 encoded = jwt.encode(payload, private_key, algorithm="RS256", headers=headers)
 
-print(encoded)
+def encode_private_key(payload: dict, private_key: str, headers: dict=None):
+    return jwt.encode(payload, private_key, algorithm="RS256", headers=headers)
+
+if __name__ == "__main__":
+    print(encode_private_key(payload, private_key, headers))

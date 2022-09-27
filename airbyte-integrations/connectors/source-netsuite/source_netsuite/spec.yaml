@@ -4,9 +4,20 @@ connectionSpecification:
   title: Netsuite Spec
   type: object
   required:
-    - TODO
+    - account_id
+    - client_id
+    - certificate_id
   properties:
     # 'TODO: This schema defines the configuration required for the source. This usually involves metadata such as database and/or authentication information.':
-    TODO:
+    account_id:
       type: string
-      description: describe me
+      description: This is the account ID given by the service
+    client_id:
+      type: string
+      description: This is generated when an app is created in the Netsuite Config panel.
+    certificate_id:
+      type: string
+      description: This is generated when the public key is uploaded to Netsuite.
+    private_key:
+      type: string
+      description: Base64 encoded contents of the private key file.
