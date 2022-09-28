@@ -4,6 +4,7 @@
 # been uploaded to Netsuite's config, then include that
 # JWT in a POST request to Netsuite's OAUTH endpoint.
 import json
+from base64 import b64encode, b64decode
 
 import jwt
 import pendulum
@@ -13,6 +14,16 @@ with open("secrets/config.json", "r") as F:
 
 with open("secrets/private_key.pem", "r") as F:
     private_key = F.read()
+
+# encode private key b64
+bytestream: bytes = bytes(private_key, "utf-8")
+raw_encoded: bytes = b64encode(bytestream)
+str_encoded: str = raw_encoded.decode("utf-8")
+
+# decode b64 private key
+bytes_encoded_key: bytes = bytes(str_encoded, "utf-8")
+bytes_decoded_key: bytes = b64decode(bytes_encoded_key)
+fully_decoded_key: str = bytes_decoded_key.decode("utf-8")
 
 headers = {
     "kid": secrets["certificate_id"] 
@@ -33,4 +44,4 @@ def encode_private_key(payload: dict, private_key: str, headers: dict=None):
     return jwt.encode(payload, private_key, algorithm="RS256", headers=headers)
 
 if __name__ == "__main__":
-    print(encode_private_key(payload, private_key, headers))
+    print(encode_private_key(payload, fully_decoded_key, headers))
