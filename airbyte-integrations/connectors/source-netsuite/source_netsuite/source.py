@@ -13,9 +13,9 @@ import requests
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
-from airbyte_cdk.sources.streams.http.requests_native_auth.abstract_oauth import AbstractOauth2Authenticator
+from airbyte_cdk.sources.streams.http.requests_native_auth import Oauth2Authenticator
 
-class NetsuiteOauth2Authenticator(AbstractOauth2Authenticator):
+class NetsuiteOauth2Authenticator(Oauth2Authenticator):
     # NOTE: Netsuite's OAuth2 implementation for server-to-server
     #       communication calls for a public/private keypair and
     #       has the following attributes:
@@ -25,12 +25,22 @@ class NetsuiteOauth2Authenticator(AbstractOauth2Authenticator):
     #       private half of the keypair.
     #       - the access token thus granted lasts only one hour.
     #       - "refreshing" thus is just getting a new token
-    def __init__(self, client_id: str, certificate_id: str, private_key: str, *args, **kwargs):
+    def __init__(self,
+        client_id: str,
+        certificate_id: str,
+        private_key: str,
+        account_id: str,
+        *args,
+        **kwargs
+    ):
         super().__init__(*args, **kwargs)
 
-        self.client_id = client_id
-        self.certificate_id = certificate_id
-        self.private_key = private_key
+        self.client_id: str = client_id
+        self.certificate_id: str = certificate_id
+        self.private_key: str = private_key
+
+        self.account_id: str = account_id
+        self._refresh_endpoint: str = "https://{account_id}.suitetalk.api.netsuite.com/services/rest/oauth2/v1/token"
 
     def __decode_private_key(self) -> str:
         bytes_private_key = bytes(self.private_key, "utf-8")
@@ -38,13 +48,13 @@ class NetsuiteOauth2Authenticator(AbstractOauth2Authenticator):
         return str(decoded_key) 
 
     def __generate_signed_jwt(self) -> str:
-        headers = {
+        headers: dict = {
             "kid": self.certificate_id
         }
 
-        iat = int(pendulum.now().timestamp())
-        exp = int(iat + 3600)
-        payload = {
+        iat: int = int(pendulum.now().timestamp())
+        exp: int = int(iat + 3600)
+        payload: dict = {
             "iss": self.client_id,
             "scope": "rest_webservices",
             "aud": f"https://{self.account_id}.suitetalk.api.netsuite.com/services/rest/record/v1",
@@ -53,12 +63,30 @@ class NetsuiteOauth2Authenticator(AbstractOauth2Authenticator):
         }
 
         decoded_private_key: str = self.__decode_private_key()
-        encoded = jwt.encode(payload, decoded_private_key, algorithm="RS256", headers=headers)
+        encoded: str = jwt.encode(payload, decoded_private_key, algorithm="RS256", headers=headers)
 
         return encoded
 
-    def get_refresh_token(self) -> str:
-        pass
+    def refresh_access_token(self) -> str:
+        jwt = self.__generate_signed_jwt()
+        try:
+            response = requests.post(
+                url=self.get_token_refresh_endpoint()
+                body={
+                    "grant_type": "client_credentials",
+                    "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+                    "client_assertion": jwt
+                }
+            )
+            response.raise_for_status()
+            response_json = response.json()
+            return response_json["access_token"], response_json["expires_in"]
+        except Exception as e:
+            raise Exception(f"Error while refreshing access token: {e}") from e
+
+    def get_token_refresh_endpoint(self) -> str:
+        return self._refresh_endpoint.format(account_id=self.account_id)
+        
 
 # Basic full refresh stream
 class NetsuiteStream(HttpStream, ABC):
