@@ -55,6 +55,12 @@ class NetsuiteStream(HttpStream, ABC):
         :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
                 If there are no more pages in the result, return None.
         """
+        data: dict = response.json()
+        has_more: bool = data["hasMore"]
+
+        if has_more:
+            return {"next_page": "".join([x["href"] for x in data["links"] if x["rel"] == "next"])}
+
         return None
 
     def request_params(
@@ -71,6 +77,20 @@ class NetsuiteStream(HttpStream, ABC):
         """
         data: dict = response.json()
         yield from data["items"]
+
+    def path(
+        self,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        if next_page_token:
+            return next_page_token["next_page"]
+
 
 class NetsuiteChildStream(NetsuiteStream):
     @property
