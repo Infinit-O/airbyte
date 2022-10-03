@@ -1,9 +1,11 @@
 
-from abc import ABC
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from abc import ABC, abstractmethod
+from re import S
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional
 
 import requests
 from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.models import SyncMode
 
 class NetsuiteStream(HttpStream, ABC):
     """
@@ -30,9 +32,15 @@ class NetsuiteStream(HttpStream, ABC):
     See the reference docs for the full list of configurable options.
     """
 
+    def __init__(self, config=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.config = config
+
+    @property
     def url_base(self):
         account_id = self.config["account_id"]
-        return f"https://{account_id}.suite_talk.api.netsuite.com/services/rest/record/v1/"
+        return f"https://{account_id}.suitetalk.api.netsuite.com/services/rest/record/v1/"
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
@@ -61,4 +69,78 @@ class NetsuiteStream(HttpStream, ABC):
         """
         :return an iterable containing each record in the response
         """
-        yield {}
+        data: dict = response.json()
+        yield from data["items"]
+
+class NetsuiteChildStream(NetsuiteStream):
+    @property
+    @abstractmethod
+    def parent(self):
+        pass
+
+    @property
+    @abstractmethod
+    def fk_name(self):
+        pass
+
+    @property
+    @abstractmethod
+    def fk(self):
+        pass
+
+    @property
+    @abstractmethod
+    def path_template(self):
+        pass
+    
+    def path(
+        self,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        fkid = stream_slice[self.fk_name]
+        return self.path_template.format(entity_id=fkid)
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        """
+        :return an iterable containing each record in the response
+        """
+        data: dict = response.json()
+        yield from [data]
+
+    def stream_slices(
+        self,
+        sync_mode: SyncMode,
+        cursor_field: List[str] = None,
+        stream_state: Mapping[str, Any] = None
+    ) -> Iterable[Optional[Mapping[str, Any]]]:
+        # find the auth!
+        if self._session.auth:
+            auth = self._session.auth
+        elif self._authenticator:
+            auth = self._authenticator
+
+        parent = self.parent(authenticator=auth, config=self.config)
+        parent_stream_slices = parent.stream_slices(
+            sync_mode=SyncMode.full_refresh,
+            cursor_field=cursor_field,
+            stream_state=stream_state
+        )
+
+        # iterate over all parent stream_slices
+        for stream_slice in parent_stream_slices:
+            parent_records = parent.read_records(
+                sync_mode=SyncMode.full_refresh,
+                cursor_field=cursor_field,
+                stream_slice=stream_slice,
+                stream_state=stream_state
+            )
+
+            # iterate over all parent records with current stream_slice
+            for record in parent_records:
+                yield {self.fk_name: record[self.fk]}
