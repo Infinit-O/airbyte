@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "links": {"type": "array"},
+    "author": {"type": "object"},
+    "authorEmail": {"type": "string"},
+    "cc": {"type": "string"},
+    "emailed": {"type": "boolean"},
+    "entity": {"type": "object"},
+    "hasAttachment": {"type": "boolean"},
+    "htmlMessage": {"type": "boolean"},
+    "id": {"type": "string"},
+    "incoming": {"type": "boolean"},
+    "lastModifiedDate": {"type": "string"},
+    "message": {"type": "string"},
+    "messageDate": {"type": "string"},
+    "recipientEmail": {"type": "string"},
+    "subject": {"type": "string"},
+    "time": {"type": "string"},
+    "transaction": {"type": "string"}
+  }
+}

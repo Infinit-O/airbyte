@@ -10,21 +10,20 @@ from airbyte_cdk.sources.streams import Stream
 from .custom_authenticator import NetsuiteOauth2Authenticator
 from .streams import (
     CreditMemo,
-    CreditMemoList
+    CreditMemoList,
+    EmployeeList,
+    Employee,
+    InvoiceList,
+    Invoice,
+    MessageList,
+    Message,
+    PurchaseOrderList,
+    PurchaseOrder,
+    SubsidiaryList,
+    Subsidiary,
+    VendorList,
+    Vendor,
 )
-
-# Basic full refresh stream
-# class Customers(NetsuiteStream):
-#     primary_key = "customer_id"
-
-#     def path(
-#         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
-#     ) -> str:
-#         """
-#         Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
-#         should return "customers". Required.
-#         """
-#         return "customers"
 
 # Source
 class SourceNetsuite(AbstractSource):
@@ -75,5 +74,17 @@ class SourceNetsuite(AbstractSource):
         )
         return [
             CreditMemo(authenticator=auth, config=config),
-            CreditMemoList(authenticator=auth, config=config)
+            CreditMemoList(authenticator=auth, config=config),
+            EmployeeList(authenticator=auth, config=config),
+            Employee(authenticator=auth, config=config),
+            InvoiceList(authenticator=auth, config=config),
+            Invoice(authenticator=auth, config=config),
+            MessageList(authenticator=auth, config=config),
+            Message(authenticator=auth, config=config),
+            PurchaseOrderList(authenticator=auth, config=config),
+            PurchaseOrder(authenticator=auth, config=config),
+            SubsidiaryList(authenticator=auth, config=config),
+            Subsidiary(authenticator=auth, config=config),
+            VendorList(authenticator=auth, config=config),
+            Vendor(authenticator=auth, config=config),
         ]

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "links": {"type": "array"},
+    "country": {"type": "object"},
+    "currency": {"type": "object"},
+    "custrecord_psg_lc_test_mode": {"type": "string"},
+    "custrecord_psg_sal_ph_cas_app": {"type": "object"},
+    "custrecord_sub_enable_ph_doc_num": {"type": "boolean"},
+    "custrecord_sub_vat_inc": {"type": "boolean"},
+    "id": {"type": "string"},
+    "isElimination": {"type": "boolean"},
+    "isInactive": {"type": "boolean"},
+    "lastModifiedDate": {"type": "string"},
+    "legalName": {"type": "string"},
+    "mainAddress": {"type": "object"},
+    "name": {"type": "string"},
+    "parent": {"type": "object"},
+    "representingCustomer": {"type": "object"},
+    "representingVendor": {"type": "object"},
+    "returnAddress": {"type": "object"},
+    "shippingAddress": {"type": "object"}
+  }
+}

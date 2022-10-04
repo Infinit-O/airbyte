@@ -2,6 +2,7 @@
 from abc import ABC, abstractmethod
 from re import S
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional
+from urllib.parse import urlparse, parse_qs, ParseResult
 
 import requests
 from airbyte_cdk.sources.streams.http import HttpStream
@@ -34,7 +35,6 @@ class NetsuiteStream(HttpStream, ABC):
 
     def __init__(self, config=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.config = config
 
     @property
@@ -56,10 +56,16 @@ class NetsuiteStream(HttpStream, ABC):
                 If there are no more pages in the result, return None.
         """
         data: dict = response.json()
-        has_more: bool = data["hasMore"]
+        try:
+            has_more: bool = data["hasMore"]
+        except KeyError:
+            return None
 
         if has_more:
-            return {"next_page": "".join([x["href"] for x in data["links"] if x["rel"] == "next"])}
+            url: str = "".join([x["href"] for x in data["links"] if x["rel"] == "next"])
+            parsed: ParseResult = urlparse(url)
+            parts: dict = parse_qs(parsed.query)
+            return {"limit": parts["limit"][0], "offset": parts["offset"][0]}
 
         return None
 
@@ -69,6 +75,8 @@ class NetsuiteStream(HttpStream, ABC):
         """
         Usually contains common params e.g. pagination size etc.
         """
+        if next_page_token:
+            return {"limit": next_page_token["limit"], "offset": next_page_token["offset"]}
         return {}
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
@@ -131,6 +139,8 @@ class NetsuiteChildStream(NetsuiteStream):
         :return an iterable containing each record in the response
         """
         data: dict = response.json()
+        # stream_slice: dict = kwargs["stream_slice"]
+        # data[self.fk_name] = stream_slice[self.fk_name]
         yield from [data]
 
     def stream_slices(
