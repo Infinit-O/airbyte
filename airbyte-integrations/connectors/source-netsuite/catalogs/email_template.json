@@ -2,7 +2,7 @@
     "streams": [
         {
             "stream": {
-                "name": "message_list",
+                "name": "email_template",
                 "json_schema": {},
                 "supported_sync_modes": ["full_refresh"]
             },
