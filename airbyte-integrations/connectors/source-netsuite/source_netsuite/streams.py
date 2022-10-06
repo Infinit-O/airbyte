@@ -3,6 +3,25 @@ from typing import Any, Iterable, List, Mapping, MutableMapping, Optional
 from .base_stream import NetsuiteStream, NetsuiteChildStream
 
 
+class CalendarEventList(NetsuiteStream):
+    primary_key = "id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "calendarEvent"
+
+class CalendarEvent(NetsuiteChildStream):
+    parent = CalendarEventList
+    primary_key = "id"
+    fk_name = "id"
+    fk = "id"
+    path_template = "calendarEvent/{entity_id}"
+
 class CreditMemoList(NetsuiteStream):
     primary_key = "id"
 
@@ -40,6 +59,25 @@ class Customer(NetsuiteChildStream):
     fk_name = "id"
     fk = "id"
     path_template = "customer/{entity_id}"
+
+class CustomerSubsidiaryRelationshipList(NetsuiteStream):
+    primary_key = "id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "customerSubsidiaryRelationship"
+
+class CustomerSubsidiaryRelationship(NetsuiteChildStream):
+    parent = CustomerSubsidiaryRelationshipList
+    primary_key = "id"
+    fk_name = "customer_subsidiary_id"
+    fk = "id"
+    path_template = "customersubsidiaryrelationship/{entity_id}"
 
 class EmailTemplateList(NetsuiteStream):
     primary_key = "id"

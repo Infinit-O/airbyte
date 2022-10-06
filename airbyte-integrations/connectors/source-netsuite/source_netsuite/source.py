@@ -9,9 +9,13 @@ from airbyte_cdk.sources.streams import Stream
 
 from .custom_authenticator import NetsuiteOauth2Authenticator
 from .streams import (
+    CalendarEventList,
+    CalendarEvent,
     CreditMemo,
     CreditMemoList,
     CustomerList,
+    CustomerSubsidiaryRelationshipList,
+    CustomerSubsidiaryRelationship,
     Customer,
     EmailTemplateList,
     EmailTemplate,
@@ -83,9 +87,13 @@ class SourceNetsuite(AbstractSource):
             config["account_id"]
         )
         return [
+            CalendarEventList(authenticator=auth, config=config),
+            CalendarEvent(authenticator=auth, config=config),
             CreditMemo(authenticator=auth, config=config),
             CreditMemoList(authenticator=auth, config=config),
             CustomerList(authenticator=auth, config=config),
+            CustomerSubsidiaryRelationshipList(authenticator=auth, config=config),
+            CustomerSubsidiaryRelationship(authenticator=auth, config=config),
             Customer(authenticator=auth, config=config),
             EmployeeList(authenticator=auth, config=config),
             Employee(authenticator=auth, config=config),

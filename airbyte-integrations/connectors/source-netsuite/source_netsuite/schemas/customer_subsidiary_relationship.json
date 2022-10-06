@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "links": {"type": "array"},
+    "balance": {"type": "number"},
+    "depositBalance": {"type": "number"},
+    "entity": {"type": "object"},
+    "id": {"type": "string"},
+    "isPrimarySub": {"type": "boolean"},
+    "lastModifiedDate": {"type": "string"},
+    "name": {"type": "string"},
+    "primaryCurrency": {"type": "object"},
+    "subsidiary": {"type": "object"},
+    "unbilledOrders": {"type": "number"}
+  }
+}

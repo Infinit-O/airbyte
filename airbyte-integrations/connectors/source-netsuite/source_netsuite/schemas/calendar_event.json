@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "links": {"type": "array"},
+    "accessLevel": {"type": "object"},
+    "allDayEvent": {"type": "boolean"},
+    "attendee": {"type": "object"},
+    "company": {"type": "object"},
+    "createdDate": {"type": "string"},
+    "customForm": {"type": "object"},
+    "endTime": {"type": "string"},
+    "id": {"type": "string"},
+    "lastModifiedDate": {"type": "string"},
+    "organizer": {"type": "object"},
+    "owner": {"type": "object"},
+    "resource": {"type": "object"},
+    "startDate": {"type": "string"},
+    "startTime": {"type": "string"},
+    "status": {"type": "object"},
+    "timedEvent": {"type": "boolean"},
+    "timezone": {"type": "string"},
+    "title": {"type": "string"},
+    "transaction": {"type": "object"}
+  }
+}
