@@ -1,7 +1,26 @@
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional
+from typing import Any, List, Mapping
 
 from .base_stream import NetsuiteStream, NetsuiteChildStream
 
+
+class AssemblyItemList(NetsuiteStream):
+    primary_key = "id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "assemblyItem"
+
+class AssemblyItem(NetsuiteChildStream):
+    parent = AssemblyItemList
+    primary_key = "id"
+    fk_name = "assembly_item_id"
+    fk = "id"
+    path_template = "assemblyItem/{entity_id}"
 
 class CalendarEventList(NetsuiteStream):
     primary_key = "id"
@@ -18,9 +37,40 @@ class CalendarEventList(NetsuiteStream):
 class CalendarEvent(NetsuiteChildStream):
     parent = CalendarEventList
     primary_key = "id"
-    fk_name = "id"
+    fk_name = "calendar_event_id"
     fk = "id"
     path_template = "calendarEvent/{entity_id}"
+
+class CashSaleList(NetsuiteStream):
+    primary_key = "id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "cashSale"
+
+class ContactRoleList(NetsuiteStream):
+    primary_key = "id"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        return "contactRole"
+
+class ContactRole(NetsuiteChildStream):
+    parent = ContactRoleList
+    primary_key = "id"
+    fk_name = "contact_role_id"
+    fk = "id"
+    path_template = "contactRole/{entity_id}"
 
 class CreditMemoList(NetsuiteStream):
     primary_key = "id"
@@ -37,7 +87,7 @@ class CreditMemoList(NetsuiteStream):
 class CreditMemo(NetsuiteChildStream):
     parent = CreditMemoList
     primary_key = "id"
-    fk_name = "id"
+    fk_name = "credit_memo_id"
     fk = "id"
     path_template = "creditmemo/{entity_id}"
 
@@ -56,7 +106,7 @@ class CustomerList(NetsuiteStream):
 class Customer(NetsuiteChildStream):
     parent = CustomerList
     primary_key = "id"
-    fk_name = "id"
+    fk_name = "customer_id"
     fk = "id"
     path_template = "customer/{entity_id}"
 
@@ -94,7 +144,7 @@ class EmailTemplateList(NetsuiteStream):
 class EmailTemplate(NetsuiteChildStream):
     parent = EmailTemplateList
     primary_key = "id"
-    fk_name = "id"
+    fk_name = "email_template_id"
     fk = "id"
     path_template = "emailTemplate/{entity_id}"
 
