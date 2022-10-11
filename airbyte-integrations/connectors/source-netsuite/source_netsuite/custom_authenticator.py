@@ -1,3 +1,4 @@
+from asyncio.log import logger
 from base64 import b64decode
 
 from airbyte_cdk.sources.streams.http.requests_native_auth import Oauth2Authenticator
@@ -38,11 +39,11 @@ class NetsuiteOauth2Authenticator(Oauth2Authenticator):
         self.certificate_id: str = certificate_id
 
         self.decoder = B64Utility(private_key)
-
         current_time = pendulum.now()
         expiry_time = current_time.add(hours=1)
         self.iat: int = int(current_time.timestamp())
         self.exp: int = int(expiry_time.timestamp())
+
         # NOTE: The intent here is to force the get_access_token() method
         #       to go and fetch+set a new token on init. By the time
         #       it reaches this line now() != current_time at least I
@@ -53,7 +54,7 @@ class NetsuiteOauth2Authenticator(Oauth2Authenticator):
         self._token_refresh_endpoint: str = "https://{account_id}.suitetalk.api.netsuite.com/services/rest/auth/oauth2/v1/token"
         self.get_access_token()
 
-    def __generate_signed_jwt(self) -> str:
+    def __generate_signed_jwt(self, current_time, expiry_time) -> str:
         headers: dict = {
             "kid": self.certificate_id
         }
@@ -62,8 +63,8 @@ class NetsuiteOauth2Authenticator(Oauth2Authenticator):
             "iss": self.client_id,
             "scope": "rest_webservices",
             "aud": f"https://{self.account_id}.suitetalk.api.netsuite.com/services/rest/record/v1",
-            "iat": self.iat,
-            "exp": self.exp
+            "iat": int(current_time.timestamp()),
+            "exp": int(expiry_time.timestamp())
         }
 
         decoded_private_key: str = self.decoder.decode_content()
@@ -78,7 +79,9 @@ class NetsuiteOauth2Authenticator(Oauth2Authenticator):
         return encoded
 
     def refresh_access_token(self) -> str:
-        jwt = self.__generate_signed_jwt()
+        current_time: pendulum.datetime.DateTime = pendulum.now()
+        expiry_time: pendulum.datetime.DateTime = current_time.add(hours=1)
+        jwt = self.__generate_signed_jwt(current_time, expiry_time)
         try:
             response = requests.post(
                 url=self.get_token_refresh_endpoint(),
