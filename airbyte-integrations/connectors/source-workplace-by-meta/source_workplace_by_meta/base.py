@@ -32,6 +32,10 @@ class WorkplaceByMetaStream(HttpStream, ABC):
 
     url_base = "https://graph.facebook.com/"
 
+    @property
+    def exclude_fields(self):
+        pass
+
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
         This method should return a Mapping (e.g: dict) containing whatever information required to make paginated requests. This dict is passed
@@ -55,6 +59,8 @@ class WorkplaceByMetaStream(HttpStream, ABC):
         Usually contains common params e.g. pagination size etc.
         """
         if self.fields:
+            if self.exclude_fields:
+                self.fields = [x for x in self.fields if x not in self.exclude_fields]
             return {"fields": ",".join(self.fields)}
         else:
             return {}

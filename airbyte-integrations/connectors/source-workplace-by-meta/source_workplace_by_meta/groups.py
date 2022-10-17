@@ -1,5 +1,4 @@
 from typing import Any, List, Mapping, Iterable
-import requests
 
 from .base import WorkplaceByMetaStream, WorkplaceByMetaSubstream
 from .field_mixins import (
@@ -128,6 +127,7 @@ class GroupFeed(WorkplaceByMetaSubstream, PostFieldsMixin):
     primary_key = "id"
     foreign_key = "id"
     parent_stream = Groups
+    exclude_fields = ["properties", "icon"]
     path_template = "{entity_id}/feed"
 
 class GroupFiles(WorkplaceByMetaSubstream):
