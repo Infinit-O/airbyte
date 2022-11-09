@@ -154,6 +154,8 @@ class Reservations(RobinChildStream):
         params = super().request_params(stream_state, stream_slice, next_page_token)
         self.logger.info("Stream 'spaces' has special handling for request_params. Adding 'include' param for calendar data.")
         params["location_ids"] = stream_slice[self.foreign_key_name]
+        params["before"] = "2999-01-01T00:00:00Z"
+        params["after"] = "2021-01-01T00:00:00Z"
         return params
 
 class ReservationConfirmations(RobinChildStream):
