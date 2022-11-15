@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+      "uri": {"type": "string"},  
+      "id": {"type": "number"},
+      "extensionNumber": {"type": "string"},
+      "contact": {"type": "object"},
+      "name": {"type": "string"},
+      "type": {"type": "string"},
+      "status": {"type": "string"},
+      "permissions": {"type": "object"},
+      "profileImage": {"type": "object"},
+      "hidden": {"type": "boolean"} 
+  }
+}

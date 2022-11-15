@@ -4,9 +4,20 @@ connectionSpecification:
   title: Ringcentral Spec
   type: object
   required:
-    - TODO
+    - rc_client_secret
+    - rc_client_id
+    - rc_jwt
+    - rc_server_url
   properties:
-    # 'TODO: This schema defines the configuration required for the source. This usually involves metadata such as database and/or authentication information.':
-    TODO:
+    rc_client_secret:
       type: string
-      description: describe me
+      description: client secret from the Ringcentral Dev Console
+    rc_client_id:
+      type: string
+      description: client ID from the Ringcentral Dev Console
+    rc_jwt:
+      type: string
+      description: JWT created for account user
+    rc_server_url:
+      type: string
+      description: either the URL for the sandbox, or production, whichever you're working on.
