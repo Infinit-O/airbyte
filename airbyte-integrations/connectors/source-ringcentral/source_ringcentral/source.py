@@ -3,7 +3,7 @@
 #
 
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 from urllib.parse import urlparse
 from urllib.parse import parse_qs 
@@ -87,10 +87,16 @@ class RingcentralStream(HttpStream, ABC):
                 If there are no more pages in the result, return None.
         """
         rjson = response.json()
-        paging = rjson["paging"]
+        try:
+            paging = rjson["paging"]
+        except KeyError:
+            return None
 
-        current_page = int(paging["page"])
-        last_page = int(paging["pageEnd"])
+        try:
+            current_page = int(paging["page"])
+            last_page = int(paging["pageEnd"])
+        except KeyError:
+            return None
 
         if current_page < last_page:
             return {"next_page": int(current_page) + 1}
@@ -142,6 +148,40 @@ class RingcentralStream(HttpStream, ABC):
                 pagination_complete = True
 
 
+class IncrementalRingcentralStream(RingcentralStream):
+    @property
+    @abstractmethod
+    def parent_stream(self):
+        pass
+
+    @property
+    @abstractmethod
+    def parent_stream_attr(self):
+        pass
+
+    def stream_slices(
+        self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None
+    ) -> Iterable[Optional[Mapping[str, Any]]]:
+        ps = self.parent_stream(platform=self._platform)
+        ps_slices = [
+            x
+            for x in ps.stream_slices(
+                sync_mode=SyncMode.full_refresh,
+                cursor_field=cursor_field,
+                stream_state=stream_state
+            )
+        ]
+        for slice in ps_slices:
+            records = ps.read_records(
+                sync_mode=SyncMode.full_refresh,
+                stream_state=stream_state,
+                stream_slice=slice,
+                cursor_field=cursor_field, 
+            )
+            for rec in records:
+                yield {self.parent_stream_attr: rec[self.parent_stream_attr]}
+
+
 class Extensions(RingcentralStream):
     primary_key = "id"
 
@@ -154,7 +194,7 @@ class Extensions(RingcentralStream):
         """
         return "/account/~/extension"
 
-class CallLog(RingcentralStream):
+class CompanyCallLog(RingcentralStream):
     primary_key = "id"
 
     def path(
@@ -178,9 +218,19 @@ class CompanyDirectory(RingcentralStream):
         """
         return "/account/~/directory/entries"
 
+class IndividualCallLog(IncrementalRingcentralStream):
+    parent_stream = CompanyDirectory
+    primary_key = "id"
+    parent_stream_attr = "extensionNumber"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        extension_number = stream_slice[self.parent_stream_attr]
+        return f"/account/~/extension/{extension_number}/call-log"
+
 # Source
 class SourceRingcentral(AbstractSource):
-
     def _create_rc_platform(self, client_id: str, client_secret: str, client_server: str, jwt: str):
         sdk: ringcentral.SDK = ringcentral.SDK(
             client_id,
@@ -242,5 +292,7 @@ class SourceRingcentral(AbstractSource):
         )
         return [
             Extensions(platform=platform),
-            CompanyDirectory(platform=platform)
+            CompanyDirectory(platform=platform),
+            CompanyCallLog(platform=platform),
+            IndividualCallLog(platform=platform),
         ]
