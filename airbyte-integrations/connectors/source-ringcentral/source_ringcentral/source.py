@@ -17,6 +17,7 @@ from ringcentral.platform import Platform
 from airbyte_cdk.models import SyncMode
 
 from ringcentral.http.client import Client
+from ringcentral.http.api_exception import ApiException
 
 """
 This file provides a stubbed example of how to use the Airbyte CDK to develop both a source connector which supports full refresh or and an
@@ -39,6 +40,7 @@ There are additional required TODOs in the files within the integration_tests fo
 #   -> self.request_kwargs()
 #   -> self._send_request()
 # Lots to cover I guess
+
 
 # Basic full refresh stream
 class RingcentralStream(HttpStream, ABC):
@@ -137,12 +139,24 @@ class RingcentralStream(HttpStream, ABC):
                 next_page_token=next_page_token
             )
 
-            raw_response = self._platform.get(path)
-            response = raw_response._response
+            self.logger.debug(f"Using path: {path}")
 
-            yield from self.parse_response(response)
+            try:
+                raw_response = self._platform.get(path)
+                response = raw_response._response
+            except ApiException as e:
+                self.logger.info("No response from API.")
+                self.logger.debug(f"Exception: {e}")
+                response = None
 
-            next_page_token = self.next_page_token(response)
+            if not response:
+                self.logger.info("Response is NONE, ending sync." )
+                yield from []
+                next_page_token = None
+            else:
+                yield from self.parse_response(response)
+                next_page_token = self.next_page_token(response)
+
 
             if not next_page_token:
                 pagination_complete = True
@@ -229,6 +243,17 @@ class IndividualCallLog(IncrementalRingcentralStream):
         extension_number = stream_slice[self.parent_stream_attr]
         return f"/account/~/extension/{extension_number}/call-log"
 
+class MessageStore(IncrementalRingcentralStream):
+    parent_stream = CompanyDirectory
+    primary_key = "id"
+    parent_stream_attr = "extensionNumber"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        extension_number = stream_slice[self.parent_stream_attr]
+        return f"/account/~/extension/{extension_number}/message-store"
+
 # Source
 class SourceRingcentral(AbstractSource):
     def _create_rc_platform(self, client_id: str, client_secret: str, client_server: str, jwt: str):
@@ -295,4 +320,5 @@ class SourceRingcentral(AbstractSource):
             CompanyDirectory(platform=platform),
             CompanyCallLog(platform=platform),
             IndividualCallLog(platform=platform),
+            MessageStore(platform=platform),
         ]
