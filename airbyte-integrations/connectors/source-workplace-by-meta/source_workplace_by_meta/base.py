@@ -49,7 +49,23 @@ class WorkplaceByMetaStream(HttpStream, ABC):
         :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
                 If there are no more pages in the result, return None.
         """
-        return None
+        raw = response.json()
+        try:
+            paging = raw["paging"]
+        except KeyError:
+            return None
+
+        try:
+            paging["next"]
+        except KeyError:
+            return None
+
+        try:
+            cursors = paging["cursors"]
+        except KeyError:
+            return None
+
+        return cursors
 
     def request_params(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
@@ -58,12 +74,16 @@ class WorkplaceByMetaStream(HttpStream, ABC):
         Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
         Usually contains common params e.g. pagination size etc.
         """
+        params = {}
         if self.fields:
             if self.exclude_fields:
                 self.fields = [x for x in self.fields if x not in self.exclude_fields]
-            return {"fields": ",".join(self.fields)}
-        else:
-            return {}
+            params["fields"] = ",".join(self.fields)
+
+        if next_page_token:
+            params["after"] = next_page_token["after"]
+
+        return params
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         """
