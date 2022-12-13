@@ -1,0 +1,16 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Crowdstrike Spec
+  type: object
+  required:
+    - client_secret
+    - client_id
+  properties:
+    # 'TODO: This schema defines the configuration required for the source. This usually involves metadata such as database and/or authentication information.':
+    client_secret:
+      type: string
+      description: "The client secret from the Crowdstrike API."
+    client_id:
+      type: string
+      description: "Client ID provided by the Crowdstrike API."
