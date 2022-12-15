@@ -10,6 +10,7 @@ import requests
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.models import SyncMode
 from airbyte_cdk.sources.streams.http.auth import Oauth2Authenticator
 
 """
@@ -81,15 +82,17 @@ class CrowdstrikeStream(HttpStream, ABC):
                 If there are no more pages in the result, return None.
         """
         data = response.json()
-        pagination = data["meta"]["pagination"]
-        if not pagination:
+        try:
+            pagination = data["meta"]["pagination"]
+        except KeyError:
             return None
 
         offset = pagination["offset"] 
         total = pagination["total"]
         limit = pagination["limit"]
 
-        if offset < total:
+        # NOTE: hardcoded to 10k for now. Crowdstrike has dumb limits.
+        if offset != 9000:
             return {"offset": offset + limit}
 
         return None
@@ -129,28 +132,43 @@ class Detects(CrowdstrikeStream):
         should return "customers". Required.
         """
         return "/detects/queries/detects/v1"
+        
 
-class Employees():
-    """
-    TODO: Change class name to match the table/data source this stream corresponds to.
-    """
+class DetectsInfo(CrowdstrikeStream):
+    cursor_field = "na"
+    primary_key = "na"
 
-    # TODO: Fill in the cursor_field. Required.
-    cursor_field = "start_date"
+    @property
+    def http_method(self) -> str:
+        return "POST"
 
-    # TODO: Fill in the primary key. Required. This is usually a unique field in the stream, like an ID or a timestamp.
-    primary_key = "employee_id"
+    def request_body_json(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> Optional[Mapping]:
+        self.logger.info(f"stream slice: {stream_slice}")
+        c_id = stream_slice["id"]
+        ids = []
+        ids.append(c_id)
+        self.logger.info(f"ids: {ids}")
+        return {
+            "ids": ids
+        }
 
-    def path(self, **kwargs) -> str:
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
         """
-        TODO: Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/employees then this should
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/employees then this should
         return "single". Required.
         """
-        return "employees"
+        return "detects/entities/summaries/GET/v1/"
 
     def stream_slices(self, stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Optional[Mapping[str, any]]]:
         """
-        TODO: Optionally override this method to define this stream's slices. If slicing is not needed, delete this method.
+        Optionally override this method to define this stream's slices. If slicing is not needed, delete this method.
 
         Slices control when state is saved. Specifically, state is saved after a slice has been fully read.
         This is useful if the API offers reads by groups or filters, and can be paired with the state object to make reads efficient. See the "concepts"
@@ -168,8 +186,22 @@ class Employees():
         till now. The request_params function would then grab the date from the stream_slice and make it part of the request by injecting it into
         the date query param.
         """
-        raise NotImplementedError("Implement stream slices or delete this method!")
+        ps = Detects(authenticator=self.authenticator)
 
+
+        for x in ps.read_records(sync_mode=SyncMode.full_refresh):
+            self.logger.info(f"from stream slices, yielding x: {x['id']}")
+            yield x
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        """
+        Override this method to define how a response is parsed.
+        :return an iterable containing each record in the response
+        """
+        data = response.json()
+        resources = data["resources"]
+        for x in resources:
+            yield x
 
 # Source
 class SourceCrowdstrike(AbstractSource):
@@ -215,4 +247,4 @@ class SourceCrowdstrike(AbstractSource):
             refresh_token="asdf",
             token_refresh_endpoint=refresh_endpoint
         )  # Oauth2Authenticator is also available if you need oauth support
-        return [Detects(authenticator=auth)]
+        return [DetectsInfo(authenticator=auth)]

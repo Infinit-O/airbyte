@@ -1,0 +1,27 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "name": "companies",
+    "type": "object",
+    "properties": {
+        "cid": {"type": "string"},
+        "created_timestamp": {"type": "string"},
+        "detection_id": {"type": "string"},
+        "device": {"type": "object"},
+        "behaviors": {"type": "array"},
+        "email_sent": {"type": "boolean"},
+        "first_behavior": {"type": "string"},
+        "last_behavior": {"type": "string"},
+        "max_confidence": {"type": "number"},
+        "max_severity": {"type": "number"},
+        "max_severity_displayname": {"type": "string"},
+        "show_in_ui": {"type": "boolean"},
+        "status": {"type": "string"},
+        "assigned_to_uid": {"type": "string"},
+        "assigned_to_name": {"type": "string"},
+        "hostinfo": {"type": "object"},
+        "seconds_to_triaged": {"type": "number"},
+        "seconds_to_resolved": {"type": "number"},
+        "behaviors_processed": {"type": "array"},
+        "date_updated": {"type": "string"} 
+    }
+}
