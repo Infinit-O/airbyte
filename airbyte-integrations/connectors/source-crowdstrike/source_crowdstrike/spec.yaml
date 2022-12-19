@@ -6,11 +6,18 @@ connectionSpecification:
   required:
     - client_secret
     - client_id
+    - token_refresh_endpoint
+    - base_url
   properties:
-    # 'TODO: This schema defines the configuration required for the source. This usually involves metadata such as database and/or authentication information.':
     client_secret:
       type: string
       description: "The client secret from the Crowdstrike API."
     client_id:
       type: string
       description: "Client ID provided by the Crowdstrike API."
+    token_refresh_endpoint:
+      type: string
+      description: "THe OAuth2 Token Endpoint"
+    base_url:
+      type: string
+      description: "Region specific base url."
