@@ -6,7 +6,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 from urllib.parse import urlparse
-from urllib.parse import parse_qs 
+from urllib.parse import parse_qs
 
 import requests
 import ringcentral
@@ -90,20 +90,21 @@ class RingcentralStream(HttpStream, ABC):
         """
         rjson = response.json()
         try:
-            paging = rjson["paging"]
+            nav = rjson["navigation"]
         except KeyError:
             return None
 
         try:
-            current_page = int(paging["page"])
-            last_page = int(paging["pageEnd"])
+            next_url = nav["nextPage"]["uri"]
         except KeyError:
             return None
 
-        if current_page < last_page:
-            return {"next_page": int(current_page) + 1}
-        else:
-            return None
+        urlparts = urlparse(next_url)
+        queryparts = parse_qs(urlparts.query)
+        
+        self.logger.debug(f"returning page: {queryparts['page'][0]}")
+
+        return {"page": queryparts["page"][0]}
 
     def request_params(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
@@ -111,10 +112,7 @@ class RingcentralStream(HttpStream, ABC):
         """
         Usually contains common params e.g. pagination size etc.
         """
-        if next_page_token:
-            return {"page": next_page_token["page"]}
-        else:
-            return {}
+        return {}
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         """
@@ -141,8 +139,15 @@ class RingcentralStream(HttpStream, ABC):
 
             self.logger.debug(f"Using path: {path}")
 
+            params = self.request_params(
+                stream_state=stream_state,
+                stream_slice=stream_slice,
+                next_page_token=next_page_token
+            )
+            self.logger.debug(f"Using params: {params}")
+
             try:
-                raw_response = self._platform.get(path)
+                raw_response = self._platform.get(path, query_params=params)
                 response = raw_response._response
             except ApiException as e:
                 self.logger.info("No response from API.")
@@ -156,7 +161,6 @@ class RingcentralStream(HttpStream, ABC):
             else:
                 yield from self.parse_response(response)
                 next_page_token = self.next_page_token(response)
-
 
             if not next_page_token:
                 pagination_complete = True
@@ -210,6 +214,23 @@ class Extensions(RingcentralStream):
 
 class CompanyCallLog(RingcentralStream):
     primary_key = "id"
+
+    def request_params(
+        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        if next_page_token:
+            page = next_page_token["page"]
+        else:
+            page = 1
+
+        return {
+            "view": "Detailed",
+            "showBlocked": "true",
+            "withRecording": "false",
+            "dateFrom": "2023-01-22T00:00:00.000Z",
+            "page": page,
+            "perPage": "1000"
+        }
 
     def path(
         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
