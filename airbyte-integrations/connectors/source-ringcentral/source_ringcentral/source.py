@@ -10,6 +10,7 @@ from urllib.parse import parse_qs
 
 import requests
 import ringcentral
+import pendulum
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
@@ -223,11 +224,16 @@ class CompanyCallLog(RingcentralStream):
         else:
             page = 1
 
+        six_months_back = pendulum.now().subtract(months=6)
+        date = six_months_back.to_date_string()
+        template = "{}T00:00:00.000Z".format(date)
+
+
         return {
             "view": "Detailed",
             "showBlocked": "true",
             "withRecording": "false",
-            "dateFrom": "2023-01-22T00:00:00.000Z",
+            "dateFrom": template,
             "page": page,
             "perPage": "1000"
         }
