@@ -202,6 +202,14 @@ class SourceCloudflare(AbstractSource):
         :param logger:  logger object
         :return Tuple[bool, any]: (True, None) if the input config can be used to connect to the API successfully, (False, error) otherwise.
         """
+        token_check_url = "https://api.cloudflare.com/client/v4/user/tokens/verify"
+        supplied_token = config["api_token"]
+        try:
+            resp = requests.get(token_check_url, headers={"Authorization": "Bearer {}".format(supplied_token)})
+            resp.raise_for_status()
+        except:
+            return False, resp.json()
+        
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
