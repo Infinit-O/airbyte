@@ -1,16 +1,21 @@
 import React, { useState } from "react";
 import { FormattedMessage } from "react-intl";
+import { useLocation } from "react-router-dom";
 
-import { Action, Namespace } from "core/analytics";
+import { BuilderPrompt } from "components/connectorBuilder/BuilderPrompt";
+import { Card } from "components/ui/Card";
+
 import { ConnectionConfiguration } from "core/domain/connection";
 import { LogsRequestError } from "core/request/LogsRequestError";
-import { useAnalyticsService } from "hooks/services/Analytics";
-import useRouter from "hooks/useRouter";
+import { useExperiment } from "hooks/services/Experiment";
+import { RoutePaths } from "pages/routePaths";
 import { SourceDefinitionReadWithLatestTag } from "services/connector/SourceDefinitionService";
 import { useGetSourceDefinitionSpecificationAsync } from "services/connector/SourceDefinitionSpecificationService";
-import { createFormErrorMessage } from "utils/errorStatusMessage";
+import { FormError } from "utils/errorStatusMessage";
 import { ConnectorCard } from "views/Connector/ConnectorCard";
-import { ServiceFormValues } from "views/Connector/ServiceForm/types";
+import { ConnectorCardValues } from "views/Connector/ConnectorForm/types";
+
+import styles from "./SourceForm.module.scss";
 
 interface SourceFormProps {
   onSubmit: (values: {
@@ -18,11 +23,9 @@ interface SourceFormProps {
     serviceType: string;
     sourceDefinitionId?: string;
     connectionConfiguration?: ConnectionConfiguration;
-  }) => void;
-  afterSelectConnector?: () => void;
+  }) => Promise<void>;
   sourceDefinitions: SourceDefinitionReadWithLatestTag[];
-  hasSuccess?: boolean;
-  error?: { message?: string; status?: number } | null;
+  error?: FormError | null;
 }
 
 const hasSourceDefinitionId = (state: unknown): state is { sourceDefinitionId: string } => {
@@ -33,15 +36,8 @@ const hasSourceDefinitionId = (state: unknown): state is { sourceDefinitionId: s
   );
 };
 
-export const SourceForm: React.FC<SourceFormProps> = ({
-  onSubmit,
-  sourceDefinitions,
-  error,
-  hasSuccess,
-  afterSelectConnector,
-}) => {
-  const { location } = useRouter();
-  const analyticsService = useAnalyticsService();
+export const SourceForm: React.FC<SourceFormProps> = ({ onSubmit, sourceDefinitions, error }) => {
+  const location = useLocation();
 
   const [sourceDefinitionId, setSourceDefinitionId] = useState<string | null>(
     hasSourceDefinitionId(location.state) ? location.state.sourceDefinitionId : null
@@ -55,43 +51,37 @@ export const SourceForm: React.FC<SourceFormProps> = ({
 
   const onDropDownSelect = (sourceDefinitionId: string) => {
     setSourceDefinitionId(sourceDefinitionId);
-
-    const connector = sourceDefinitions.find((item) => item.sourceDefinitionId === sourceDefinitionId);
-
-    if (afterSelectConnector) {
-      afterSelectConnector();
-    }
-
-    analyticsService.track(Namespace.SOURCE, Action.SELECT, {
-      actionDescription: "Source connector type selected",
-      connector_source: connector?.name,
-      connector_source_definition_id: sourceDefinitionId,
-    });
   };
 
-  const onSubmitForm = async (values: ServiceFormValues) => {
-    await onSubmit({
+  const onSubmitForm = (values: ConnectorCardValues) => {
+    onSubmit({
       ...values,
       sourceDefinitionId: sourceDefinitionSpecification?.sourceDefinitionId,
     });
   };
 
-  const errorMessage = error ? createFormErrorMessage(error) : null;
+  const showBuilderNavigationLinks = useExperiment("connectorBuilder.showNavigationLinks", false);
 
   return (
-    <ConnectorCard
-      onServiceSelect={onDropDownSelect}
-      onSubmit={onSubmitForm}
-      formType="source"
-      availableServices={sourceDefinitions}
-      selectedConnectorDefinitionSpecification={sourceDefinitionSpecification}
-      hasSuccess={hasSuccess}
-      fetchingConnectorError={sourceDefinitionError instanceof Error ? sourceDefinitionError : null}
-      errorMessage={errorMessage}
-      isLoading={isLoading}
-      formValues={sourceDefinitionId ? { serviceType: sourceDefinitionId, name: "" } : undefined}
-      title={<FormattedMessage id="onboarding.sourceSetUp" />}
-      jobInfo={LogsRequestError.extractJobInfo(error)}
-    />
+    <>
+      <ConnectorCard
+        formType="source"
+        title={<FormattedMessage id="onboarding.sourceSetUp" />}
+        description={<FormattedMessage id="sources.description" />}
+        isLoading={isLoading}
+        fetchingConnectorError={sourceDefinitionError instanceof Error ? sourceDefinitionError : null}
+        availableConnectorDefinitions={sourceDefinitions}
+        onConnectorDefinitionSelect={onDropDownSelect}
+        selectedConnectorDefinitionSpecification={sourceDefinitionSpecification}
+        selectedConnectorDefinitionId={sourceDefinitionId}
+        onSubmit={onSubmitForm}
+        jobInfo={LogsRequestError.extractJobInfo(error)}
+      />
+      {showBuilderNavigationLinks && !sourceDefinitionSpecification && (
+        <Card fullWidth className={styles.builderPrompt}>
+          <BuilderPrompt builderRoutePath={`../../${RoutePaths.ConnectorBuilder}`} />
+        </Card>
+      )}
+    </>
   );
 };

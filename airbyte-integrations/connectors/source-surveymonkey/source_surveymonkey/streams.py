@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 import tempfile
@@ -11,6 +11,7 @@ import pendulum
 import requests
 import vcr
 from airbyte_cdk.models import SyncMode
+from airbyte_cdk.sources.streams.availability_strategy import AvailabilityStrategy
 from airbyte_cdk.sources.streams.http import HttpStream
 
 cache_file = tempfile.NamedTemporaryFile()
@@ -26,6 +27,10 @@ class SurveymonkeyStream(HttpStream, ABC):
         super().__init__(**kwargs)
         self._start_date = start_date
         self._survey_ids = survey_ids
+
+    @property
+    def availability_strategy(self) -> Optional["AvailabilityStrategy"]:
+        return None
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         resp_json = response.json()
@@ -56,9 +61,15 @@ class SurveymonkeyStream(HttpStream, ABC):
         We use the "new_episodes" record mode to save and reuse all requests in slices, details, etc..
         """
         with vcr.use_cassette(cache_file.name, record_mode="new_episodes", serializer="json", decode_compressed_response=True):
-            yield from super().read_records(
-                sync_mode=sync_mode, cursor_field=cursor_field, stream_slice=stream_slice, stream_state=stream_state
-            )
+            try:
+                yield from super().read_records(
+                    sync_mode=sync_mode, cursor_field=cursor_field, stream_slice=stream_slice, stream_state=stream_state
+                )
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 404:
+                    yield from []
+                else:
+                    raise e
 
     def backoff_time(self, response: requests.Response) -> Optional[float]:
         """

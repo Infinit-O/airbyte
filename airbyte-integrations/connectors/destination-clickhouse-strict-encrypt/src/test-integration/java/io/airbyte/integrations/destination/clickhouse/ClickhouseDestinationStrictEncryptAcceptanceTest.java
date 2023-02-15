@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.destination.clickhouse;
@@ -17,8 +17,8 @@ import io.airbyte.db.jdbc.JdbcDatabase;
 import io.airbyte.db.jdbc.JdbcUtils;
 import io.airbyte.integrations.base.JavaBaseConstants;
 import io.airbyte.integrations.destination.ExtendedNameTransformer;
-import io.airbyte.integrations.standardtest.destination.DataTypeTestArgumentProvider;
 import io.airbyte.integrations.standardtest.destination.DestinationAcceptanceTest;
+import io.airbyte.integrations.standardtest.destination.argproviders.DataTypeTestArgumentProvider;
 import io.airbyte.integrations.standardtest.destination.comparator.TestDataComparator;
 import io.airbyte.integrations.util.HostPortResolver;
 import java.sql.SQLException;
@@ -49,7 +49,7 @@ public class ClickhouseDestinationStrictEncryptAcceptanceTest extends Destinatio
   private GenericContainer db;
 
   private static JdbcDatabase getDatabase(final JsonNode config) {
-    final String jdbcStr = String.format(DatabaseDriver.CLICKHOUSE.getUrlFormatString() + "?sslmode=none",
+    final String jdbcStr = String.format(DatabaseDriver.CLICKHOUSE.getUrlFormatString() + "?sslmode=NONE",
         ClickhouseDestination.HTTPS_PROTOCOL,
         config.get(JdbcUtils.HOST_KEY).asText(),
         config.get(JdbcUtils.PORT_KEY).asInt(),
@@ -64,16 +64,6 @@ public class ClickhouseDestinationStrictEncryptAcceptanceTest extends Destinatio
   @Override
   protected String getImageName() {
     return "airbyte/destination-clickhouse-strict-encrypt:dev";
-  }
-
-  @Override
-  protected boolean supportsNormalization() {
-    return true;
-  }
-
-  @Override
-  protected boolean supportsDBT() {
-    return false;
   }
 
   @Override
@@ -113,7 +103,6 @@ public class ClickhouseDestinationStrictEncryptAcceptanceTest extends Destinatio
   protected JsonNode getConfig() {
     return Jsons.jsonNode(ImmutableMap.builder()
         .put(JdbcUtils.HOST_KEY, HostPortResolver.resolveIpAddress(db))
-        .put(JdbcUtils.TCP_PORT_KEY, NATIVE_SECURE_PORT)
         .put(JdbcUtils.PORT_KEY, HTTPS_PORT)
         .put(JdbcUtils.DATABASE_KEY, DB_NAME)
         .put(JdbcUtils.USERNAME_KEY, USER_NAME)

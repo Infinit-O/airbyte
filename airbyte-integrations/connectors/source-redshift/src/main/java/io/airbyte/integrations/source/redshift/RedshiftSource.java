@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.source.redshift;
@@ -27,16 +27,18 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RedshiftSource extends AbstractJdbcSource<JDBCType> implements Source {
+public class RedshiftSource extends AbstractJdbcSource<JDBCType> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RedshiftSource.class);
+  private static final int INTERMEDIATE_STATE_EMISSION_FREQUENCY = 10_000;
+
   public static final String DRIVER_CLASS = DatabaseDriver.REDSHIFT.getDriverClassName();
   private List<String> schemas;
 
   // todo (cgardens) - clean up passing the dialect as null versus explicitly adding the case to the
   // constructor.
   public RedshiftSource() {
-    super(DRIVER_CLASS, AdaptiveStreamingQueryConfig::new, JdbcUtils.getDefaultSourceOperations());
+    super(DRIVER_CLASS, AdaptiveStreamingQueryConfig::new, new RedshiftSourceOperations());
   }
 
   @Override
@@ -62,6 +64,10 @@ public class RedshiftSource extends AbstractJdbcSource<JDBCType> implements Sour
     }
 
     addSsl(additionalProperties);
+
+    if (redshiftConfig.get(JdbcUtils.JDBC_URL_PARAMS_KEY) != null && !redshiftConfig.get(JdbcUtils.JDBC_URL_PARAMS_KEY).asText().isEmpty()) {
+      additionalProperties.addAll(List.of(redshiftConfig.get(JdbcUtils.JDBC_URL_PARAMS_KEY).asText().split("&")));
+    }
 
     builder.put(JdbcUtils.CONNECTION_PROPERTIES_KEY, String.join("&", additionalProperties));
 
@@ -117,6 +123,11 @@ public class RedshiftSource extends AbstractJdbcSource<JDBCType> implements Sour
               .tableName(json.get("tablename").asText())
               .build();
         }));
+  }
+
+  @Override
+  protected int getStateEmissionFrequency() {
+    return INTERMEDIATE_STATE_EMISSION_FREQUENCY;
   }
 
   public static void main(final String[] args) throws Exception {

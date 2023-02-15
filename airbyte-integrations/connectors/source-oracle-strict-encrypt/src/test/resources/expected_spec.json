@@ -1,5 +1,5 @@
 {
-  "documentationUrl": "https://docs.airbyte.io/integrations/sources/oracle",
+  "documentationUrl": "https://docs.airbyte.com/integrations/sources/oracle",
   "connectionSpecification": {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Oracle Source Spec",
@@ -30,14 +30,11 @@
           {
             "title": "Service name",
             "description": "Use service name",
-            "required": [
-              "service_name"
-            ],
+            "required": ["service_name"],
             "properties": {
               "connection_type": {
                 "type": "string",
                 "const": "service_name",
-                "default": "service_name",
                 "order": 0
               },
               "service_name": {
@@ -50,14 +47,11 @@
           {
             "title": "System ID (SID)",
             "description": "Use SID (Oracle System Identifier)",
-            "required": [
-              "sid"
-            ],
+            "required": ["sid"],
             "properties": {
               "connection_type": {
                 "type": "string",
                 "const": "sid",
-                "default": "sid",
                 "order": 0
               },
               "sid": {
@@ -112,9 +106,7 @@
             "properties": {
               "encryption_method": {
                 "type": "string",
-                "const": "client_nne",
-                "enum": ["client_nne"],
-                "default": "client_nne"
+                "const": "client_nne"
               },
               "encryption_algorithm": {
                 "type": "string",
@@ -132,9 +124,7 @@
             "properties": {
               "encryption_method": {
                 "type": "string",
-                "const": "encrypted_verify_certificate",
-                "enum": ["encrypted_verify_certificate"],
-                "default": "encrypted_verify_certificate"
+                "const": "encrypted_verify_certificate"
               },
               "ssl_certificate": {
                 "title": "SSL PEM File",

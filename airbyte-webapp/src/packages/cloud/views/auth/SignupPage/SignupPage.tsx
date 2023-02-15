@@ -1,21 +1,35 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
-import HeadTitle from "components/HeadTitle";
+import { HeadTitle } from "components/common/HeadTitle";
+import { FlexContainer } from "components/ui/Flex";
+import { Heading } from "components/ui/Heading";
 
-import { SignupForm } from "./components/SignupForm";
+import { PageTrackingCodes, useTrackPage } from "hooks/services/Analytics";
+import { useExperiment } from "hooks/services/Experiment";
+
+import { Separator } from "./components/Separator";
+import { Disclaimer, SignupForm } from "./components/SignupForm";
+import { SimpleLeftSide } from "./components/SimpleLeftSide/SimpleLeftSide";
 import SpecialBlock from "./components/SpecialBlock";
 import styles from "./SignupPage.module.scss";
+import { OAuthLogin } from "../OAuthLogin";
 
 interface SignupPageProps {
   highlightStyle?: React.CSSProperties;
 }
 
 const SignupPage: React.FC<SignupPageProps> = ({ highlightStyle }) => {
+  useTrackPage(PageTrackingCodes.SIGNUP);
+  const isSimpleLeftSide = useExperiment("authPage.signup.simplifyLeftSide", false);
+
+  if (isSimpleLeftSide) {
+    return <SimpleLeftSide />;
+  }
   return (
-    <div>
+    <FlexContainer direction="column" gap="xl">
       <HeadTitle titles={[{ id: "login.signup" }]} />
-      <h1 className={styles.title}>
+      <Heading as="h1" size="xl" className={styles.title}>
         <FormattedMessage
           id="login.activateAccess"
           values={{
@@ -26,10 +40,14 @@ const SignupPage: React.FC<SignupPageProps> = ({ highlightStyle }) => {
             ),
           }}
         />
-      </h1>
+      </Heading>
       <SpecialBlock />
+
+      <OAuthLogin />
+      <Separator />
       <SignupForm />
-    </div>
+      <Disclaimer />
+    </FlexContainer>
   );
 };
 

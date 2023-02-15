@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 
@@ -15,6 +15,8 @@ class DestinationType(Enum):
     POSTGRES = "postgres"
     REDSHIFT = "redshift"
     SNOWFLAKE = "snowflake"
+    TIDB = "tidb"
+    DUCKDB = "duckdb"
 
     @classmethod
     def from_string(cls, string_value: str) -> "DestinationType":

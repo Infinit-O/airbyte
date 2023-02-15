@@ -1,16 +1,19 @@
 #
-# Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 from abc import abstractmethod
+from dataclasses import dataclass
 from typing import Iterable, Optional
 
 from airbyte_cdk.models import SyncMode
 from airbyte_cdk.sources.declarative.requesters.request_options.request_options_provider import RequestOptionsProvider
 from airbyte_cdk.sources.declarative.types import Record, StreamSlice, StreamState
+from dataclasses_jsonschema import JsonSchemaMixin
 
 
-class StreamSlicer(RequestOptionsProvider):
+@dataclass
+class StreamSlicer(RequestOptionsProvider, JsonSchemaMixin):
     """
     Slices the stream into a subset of records.
     Slices enable state checkpointing and data retrieval parallelization.

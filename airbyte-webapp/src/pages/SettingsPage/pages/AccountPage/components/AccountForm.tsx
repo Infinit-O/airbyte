@@ -4,21 +4,14 @@ import { FormattedMessage, useIntl } from "react-intl";
 import styled from "styled-components";
 import * as yup from "yup";
 
-import { LoadingButton } from "components";
-import LabeledInput from "components/LabeledInput";
+import { LabeledInput } from "components";
 import { Row, Cell } from "components/SimpleTableComponents";
+import { Button } from "components/ui/Button";
+
+import styles from "./AccountForm.module.scss";
 
 const InputRow = styled(Row)`
   height: auto;
-  margin-bottom: 40px;
-`;
-
-const ButtonCell = styled(Cell)`
-  &:last-child {
-    text-align: left;
-  }
-  padding-left: 11px;
-  height: 9px;
 `;
 
 const EmailForm = styled(Form)`
@@ -61,11 +54,13 @@ const AccountForm: React.FC<AccountFormProps> = ({ email, onSubmit, successMessa
       validateOnChange={false}
       validationSchema={accountValidationSchema}
       enableReinitialize
-      onSubmit={onSubmit}
+      onSubmit={(data) => {
+        onSubmit(data);
+      }}
     >
       {({ isSubmitting, dirty, values }) => (
         <EmailForm>
-          <InputRow>
+          <InputRow className={styles.formItem}>
             <Cell flex={3}>
               <Field name="email">
                 {({ field, meta }: FieldProps<string>) => (
@@ -81,12 +76,12 @@ const AccountForm: React.FC<AccountFormProps> = ({ email, onSubmit, successMessa
                 )}
               </Field>
             </Cell>
-            <ButtonCell>
-              <LoadingButton isLoading={isSubmitting} type="submit" disabled={!dirty || !values.email}>
-                <FormattedMessage id="form.saveChanges" />
-              </LoadingButton>
-            </ButtonCell>
           </InputRow>
+          <div className={styles.submit}>
+            <Button isLoading={isSubmitting} type="submit" disabled={!dirty || !values.email}>
+              <FormattedMessage id="form.saveChanges" />
+            </Button>
+          </div>
           {!dirty &&
             (successMessage ? (
               <Success>{successMessage}</Success>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.destination.mssql;
@@ -15,11 +15,11 @@ import io.airbyte.db.factory.DatabaseDriver;
 import io.airbyte.db.jdbc.JdbcUtils;
 import io.airbyte.integrations.base.JavaBaseConstants;
 import io.airbyte.integrations.destination.ExtendedNameTransformer;
-import io.airbyte.integrations.standardtest.destination.DestinationAcceptanceTest;
+import io.airbyte.integrations.standardtest.destination.JdbcDestinationAcceptanceTest;
+import io.airbyte.integrations.standardtest.destination.comparator.TestDataComparator;
 import io.airbyte.integrations.util.HostPortResolver;
 import io.airbyte.test.utils.DatabaseConnectionHelper;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.jooq.DSLContext;
@@ -29,7 +29,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.utility.DockerImageName;
 
-public class MSSQLDestinationAcceptanceTestSSL extends DestinationAcceptanceTest {
+public class MSSQLDestinationAcceptanceTestSSL extends JdbcDestinationAcceptanceTest {
 
   private static MSSQLServerContainer<?> db;
   private final ExtendedNameTransformer namingResolver = new ExtendedNameTransformer();
@@ -40,16 +40,6 @@ public class MSSQLDestinationAcceptanceTestSSL extends DestinationAcceptanceTest
   @Override
   protected String getImageName() {
     return "airbyte/destination-mssql:dev";
-  }
-
-  @Override
-  protected boolean supportsDBT() {
-    return true;
-  }
-
-  @Override
-  protected boolean supportsNormalization() {
-    return true;
   }
 
   private JsonNode getConfig(final MSSQLServerContainer<?> db) {
@@ -90,7 +80,7 @@ public class MSSQLDestinationAcceptanceTestSSL extends DestinationAcceptanceTest
       throws Exception {
     return retrieveRecordsFromTable(namingResolver.getRawTableName(streamName), namespace)
         .stream()
-        .map(r -> Jsons.deserialize(r.get(JavaBaseConstants.COLUMN_NAME_DATA).asText()))
+        .map(r -> r.get(JavaBaseConstants.COLUMN_NAME_DATA))
         .collect(Collectors.toList());
   }
 
@@ -112,19 +102,6 @@ public class MSSQLDestinationAcceptanceTestSSL extends DestinationAcceptanceTest
     return retrieveRecordsFromTable(tableName, namespace);
   }
 
-  @Override
-  protected List<String> resolveIdentifier(final String identifier) {
-    final List<String> result = new ArrayList<>();
-    final String resolved = namingResolver.getIdentifier(identifier);
-    result.add(identifier);
-    result.add(resolved);
-    if (!resolved.startsWith("\"")) {
-      result.add(resolved.toLowerCase());
-      result.add(resolved.toUpperCase());
-    }
-    return result;
-  }
-
   private List<JsonNode> retrieveRecordsFromTable(final String tableName, final String schemaName) throws SQLException {
     final DSLContext dslContext = DatabaseConnectionHelper.createDslContext(db, SQLDialect.DEFAULT);
     return new Database(dslContext).query(
@@ -133,8 +110,7 @@ public class MSSQLDestinationAcceptanceTestSSL extends DestinationAcceptanceTest
           return ctx
               .fetch(String.format("SELECT * FROM %s.%s ORDER BY %s ASC;", schemaName, tableName, JavaBaseConstants.COLUMN_NAME_EMITTED_AT))
               .stream()
-              .map(r -> r.formatJSON(JdbcUtils.getDefaultJSONFormat()))
-              .map(Jsons::deserialize)
+              .map(this::getJsonFromRecord)
               .collect(Collectors.toList());
         });
   }
@@ -192,6 +168,26 @@ public class MSSQLDestinationAcceptanceTestSSL extends DestinationAcceptanceTest
   static void cleanUp() {
     db.stop();
     db.close();
+  }
+
+  @Override
+  protected TestDataComparator getTestDataComparator() {
+    return new MSSQLTestDataComparator();
+  }
+
+  @Override
+  protected boolean supportBasicDataTypeTest() {
+    return true;
+  }
+
+  @Override
+  protected boolean supportArrayDataTypeTest() {
+    return true;
+  }
+
+  @Override
+  protected boolean supportObjectDataTypeTest() {
+    return true;
   }
 
 }

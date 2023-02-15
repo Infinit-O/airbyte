@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 from airbyte_cdk.models import SyncMode
@@ -7,7 +7,8 @@ from airbyte_cdk.sources.declarative.stream_slicers.single_slice import SingleSl
 
 
 def test():
-    iterator = SingleSlice()
+    iterator = SingleSlice(options={})
 
     stream_slices = iterator.stream_slices(SyncMode.incremental, None)
-    assert stream_slices == [dict()]
+    next_slice = next(stream_slices)
+    assert next_slice == dict()

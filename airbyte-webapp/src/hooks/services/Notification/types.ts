@@ -1,10 +1,8 @@
-export interface Notification {
-  id: string | number;
-  title: string;
-  text?: string;
-  isError?: boolean;
+import { ToastProps } from "components/ui/Toast";
+
+export interface Notification extends Pick<ToastProps, "type" | "onAction" | "onClose" | "actionBtnText" | "text"> {
+  id: string;
   nonClosable?: boolean;
-  onClose?: () => void;
 }
 
 export interface NotificationServiceApi {

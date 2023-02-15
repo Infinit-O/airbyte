@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.metrics.lib;
@@ -31,15 +31,6 @@ class MetricClientFactoryTest {
   @DisplayName("Should not throw error if MetricClientFactory creates a metric client on the first call;")
   void testMetricClientFactoryCreateSuccess() {
     Assertions.assertDoesNotThrow(() -> {
-      MetricClientFactory.initialize(MetricEmittingApps.METRICS_REPORTER);
-    });
-  }
-
-  @Test
-  @DisplayName("Should throw error if MetricClientFactory create a metric client multiple times;")
-  void testMetricClientFactoryCreateMultipleTimesThrows() {
-    Assertions.assertThrows(RuntimeException.class, () -> {
-      MetricClientFactory.initialize(MetricEmittingApps.METRICS_REPORTER);
       MetricClientFactory.initialize(MetricEmittingApps.METRICS_REPORTER);
     });
   }

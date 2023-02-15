@@ -1,8 +1,7 @@
 import { Navigate } from "react-router-dom";
 
 import { RoutePaths } from "../../../pages/routePaths";
-import { CloudRoutes } from "../cloudRoutes";
-import { useListCloudWorkspaces } from "../services/workspaces/WorkspacesService";
+import { useListCloudWorkspaces } from "../services/workspaces/CloudWorkspacesService";
 
 export const DefaultView: React.FC = () => {
   const workspaces = useListCloudWorkspaces();
@@ -12,11 +11,11 @@ export const DefaultView: React.FC = () => {
   return (
     <Navigate
       to={
-        workspaces.length !== 1
-          ? `/${CloudRoutes.SelectWorkspace}`
-          : `/${RoutePaths.Workspaces}/${workspaces[0].workspaceId}`
+        workspaces.length !== 1 ? `/${RoutePaths.Workspaces}` : `/${RoutePaths.Workspaces}/${workspaces[0].workspaceId}`
       }
       replace
     />
   );
 };
+
+export default DefaultView;
