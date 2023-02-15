@@ -176,7 +176,6 @@ class FirewallEvents(CloudflareAnalyticsStream):
             "tag": self.config["zone_id"],
             "start": start_date,
             "end": end_date,
-            "ts": "2023-01-30"
         }
 
         return {"query": the_query, "variables": variables}
