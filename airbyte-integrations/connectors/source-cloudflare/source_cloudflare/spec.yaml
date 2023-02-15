@@ -1,0 +1,15 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Cloudflare Spec
+  type: object
+  required:
+    - api_token
+    - zone_id 
+  properties:
+    api_token:
+      type: string
+      description: api token thing from Cloudflare
+    zone_id:
+      type: string
+      description: the zone ID is in the Cloudflare dashboard
