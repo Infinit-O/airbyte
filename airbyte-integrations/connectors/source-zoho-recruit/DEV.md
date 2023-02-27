@@ -1,3 +1,10 @@
+# 23 Feb 2023
+- zoho scopes seem to have changed
+- potential new scopes; 
+```
+ZohoRecruit.users.all,ZohoRecruit.org.all,ZohoRecruit.settings.all,ZohoRecruit.modules.all,ZohoRecruit.bulk.all,ZohoRecruit.notifications.read,ZohoRecruit.setup.operation.all
+```
+
 # Ignore the above its bugged I'm trying to figure out which ones are bad.
 ZohoRecruit.setup.operation.READ,ZohoRecruit.settings.note_type.all,ZohoRECRUIT.settings.roles.read,ZohoRecruit.settings.profiles.read,ZohoRecruit.org.all,ZohoRecruit.users.read,ZohoRecruit.settings.fields.read,ZohoRecruit.settings.custom_views.read,ZohoRecruit.settings.layouts.read,ZohoRecruit.settings.related_lists.read,ZohoRECRUIT.modules.read,ZohoRECRUIT.settings.tags.read
 
