@@ -30,13 +30,10 @@ the_query = """
         ref
         ruleId
         rulesetId
-        wafAttackScore
         edgeResponseStatus
         source
         userAgent
-        wafRceAttackScore
-        wafSqliAttackScore
-        wafXssAttackScore
+        wafAttackScoreClass
       }
     }
   }
