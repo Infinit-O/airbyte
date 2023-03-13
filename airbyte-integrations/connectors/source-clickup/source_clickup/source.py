@@ -5,12 +5,13 @@
 
 from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from time import sleep
 
 import requests
 from airbyte_cdk.models import SyncMode
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
-from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
+from airbyte_cdk.sources.streams.http import HttpStream
 from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
 
 """
@@ -62,6 +63,13 @@ class ClickupStream(HttpStream, ABC):
     """
 
     url_base = "https://api.clickup.com/api/v2/"
+
+    def _send(self, *args, **kwargs):
+        sleep_time = 3
+        self.logger.debug("Calling into overridden _send()")
+        sleep(sleep_time)
+        self.logger.debug(f"sleep is at {sleep_time}")
+        return super()._send(*args, **kwargs)
 
     @property
     def entity_name(self):
@@ -154,6 +162,34 @@ class Spaces(ClickupSubStream):
         team_id = stream_slice["parent"]["id"]
         return f"team/{team_id}/space"
     
+class Tags(ClickupSubStream):
+    primary_key = "id"
+    parent = Teams
+    entity_name = "Tags"
+    raise_on_http_errors = False
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        team_id = stream_slice["parent"]["id"]
+        return f"space/{team_id}/tag"
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        """
+        Override this method to define how a response is parsed.
+        :return an iterable containing each record in the response
+        """
+        data = response.json()
+        try:
+            contents = data[self.entity_name]
+            yield from contents
+        except KeyError:
+            yield from []
+
 class Folders(ClickupSubStream):
     primary_key = "id"
     parent = Spaces
@@ -199,6 +235,21 @@ class Tasks(ClickupSubStream):
         team_id = stream_slice["parent"]["id"]
         return f"list/{team_id}/task"
 
+class Comments(ClickupSubStream):
+    primary_key = "id"
+    parent = Tasks 
+    entity_name = "comments"
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        """
+        Override this method to define the path this stream corresponds to. E.g. if the url is https://example-api.com/v1/customers then this
+        should return "customers". Required.
+        """
+        team_id = stream_slice["parent"]["id"]
+        return f"task/{team_id}/comment"
+
 # Source
 class SourceClickup(AbstractSource):
     def check_connection(self, logger, config) -> Tuple[bool, any]:
@@ -231,4 +282,6 @@ class SourceClickup(AbstractSource):
             Folders(authenticator=auth),
             Lists(authenticator=auth),
             Tasks(authenticator=auth),
+            Comments(authenticator=auth),
+            Tags(authenticator=auth),
         ]
