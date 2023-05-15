@@ -22,7 +22,8 @@ class ZohoRecruitSubStream(ZohoRecruitStream):
     def bad_api_list(self):
         unauthorized_api_list = ["referrals"]
         unsupported_api_list = [
-            "home", "analytics", "emails", "documents", "social", "zoho_marketplace", "submissions"
+            "home", "analytics", "emails", "documents", "social", "zoho_marketplace", "submissions",
+            "campaigns", "assessments", "offers"
         ]
         invalid_name_list = ["reports", "dashboards", "metrics",] 
         empty_api_list = ["approvals"]
