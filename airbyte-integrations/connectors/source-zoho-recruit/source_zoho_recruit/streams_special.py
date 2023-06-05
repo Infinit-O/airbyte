@@ -54,4 +54,4 @@ class Tags(ZohoRecruitSubStream):
         if response.status_code == 204:
             yield from []
         else:
-            yield response.json()["tags"]
+            yield from response.json()["tags"]
