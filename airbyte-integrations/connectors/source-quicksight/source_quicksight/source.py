@@ -9,7 +9,6 @@ from typing import Dict, Generator
 from pprint import pprint
 
 import boto3
-from botocore.config import Config
 from airbyte_cdk.logger import AirbyteLogger
 from airbyte_cdk.models import (
     AirbyteCatalog,
@@ -22,7 +21,7 @@ from airbyte_cdk.models import (
     Type,
 )
 from airbyte_cdk.sources import Source
-from .operations import list_dashboards, describe_dashboards
+from .operations import op_map_dict, list_dashboards
 
 class SourceQuicksight(Source):
     def _client_factory(self, config: json):
@@ -74,17 +73,23 @@ class SourceQuicksight(Source):
             - json_schema providing the specifications of expected schema for this stream (a list of columns described
             by their names and types)
         """
-        streams = []
 
-        stream_name = "TableName"  # Example
+        def __stream_factory(name, schema):
+            astream = AirbyteStream(
+                name=name,
+                json_schema=json_schema,
+                supported_sync_modes=["full_refresh"]
+            )
+            return astream
+
         json_schema = {  # Example
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
-            "properties": {"columnName": {"type": "string"}},
+            "properties": {},
         }
+        streams = [__stream_factory(k, json_schema) for k in op_map_dict.keys()]
 
         # Not Implemented
-        streams.append(AirbyteStream(name=stream_name, json_schema=json_schema, supported_sync_modes=["full_refresh"]))
         return AirbyteCatalog(streams=streams)
 
     def read(
@@ -111,8 +116,21 @@ class SourceQuicksight(Source):
         """
         # stream_name = "iom-quicksight"  # Example
         # data = {"columnName": "Hello World"}  # Example
+        client = self._client_factory(config)
+        account_id = config["aws_account_id"]
 
-        yield AirbyteMessage(
-            type=Type.RECORD,
-            record=AirbyteRecordMessage(stream=stream_name, data=data, emitted_at=int(datetime.now().timestamp()) * 1000),
-        )
+        for k, v in op_map_dict.items():
+            stream_name = k
+            data = v(client, account_id)
+
+            for item in data:
+                abrm = AirbyteRecordMessage(
+                    stream=stream_name,
+                    data=item,
+                    emitted_at=int(datetime.now().timestamp()) * 1000
+                )
+                abm = AirbyteMessage(
+                    type=Type.RECORD,
+                    record=abrm
+                )
+                yield abm

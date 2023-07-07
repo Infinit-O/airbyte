@@ -7,6 +7,7 @@ connectionSpecification:
     - aws_account_id
     - aws_access_key_id
     - aws_secret_access_key
+    - aws_region_name
   properties:
     aws_account_id:
       type: string
@@ -14,9 +15,9 @@ connectionSpecification:
     aws_access_key_id:
       type: string
       description: describe me
-    aws_secret_access_id:
+    aws_secret_access_key:
       type: string
-      description: describe me
+      description: the AWS secret access key for the acount
     aws_region_name:
       type: string
       description: The AWS region identifier, e.g 'ap-east-1'

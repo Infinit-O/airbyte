@@ -1,8 +1,11 @@
 import json
 import boto3
-import os.path
+import logging
+from time import sleep, time
 from pprint import pprint
 from functools import partial
+
+logs = logging.getLogger('airbyte')
 
 def _client_factory(config):
     aws_access_key_id = config["aws_access_key_id"]
@@ -32,6 +35,7 @@ def _client_adaptor(client, operation_name, account_id, **kwargs):
         return [data]
 
 def _api_call(client, account_id, operation, foreign_key_name=None, envelope_name=None, parent=None):
+    logs.info(f"working on operation -> {operation}")
     if (foreign_key_name is not None) and (parent is not None):
         parent_data = parent(client, account_id)
         results = []
@@ -65,21 +69,12 @@ def _api_call(client, account_id, operation, foreign_key_name=None, envelope_nam
 
                 for page in data:
                     results.append(page)
-        
+                sleep(5)
         return results
     else:
         data = _client_adaptor(client, operation, account_id)
         return data
 
-operations = [
-    ("list_dashboards", None),
-    ("list_data_sets", None),
-    ("list_data_sources", None),
-    ("list_folders", None),
-    ("list_namespaces", None),
-    ("list_template", None),
-    ("list_themes", None)
-]
 
 def list_dashboards(client, account_id):
     return _api_call(client, account_id, "list_dashboards")
@@ -358,7 +353,7 @@ def describe_ingestions(client, account_id):
         account_id,
         "describe_ingestion",
         envelope_name="Ingestions",
-        foreign_key_name="",
+        foreign_key_name="IngestionId",
         parent=list_ingestions
     )
 
@@ -455,56 +450,73 @@ def describe_user(client, account_id):
 def describe_iam_policy_assignment(client, account_id):
     return _api_call()
 
-if __name__ == "__main__":
-    with open("secrets/config.json") as F:
-        config = json.loads(F.read())
+op_map_dict = {
+    "list_dashboards": list_dashboards,
+    "list_dashboard_versions": list_dashboard_versions,
+    "list_analyses": list_analyses,
+    "list_data_sets": list_data_sets,
+    "list_ingestions": list_ingestions,
+    "list_data_sources": list_data_sources,
+    "list_folders": list_folders,
+    "list_folder_members": list_folder_members,
+    "list_namespaces": list_namespaces,
+    # "list_users": list_users,
+    # "list_iam_policy_assignments_for_user": list_iam_policy_assignments_for_user,
+    # "list_user_groups": list_user_groups,
+    # "list_groups": list_groups,
+    # "list_group_memberships": list_group_memberships,
+    # "list_iam_policy_assignments": list_iam_policy_assignments,
+    "list_templates": list_templates,
+    "list_template_aliases": list_template_aliases,
+    "list_template_versions": list_template_versions,
+    "list_themes": list_themes,
+    # "describe_themes": describe_themes,
+    # "list_theme_aliases": list_theme_aliases,
+    # "list_theme_versions": list_theme_versions,
+    # "describe_account_customization": describe_account_customization # this does not exist 
+    "describe_account_settings": describe_account_settings,
+    "describe_account_subscription": describe_account_subscription,
+    "describe_analysis": describe_analysis,
+    "describe_analysis_definition": describe_analysis_definition,
+    "describe_analysis_permissions": describe_analysis_permissions,
+    "describe_dashboard": describe_dashboards,
+    "describe_dashboard_definition": describe_dashboard_definition,
+    "describe_dashboard_permissions": describe_dashboard_permissions,
+    "describe_data_set": describe_data_set,
+    "describe_data_set_permissions": describe_data_set_permissions,
+    "describe_data_source": describe_data_source,
+    "describe_data_source_permissions": describe_data_source_permissions,
+    "describe_folder": describe_folders,
+    "describe_folder_permissions": describe_folder_permissions,
+    "describe_folder_resolved_permissions": describe_folder_resolved_permissions,
+    # "describe_group": describe_group,
+    # "describe_group_membership": describe_group_membership,
+    # "describe_iam_policy_assignment": describe_iam_policy_assignment,
+    # "describe_ingestion": describe_ingestions,
+    # "describe_ip_restrictions": describe_ip_restriction,
+    # "describe_namespace": describe_namespace,
+    "describe_template": describe_template,
+    "describe_template_alias": describe_template_alias,
+    "describe_template_definition": describe_template_definition,
+    "describe_template_permissions": describe_template_permissions,
+    # "describe_theme": describe_theme,
+    # "describe_theme_alias": describe_theme_alias,
+    # "describe_theme_permissions": describe_theme_permissions,
+    # "describe_user": describe_user
+}
 
-    client = _client_factory(config)
-    account_id = config["aws_account_id"]
-    print("starting...")
-    # pprint(list_dashboards(client, account_id))
-    # pprint(list_dashboard_versions(client, account_id))
-    # pprint(list_analyses(client, account_id))
-    # pprint(list_data_sets(client, account_id))
-    # pprint(list_ingestions(client, account_id))
-    # pprint(list_folder_members(client, account_id))
-    # pprint(list_data_sources(client, account_id))
-    # pprint(list_folders(client, account_id))
-    # pprint(list_namespaces(client, account_id))
-    # pprint(list_themes(client, account_id))
-    # pprint(list_theme_aliases(client, account_id))                # The two theme functions throw errors
-    # pprint(list_theme_versions(client, account_id))
-    # pprint(list_templates(client, account_id))
-    # pprint(list_template_aliases(client, account_id))
-    # pprint(list_template_versions(client, account_id))
-    # pprint(list_groups(client, account_id))                       # borked! call the sysadmin!
-    # pprint(describe_account_settings(client, account_id))
-    # pprint(describe_account_subscription(client, account_id))
-    # pprint(describe_analysis(client, account_id))
-    # pprint(describe_analysis_definition(client, account_id))
-    # pprint(describe_analysis_permissions(client, account_id))
-    # pprint(describe_dashboards(client, account_id))
-    # pprint(describe_dashboard_definition(client, account_id))
-    # pprint(describe_dashboard_permissions(client, account_id))
-    # pprint(describe_data_set(client, account_id))
-    # pprint(describe_data_set_permissions(client, account_id))
-    # pprint(describe_data_source(client, account_id))
-    # pprint(describe_folders(client, account_id))
-    # pprint(describe_folder_permissions(client, account_id))
-    # pprint(describe_folder_resolved_permissions(client, account_id))
-    # pprint(describe_group(client, account_id))                    # relies on list_groups!
-    # pprint(describe_group_membership(client, account_id))         # relies on list_groups!
-    # pprint(describe_iam_policy_assignment(client, account_id))    # relies on list_users and list_groups!
-    # pprint(describe_ingestions(client, account_id))               # requires dataset ID AND ingestion ID.
-    # pprint(describe_ip_restriction(client, account_id))           # requires sysadmin intervention
-    # pprint(describe_namespace(client, account_id))                # requires sysadmin intervention
-    # pprint(describe_template(client, account_id))
-    # pprint(describe_template_alias(client, account_id))           
-    # pprint(describe_template_definition(client, account_id))
-    # pprint(describe_template_permissions(client, account_id))
-    # pprint(describe_theme(client, account_id))                    # there are themes that throw errors when blah.
-    # pprint(describe_theme_alias(client, account_id))
-    # pprint(describe_theme_permissions(client, account_id))
-    # pprint(describe_user(client, account_id))                     # requires sysadmin intervention.
+# if __name__ == "__main__":
+#     # This whole section is for manual testing pls ignore it, ty
+#     with open("secrets/config.json") as F:
+#         config = json.loads(F.read())
 
-    pprint("finished!")
+#     client = _client_factory(config)
+#     account_id = config["aws_account_id"]
+#     starttime = time()
+#     print("starting...")
+#     for k, v in op_map_dict.items():
+#         print(f"{k} -> {v}")
+#         v(client, account_id)
+#     endtime = time()
+#     duration = endtime - starttime
+#     pprint(f"finished! operation took {duration} seconds")
