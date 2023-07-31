@@ -54,7 +54,7 @@ class PhishedIoStream(HttpStream, ABC):
     """
 
     # TODO: Fill in the url base. Required.
-    url_base = "https://app-v2.phished.io"
+    url_base = "https://app.phished.io"
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
@@ -130,7 +130,7 @@ class SourcePhishedIo(AbstractSource):
         :param logger:  logger object
         :return Tuple[bool, any]: (True, None) if the input config can be used to connect to the API successfully, (False, error) otherwise.
         """
-        test_url = "https://app-v2.phished.io/api/tasks/powerbi/events"
+        test_url = "https://app.phished.io/api/tasks/powerbi/events"
         test_url = test_url.format(config["organization_id"], config["secret"], config["integration_id"])
 
         r = requests.get(test_url, params={
