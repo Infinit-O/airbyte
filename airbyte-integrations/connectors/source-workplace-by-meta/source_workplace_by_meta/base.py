@@ -30,7 +30,7 @@ class WorkplaceByMetaStream(HttpStream, ABC):
     See the reference docs for the full list of configurable options.
     """
 
-    url_base = "https://graph.facebook.com/"
+    url_base = "https://graph.facebook.com"
 
     @property
     def exclude_fields(self):
