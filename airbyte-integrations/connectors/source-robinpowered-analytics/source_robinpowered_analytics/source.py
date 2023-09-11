@@ -15,8 +15,8 @@ from airbyte_cdk.models import (
     AirbyteConnectionStatus,
     AirbyteMessage,
     AirbyteRecordMessage,
+    AirbyteStateMessage,
     AirbyteStream,
-    AirbyteStreamState,
     AirbyteStateBlob,
     StreamDescriptor,
     SyncMode,
@@ -150,20 +150,26 @@ class SourceRobinpoweredAnalytics(Source):
 
         :return: A generator that produces a stream of AirbyteRecordMessage contained in AirbyteMessage object.
         """
-        stream_name = "robinpowered_analytics"  # Example
+        stream_name = catalog.streams[0].stream.name
+        namespace = ""
 
         # 1. get list of existing report requests from state. if none, skip to 4.
         if state:
+            logger.info("State found! Getting export IDs.")
             desks = state["desks_export_id"]
             spaces = state["spaces_export_id"]
+            logger.info(f"desks -> {desks}")
+            logger.info(f"spaces -> {spaces}")
 
             desks_report = self._get_report(config["api_key"], desks)
+            logger.info("retrieved desks report")
+
             spaces_report = self._get_report(config["api_key"], spaces)
+            logger.info("retrieved spaces report")
 
             # 2. get reports from remote API using state data
             for r in [desks_report, spaces_report]:
                 # 3. send reports to S3 (yield AirbyteRecordMessage, etc)
-                print(r)
                 yield AirbyteMessage(
                     type=Type.RECORD,
                     record=AirbyteRecordMessage(
@@ -178,22 +184,23 @@ class SourceRobinpoweredAnalytics(Source):
         # 4. send POSTs out to remote to queue up requests for (new) reports.
         start_template = "{}T00:00:00Z"
         end_template = "{}T23:59:59Z"
-        yesterday = pendulum.yesterday()
-        start_date = str(yesterday.date())
+        end_date = pendulum.today().date()
+        start_date = end_date.subtract(months=6)
 
         body = {
             "from": start_template.format(start_date),
-            "to": end_template.format(start_date)
+            "to": end_template.format(end_date)
             }
         desks_response = self._request_desks_report(config["api_key"], config["org_id"], body).json()
         spaces_response = self._request_spaces_report(config["api_key"], config["org_id"], body).json()
 
         desks_export_id = desks_response["data"]["export_id"]
+        logger.info(f"requested desks report -> {desks_export_id}")
         spaces_export_id = spaces_response["data"]["export_id"]
+        logger.info(f"requested spaces report -> {spaces_export_id}")
 
         # 5. record the new report IDs for download next run, i.e yield as state
         blob = AirbyteStateBlob(desks_export_id=desks_export_id, spaces_export_id=spaces_export_id)
-        stream_descriptor = StreamDescriptor(name="Robinpowered Analytics")
-        new_state = AirbyteStreamState(stream_descriptor=stream_descriptor, stream_state=blob)
-
-        yield new_state
+        new_state = AirbyteStateMessage(data=blob)
+        logger.info("Yielding state...")
+        yield AirbyteMessage(type=Type.STATE, state=new_state)
