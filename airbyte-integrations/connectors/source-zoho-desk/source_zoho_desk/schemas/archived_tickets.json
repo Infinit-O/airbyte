@@ -1,0 +1,8 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "name": "available_badge_icons",
+    "properties": {
+        "id": {"type": "string"}
+    }
+}

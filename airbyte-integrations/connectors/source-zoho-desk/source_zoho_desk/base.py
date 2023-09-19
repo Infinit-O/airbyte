@@ -5,6 +5,7 @@ from typing import Mapping, Any, Optional, Iterable, MutableMapping, List, Union
 import requests
 import arrow
 from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.models import SyncMode
 
 class ZohoDeskStream(HttpStream, ABC):
     """
@@ -141,6 +142,30 @@ class ZohoDeskIncrementalStream(ZohoDeskStream):
             else:
                 yield from contents
 
-        
 
-        
+class ZohoDeskSubstream(ZohoDeskStream):
+    @property
+    def parent(self):
+        return NotImplementedError
+
+    def stream_slices(
+        self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None
+    ) -> Iterable[Optional[Mapping[str, Any]]]:
+        seen = []
+        pr = self.parent(authenticator=self._session.auth)
+        self.logger.info("Fetching tickets from parent stream...")
+        pr_records = pr.read_records(sync_mode=SyncMode.full_refresh)
+
+        self.logger.info("Sorting out unique department IDs...")
+        for record in pr_records:
+            if record["departmentId"] in seen:
+                continue
+            else:
+                seen.append(record["departmentId"])
+
+        self.logger.debug(f"unique ids: {seen}")
+
+        self.logger.info("yielding results...")
+        for dept_id in seen:
+            self.logger.debug(f"yielding: {dept_id}")
+            yield {"department_id": dept_id}

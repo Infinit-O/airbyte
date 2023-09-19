@@ -1,5 +1,5 @@
 from typing import Mapping, Any, MutableMapping
-from .base import ZohoDeskStream, ZohoDeskIncrementalStream
+from .base import ZohoDeskStream, ZohoDeskIncrementalStream, ZohoDeskSubstream
 
 class Agents(ZohoDeskStream):
     primary_key = "id"
@@ -64,6 +64,31 @@ class Tickets(ZohoDeskIncrementalStream):
         next_page_token: Mapping[str, Any] = None,
     ) -> str:
         return "tickets"
+    
+class ArchivedTickets(ZohoDeskSubstream):
+    parent = Tickets
+    primary_key = "id"
+
+    def request_params(self, 
+                       stream_state: Mapping[str, Any], 
+                       stream_slice: Mapping[str, Any] = None,
+                       next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        if stream_slice:
+            return {
+                "departmentId": stream_slice["department_id"]
+            }
+        else:
+            return {}
+        
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        return "tickets/archivedTickets"
 
 class Contacts(ZohoDeskStream):
     primary_key = "id"
@@ -126,19 +151,6 @@ class Users(ZohoDeskStream):
         return "users"
 
 class BusinessHours(ZohoDeskStream):
-    primary_key = "id"
-
-    def path(
-        self,
-        *,
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None,
-    ) -> str:
-        return "businessHours"
-
-
-class Tasks(ZohoDeskStream):
     primary_key = "id"
 
     def path(

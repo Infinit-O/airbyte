@@ -80,4 +80,5 @@ class SourceZohoDesk(AbstractSource):
             Users(authenticator=auth),
             BusinessHours(authenticator=auth),
             Tasks(authenticator=auth),
+            ArchivedTickets(authenticator=auth),
         ]
