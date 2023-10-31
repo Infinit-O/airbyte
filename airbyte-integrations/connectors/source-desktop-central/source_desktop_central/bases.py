@@ -30,6 +30,12 @@ class DesktopCentralStream(HttpStream, ABC):
 
     See the reference docs for the full list of configurable options.
     """
+    # NOTE: Very temporary workaround for the infrastructure troubles we're having on the devops side
+    # Please don't change this without alerting me first. 
+    @property
+    def verify_ssl(self):
+        return False
+
     @property
     def envelope_name(self):
         return ""
@@ -45,6 +51,17 @@ class DesktopCentralStream(HttpStream, ABC):
     @property
     def url_base(self):
         return self.config["base_url"]
+    
+    def request_kwargs(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> Mapping[str, Any]:
+        verify = self.verify_ssl
+        return {
+            'verify': verify
+        }
 
     def __init__(self, config, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -147,6 +164,7 @@ class DesktopCentralStream(HttpStream, ABC):
         yield from items
 
     def _send(self, request: requests.PreparedRequest, request_kwargs: Mapping[str, Any]) -> requests.Response:
+        self.logger.debug("kwargs: {}".format(request_kwargs))
         sleep(self.pacing)
         resp = super()._send(request, request_kwargs)
         return resp
