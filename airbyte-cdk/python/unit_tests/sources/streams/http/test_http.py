@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 
@@ -22,28 +22,24 @@ class StubBasicReadHttpStream(HttpStream):
     url_base = "https://test_base_url.com"
     primary_key = ""
 
-    def __init__(self, **kwargs):
+    def __init__(self, deduplicate_query_params: bool = False, **kwargs):
         super().__init__(**kwargs)
         self.resp_counter = 1
+        self._deduplicate_query_params = deduplicate_query_params
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         return None
 
-    def path(
-        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> str:
+    def path(self, **kwargs) -> str:
         return ""
 
-    def parse_response(
-        self,
-        response: requests.Response,
-        stream_state: Mapping[str, Any],
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None,
-    ) -> Iterable[Mapping]:
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         stubResp = {"data": self.resp_counter}
         self.resp_counter += 1
         yield stubResp
+
+    def must_deduplicate_query_params(self) -> bool:
+        return self._deduplicate_query_params
 
 
 def test_default_authenticator():
@@ -175,8 +171,10 @@ def test_stub_custom_backoff_http_stream_retries(mocker, retries):
     req.status_code = HTTPStatus.TOO_MANY_REQUESTS
     send_mock = mocker.patch.object(requests.Session, "send", return_value=req)
 
-    with pytest.raises(UserDefinedBackoffException):
+    with pytest.raises(UserDefinedBackoffException, match="Request URL: https://test_base_url.com/, Response Code: 429") as excinfo:
         list(stream.read_records(SyncMode.full_refresh))
+    assert isinstance(excinfo.value.request, requests.PreparedRequest)
+    assert isinstance(excinfo.value.response, requests.Response)
     if retries <= 0:
         assert send_mock.call_count == 1
     else:
@@ -227,7 +225,7 @@ def test_raise_on_http_errors_off_429(mocker):
     req.status_code = 429
 
     mocker.patch.object(requests.Session, "send", return_value=req)
-    with pytest.raises(DefaultBackoffException):
+    with pytest.raises(DefaultBackoffException, match="Request URL: https://test_base_url.com/, Response Code: 429"):
         list(stream.read_records(SyncMode.full_refresh))
 
 
@@ -246,28 +244,31 @@ def test_raise_on_http_errors_off_5xx(mocker, status_code):
 @pytest.mark.parametrize("status_code", [400, 401, 402, 403, 416])
 def test_raise_on_http_errors_off_non_retryable_4xx(mocker, status_code):
     stream = AutoFailFalseHttpStream()
-    req = requests.Response()
-    req.status_code = status_code
+    req = requests.PreparedRequest()
+    res = requests.Response()
+    res.status_code = status_code
 
-    mocker.patch.object(requests.Session, "send", return_value=req)
+    mocker.patch.object(requests.Session, "send", return_value=res)
     response = stream._send_request(req, {})
     assert response.status_code == status_code
 
 
-def test_raise_on_http_errors_off_timeout(requests_mock):
+@pytest.mark.parametrize(
+    "error",
+    (
+        requests.exceptions.ConnectTimeout,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.ChunkedEncodingError,
+        requests.exceptions.ReadTimeout,
+    ),
+)
+def test_raise_on_http_errors(mocker, error):
     stream = AutoFailFalseHttpStream()
-    requests_mock.register_uri("GET", stream.url_base, exc=requests.exceptions.ConnectTimeout)
+    send_mock = mocker.patch.object(requests.Session, "send", side_effect=error())
 
-    with pytest.raises(requests.exceptions.ConnectTimeout):
+    with pytest.raises(error):
         list(stream.read_records(SyncMode.full_refresh))
-
-
-def test_raise_on_http_errors_off_connection_error(requests_mock):
-    stream = AutoFailFalseHttpStream()
-    requests_mock.register_uri("GET", stream.url_base, exc=requests.exceptions.ConnectionError)
-
-    with pytest.raises(requests.exceptions.ConnectionError):
-        list(stream.read_records(SyncMode.full_refresh))
+    assert send_mock.call_count == stream.max_retries + 1
 
 
 class PostHttpStream(StubBasicReadHttpStream):
@@ -332,13 +333,13 @@ class TestRequestBody:
             list(stream.read_records(sync_mode=SyncMode.full_refresh))
 
     def test_body_for_all_methods(self, mocker, requests_mock):
-        """Stream must send a body for POST/PATCH/PUT methods only"""
+        """Stream must send a body for GET/POST/PATCH/PUT methods only"""
         stream = PostHttpStream()
         methods = {
             "POST": True,
             "PUT": True,
             "PATCH": True,
-            "GET": False,
+            "GET": True,
             "DELETE": False,
             "OPTIONS": False,
         }
@@ -364,10 +365,10 @@ class CacheHttpSubStream(HttpSubStream):
     def __init__(self, parent):
         super().__init__(parent=parent)
 
-    def parse_response(self, **kwargs) -> Iterable[Mapping]:
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         return []
 
-    def next_page_token(self, **kwargs) -> Optional[Mapping[str, Any]]:
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         return None
 
     def path(self, **kwargs) -> str:
@@ -376,14 +377,26 @@ class CacheHttpSubStream(HttpSubStream):
 
 def test_caching_filename():
     stream = CacheHttpStream()
-    assert stream.cache_filename == f"{stream.name}.yml"
+    assert stream.cache_filename == f"{stream.name}.sqlite"
 
 
-def test_caching_cassettes_are_different():
+def test_caching_sessions_are_different():
     stream_1 = CacheHttpStream()
     stream_2 = CacheHttpStream()
 
-    assert stream_1.cache_file != stream_2.cache_file
+    assert stream_1._session != stream_2._session
+    assert stream_1.cache_filename == stream_2.cache_filename
+
+
+# def test_cached_streams_wortk_when_request_path_is_not_set(mocker, requests_mock):
+# This test verifies that HttpStreams with a cached session work even if the path is not set
+# For instance, when running in a unit test
+# stream = CacheHttpStream()
+# with mocker.patch.object(stream._session, "send", wraps=stream._session.send):
+#     requests_mock.register_uri("GET", stream.url_base)
+#     records = list(stream.read_records(sync_mode=SyncMode.full_refresh))
+#     assert records == [{"data": 1}]
+# ""
 
 
 def test_parent_attribute_exist():
@@ -393,40 +406,225 @@ def test_parent_attribute_exist():
     assert child_stream.parent == parent_stream
 
 
-def test_cache_response(mocker):
+def test_that_response_was_cached(mocker, requests_mock):
+    requests_mock.register_uri("GET", "https://google.com/", text="text")
     stream = CacheHttpStream()
+    stream.clear_cache()
     mocker.patch.object(stream, "url_base", "https://google.com/")
-    list(stream.read_records(sync_mode=SyncMode.full_refresh))
+    records = list(stream.read_records(sync_mode=SyncMode.full_refresh))
 
-    with open(stream.cache_filename, "r") as f:
-        assert f.read()
+    assert requests_mock.called
+
+    requests_mock.reset_mock()
+    new_records = list(stream.read_records(sync_mode=SyncMode.full_refresh))
+
+    assert len(records) == len(new_records)
+    assert not requests_mock.called
 
 
 class CacheHttpStreamWithSlices(CacheHttpStream):
     paths = ["", "search"]
 
     def path(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> str:
-        return f'{stream_slice.get("path")}'
+        return f'{stream_slice["path"]}' if stream_slice else ""
 
     def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
         for path in self.paths:
             yield {"path": path}
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
-        yield response
+        yield {"value": len(response.text)}
 
 
 @patch("airbyte_cdk.sources.streams.core.logging", MagicMock())
-def test_using_cache(mocker):
+def test_using_cache(mocker, requests_mock):
+    requests_mock.register_uri("GET", "https://google.com/", text="text")
+    requests_mock.register_uri("GET", "https://google.com/search", text="text")
+
     parent_stream = CacheHttpStreamWithSlices()
     mocker.patch.object(parent_stream, "url_base", "https://google.com/")
+    parent_stream.clear_cache()
+
+    assert requests_mock.call_count == 0
+    assert len(parent_stream._session.cache.responses) == 0
 
     for _slice in parent_stream.stream_slices():
         list(parent_stream.read_records(sync_mode=SyncMode.full_refresh, stream_slice=_slice))
+
+    assert requests_mock.call_count == 2
+    assert len(parent_stream._session.cache.responses) == 2
 
     child_stream = CacheHttpSubStream(parent=parent_stream)
 
     for _slice in child_stream.stream_slices(sync_mode=SyncMode.full_refresh):
         pass
 
-    assert parent_stream.cassete.play_count != 0
+    assert requests_mock.call_count == 2
+    assert len(parent_stream._session.cache.responses) == 2
+    assert parent_stream._session.cache.contains(url="https://google.com/")
+    assert parent_stream._session.cache.contains(url="https://google.com/search")
+
+
+class AutoFailTrueHttpStream(StubBasicReadHttpStream):
+    raise_on_http_errors = True
+
+
+@pytest.mark.parametrize("status_code", range(400, 600))
+def test_send_raise_on_http_errors_logs(mocker, status_code):
+    mocker.patch.object(AutoFailTrueHttpStream, "logger")
+    mocker.patch.object(AutoFailTrueHttpStream, "should_retry", mocker.Mock(return_value=False))
+    stream = AutoFailTrueHttpStream()
+    req = requests.PreparedRequest()
+    res = requests.Response()
+    res.status_code = status_code
+    mocker.patch.object(requests.Session, "send", return_value=res)
+    with pytest.raises(requests.exceptions.HTTPError):
+        response = stream._send_request(req, {})
+        stream.logger.error.assert_called_with(response.text)
+        assert response.status_code == status_code
+
+
+@pytest.mark.parametrize(
+    "api_response, expected_message",
+    [
+        ({"error": "something broke"}, "something broke"),
+        ({"error": {"message": "something broke"}}, "something broke"),
+        ({"error": "err-001", "message": "something broke"}, "something broke"),
+        ({"failure": {"message": "something broke"}}, "something broke"),
+        ({"error": {"errors": [{"message": "one"}, {"message": "two"}, {"message": "three"}]}}, "one, two, three"),
+        ({"errors": ["one", "two", "three"]}, "one, two, three"),
+        ({"messages": ["one", "two", "three"]}, "one, two, three"),
+        ({"errors": [{"message": "one"}, {"message": "two"}, {"message": "three"}]}, "one, two, three"),
+        ({"error": [{"message": "one"}, {"message": "two"}, {"message": "three"}]}, "one, two, three"),
+        ({"errors": [{"error": "one"}, {"error": "two"}, {"error": "three"}]}, "one, two, three"),
+        ({"failures": [{"message": "one"}, {"message": "two"}, {"message": "three"}]}, "one, two, three"),
+        (["one", "two", "three"], "one, two, three"),
+        ([{"error": "one"}, {"error": "two"}, {"error": "three"}], "one, two, three"),
+        ({"error": True}, None),
+        ({"something_else": "hi"}, None),
+        ({}, None),
+    ],
+)
+def test_default_parse_response_error_message(api_response: dict, expected_message: Optional[str]):
+    stream = StubBasicReadHttpStream()
+    response = MagicMock()
+    response.json.return_value = api_response
+
+    message = stream.parse_response_error_message(response)
+    assert message == expected_message
+
+
+def test_default_parse_response_error_message_not_json(requests_mock):
+    stream = StubBasicReadHttpStream()
+    requests_mock.register_uri("GET", "mock://test.com/not_json", text="this is not json")
+    response = requests.get("mock://test.com/not_json")
+
+    message = stream.parse_response_error_message(response)
+    assert message is None
+
+
+def test_default_get_error_display_message_handles_http_error(mocker):
+    stream = StubBasicReadHttpStream()
+    mocker.patch.object(stream, "parse_response_error_message", return_value="my custom message")
+
+    non_http_err_msg = stream.get_error_display_message(RuntimeError("not me"))
+    assert non_http_err_msg is None
+
+    response = requests.Response()
+    http_exception = requests.HTTPError(response=response)
+    http_err_msg = stream.get_error_display_message(http_exception)
+    assert http_err_msg == "my custom message"
+
+
+@pytest.mark.parametrize(
+    "test_name, base_url, path, expected_full_url",
+    [
+        ("test_no_slashes", "https://airbyte.io", "my_endpoint", "https://airbyte.io/my_endpoint"),
+        ("test_trailing_slash_on_base_url", "https://airbyte.io/", "my_endpoint", "https://airbyte.io/my_endpoint"),
+        (
+            "test_trailing_slash_on_base_url_and_leading_slash_on_path",
+            "https://airbyte.io/",
+            "/my_endpoint",
+            "https://airbyte.io/my_endpoint",
+        ),
+        ("test_leading_slash_on_path", "https://airbyte.io", "/my_endpoint", "https://airbyte.io/my_endpoint"),
+        ("test_trailing_slash_on_path", "https://airbyte.io", "/my_endpoint/", "https://airbyte.io/my_endpoint/"),
+        ("test_nested_path_no_leading_slash", "https://airbyte.io", "v1/my_endpoint", "https://airbyte.io/v1/my_endpoint"),
+        ("test_nested_path_with_leading_slash", "https://airbyte.io", "/v1/my_endpoint", "https://airbyte.io/v1/my_endpoint"),
+    ],
+)
+def test_join_url(test_name, base_url, path, expected_full_url):
+    actual_url = HttpStream._join_url(base_url, path)
+    assert actual_url == expected_full_url
+
+
+@pytest.mark.parametrize(
+    "deduplicate_query_params, path, params, expected_url",
+    [
+        pytest.param(
+            True, "v1/endpoint?param1=value1", {}, "https://test_base_url.com/v1/endpoint?param1=value1", id="test_params_only_in_path"
+        ),
+        pytest.param(
+            True, "v1/endpoint", {"param1": "value1"}, "https://test_base_url.com/v1/endpoint?param1=value1", id="test_params_only_in_path"
+        ),
+        pytest.param(True, "v1/endpoint", None, "https://test_base_url.com/v1/endpoint", id="test_params_is_none_and_no_params_in_path"),
+        pytest.param(
+            True,
+            "v1/endpoint?param1=value1",
+            None,
+            "https://test_base_url.com/v1/endpoint?param1=value1",
+            id="test_params_is_none_and_no_params_in_path",
+        ),
+        pytest.param(
+            True,
+            "v1/endpoint?param1=value1",
+            {"param2": "value2"},
+            "https://test_base_url.com/v1/endpoint?param1=value1&param2=value2",
+            id="test_no_duplicate_params",
+        ),
+        pytest.param(
+            True,
+            "v1/endpoint?param1=value1",
+            {"param1": "value1"},
+            "https://test_base_url.com/v1/endpoint?param1=value1",
+            id="test_duplicate_params_same_value",
+        ),
+        pytest.param(
+            True,
+            "v1/endpoint?param1=1",
+            {"param1": 1},
+            "https://test_base_url.com/v1/endpoint?param1=1",
+            id="test_duplicate_params_same_value_not_string",
+        ),
+        pytest.param(
+            True,
+            "v1/endpoint?param1=value1",
+            {"param1": "value2"},
+            "https://test_base_url.com/v1/endpoint?param1=value1&param1=value2",
+            id="test_duplicate_params_different_value",
+        ),
+        pytest.param(
+            False,
+            "v1/endpoint?param1=value1",
+            {"param1": "value2"},
+            "https://test_base_url.com/v1/endpoint?param1=value1&param1=value2",
+            id="test_same_params_different_value_no_deduplication",
+        ),
+        pytest.param(
+            False,
+            "v1/endpoint?param1=value1",
+            {"param1": "value1"},
+            "https://test_base_url.com/v1/endpoint?param1=value1&param1=value1",
+            id="test_same_params_same_value_no_deduplication",
+        ),
+    ],
+)
+def test_duplicate_request_params_are_deduped(deduplicate_query_params, path, params, expected_url):
+    stream = StubBasicReadHttpStream(deduplicate_query_params)
+
+    if expected_url is None:
+        with pytest.raises(ValueError):
+            stream._create_prepared_request(path=path, params=params)
+    else:
+        prepared_request = stream._create_prepared_request(path=path, params=params)
+        assert prepared_request.url == expected_url

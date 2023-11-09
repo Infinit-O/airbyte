@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.destination.rockset;
 
-import io.airbyte.integrations.destination.ExtendedNameTransformer;
+import io.airbyte.cdk.integrations.destination.StandardNameTransformer;
 
-public class RocksetSQLNameTransformer extends ExtendedNameTransformer {
+public class RocksetSQLNameTransformer extends StandardNameTransformer {
 
   @Override
   public String convertStreamName(String input) {
@@ -14,7 +14,7 @@ public class RocksetSQLNameTransformer extends ExtendedNameTransformer {
   }
 
   @Override
-  protected String applyDefaultCase(String input) {
+  public String applyDefaultCase(String input) {
     return input.toLowerCase();
   }
 

@@ -1,5 +1,6 @@
 {
   "type": "object",
+  "additionalProperties": true,
   "properties": {
     "id": {
       "type": ["null", "integer"]
@@ -29,6 +30,9 @@
       "type": ["null", "string"]
     },
     "merchant_message": {
+      "type": ["null", "string"]
+    },
+    "shop_url": {
       "type": ["null", "string"]
     }
   }

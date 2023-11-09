@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.source.kafka;
@@ -8,21 +8,20 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
+import io.airbyte.cdk.integrations.standardtest.source.SourceAcceptanceTest;
+import io.airbyte.cdk.integrations.standardtest.source.TestDestinationEnv;
 import io.airbyte.commons.jackson.MoreMappers;
 import io.airbyte.commons.json.Jsons;
 import io.airbyte.commons.resources.MoreResources;
-import io.airbyte.integrations.standardtest.source.SourceAcceptanceTest;
-import io.airbyte.integrations.standardtest.source.TestDestinationEnv;
-import io.airbyte.protocol.models.CatalogHelpers;
-import io.airbyte.protocol.models.ConfiguredAirbyteCatalog;
-import io.airbyte.protocol.models.ConfiguredAirbyteStream;
-import io.airbyte.protocol.models.ConnectorSpecification;
 import io.airbyte.protocol.models.Field;
-import io.airbyte.protocol.models.JsonSchemaPrimitive;
-import io.airbyte.protocol.models.SyncMode;
+import io.airbyte.protocol.models.JsonSchemaType;
+import io.airbyte.protocol.models.v0.CatalogHelpers;
+import io.airbyte.protocol.models.v0.ConfiguredAirbyteCatalog;
+import io.airbyte.protocol.models.v0.ConfiguredAirbyteStream;
+import io.airbyte.protocol.models.v0.ConnectorSpecification;
+import io.airbyte.protocol.models.v0.SyncMode;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -115,7 +114,7 @@ public class KafkaSourceAcceptanceTest extends SourceAcceptanceTest {
   @Override
   protected ConfiguredAirbyteCatalog getConfiguredCatalog() throws Exception {
     final ConfiguredAirbyteStream streams =
-        CatalogHelpers.createConfiguredAirbyteStream(TOPIC_NAME, null, Field.of("value", JsonSchemaPrimitive.STRING));
+        CatalogHelpers.createConfiguredAirbyteStream(TOPIC_NAME, null, Field.of("value", JsonSchemaType.STRING));
     streams.setSyncMode(SyncMode.FULL_REFRESH);
     return new ConfiguredAirbyteCatalog().withStreams(Collections.singletonList(streams));
   }
@@ -123,11 +122,6 @@ public class KafkaSourceAcceptanceTest extends SourceAcceptanceTest {
   @Override
   protected JsonNode getState() throws Exception {
     return Jsons.jsonNode(new HashMap<>());
-  }
-
-  @Override
-  protected List<String> getRegexTests() throws Exception {
-    return Collections.emptyList();
   }
 
 }

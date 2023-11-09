@@ -1,34 +1,70 @@
 # Local Deployment
 
-{% hint style="info" %}
-These instructions have been tested on MacOS, Windows 10 and Ubuntu 20.04.
-{% endhint %}
+:::info
+These instructions have been tested on MacOS, Windows 10 and Ubuntu 22.04.
+
+:::
 
 ## Setup & launch Airbyte
 
-* Install Docker on your workstation \(see [instructions](https://www.docker.com/products/docker-desktop)\). Make sure you're on the latest version of `docker-compose`.
-* After Docker is installed, you can immediately get started locally by running:
+- Install `Docker Engine` and the `Docker Compose plugin` on your workstation \(see [instructions](https://docs.docker.com/engine/install/)\).
+- After Docker is installed, you can immediately get started locally by running:
 
 ```bash
-git clone https://github.com/airbytehq/airbyte.git
+# clone Airbyte from GitHub
+git clone --depth=1 https://github.com/airbytehq/airbyte.git
+
+# switch into Airbyte directory
 cd airbyte
-docker-compose up
+
+# start Airbyte
+./run-ab-platform.sh
 ```
 
-* In your browser, just visit [http://localhost:8000](http://localhost:8000)
-* Start moving some data!
+- In your browser, just visit [http://localhost:8000](http://localhost:8000)
+- You will be asked for a username and password. By default, that's username `airbyte` and password `password`. Once you deploy Airbyte to your servers, be sure to change these:
+
+```yaml
+# Proxy Configuration
+# Set to empty values, e.g. "" to disable basic auth
+BASIC_AUTH_USERNAME=your_new_username_here
+BASIC_AUTH_PASSWORD=your_new_password_here
+```
+
+- Start moving some data!
 
 ## Deploy on Windows
 
-We recommend following [this guide](https://docs.docker.com/docker-for-windows/install/) to install Docker on Windows. After installing the WSL 2 backend and Docker you should be able to run containers using Windows PowerShell. Additionally, as we note frequently, you will need `docker-compose` to build Airbyte from source. The suggested guide already installs `docker-compose` on Windows.
+After installing the WSL 2 backend and Docker you should be able to run containers using Windows PowerShell. Additionally, as we note frequently, you will need `docker-compose` to build Airbyte from source. The suggested guide already installs `docker-compose` on Windows.
+
+### Setup Guide
+
+**1. Check out system requirements from [Docker documentation](https://docs.docker.com/desktop/windows/install/).**
+
+Follow the steps on the system requirements, and necessarily, download and install the Linux kernel update package.
+
+**2. Install Docker Desktop on Windows.**
+
+Install [Docker Desktop](https://docs.docker.com/desktop/windows/install/) from here.
+
+Make sure to select the options:
+
+1. _Enable Hyper-V Windows Features_
+2. _Install required Windows components for WSL 2_
+   when prompted. After installation, it will require to reboot your computer.
+
+**3. You're done!**
+
+```bash
+git clone --depth=1 https://github.com/airbytehq/airbyte.git
+cd airbyte
+bash run-ab-platform.sh
+```
+
+- In your browser, just visit [http://localhost:8000](http://localhost:8000)
+- You will be asked for a username and password. By default, that's username `airbyte` and password `password`. Once you deploy airbyte to your servers, be sure to change these.
+- Start moving some data!
 
 ## Troubleshooting
 
-**I have a Mac with the M1 chip. Is it possible to run Airbyte?**
-
-Some users using Macs with an M1 chip are facing some problems running Airbyte. The problem is related with the chip and Docker. [Issue \#2017](https://github.com/airbytehq/airbyte/issues/2017) was created to follow up the problem, you can subscribe to it and get updates about the resolution. If you can successfully run Airbyte using a MacBook with the M1 chip, let us know so that we can share the process with the community!
-
-**Other issues**
-
-If you encounter any issues, just connect to our [Slack](https://slack.airbyte.io). Our community will help! We also have a [troubleshooting](../troubleshooting/on-deploying.md) section in our docs for common problems.
-
+If you encounter any issues, just connect to our [Slack](https://slack.airbyte.io). Our community will help! We also have a [troubleshooting](../troubleshooting.md) section in our docs for common problems.

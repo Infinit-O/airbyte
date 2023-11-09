@@ -1,32 +1,36 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.source.mongodb;
 
-import static io.airbyte.db.mongodb.MongoUtils.MongoInstanceType.STANDALONE;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.mongodb.client.MongoCollection;
+import io.airbyte.cdk.db.jdbc.JdbcUtils;
+import io.airbyte.cdk.integrations.standardtest.source.SourceAcceptanceTest;
+import io.airbyte.cdk.integrations.standardtest.source.TestDestinationEnv;
+import io.airbyte.commons.exceptions.ConfigErrorException;
 import io.airbyte.commons.json.Jsons;
 import io.airbyte.commons.resources.MoreResources;
-import io.airbyte.db.mongodb.MongoDatabase;
-import io.airbyte.integrations.standardtest.source.SourceAcceptanceTest;
-import io.airbyte.integrations.standardtest.source.TestDestinationEnv;
-import io.airbyte.protocol.models.CatalogHelpers;
-import io.airbyte.protocol.models.ConfiguredAirbyteCatalog;
-import io.airbyte.protocol.models.ConfiguredAirbyteStream;
-import io.airbyte.protocol.models.ConnectorSpecification;
-import io.airbyte.protocol.models.DestinationSyncMode;
+import io.airbyte.integrations.destination.mongodb.MongoDatabase;
+import io.airbyte.integrations.destination.mongodb.MongoUtils.MongoInstanceType;
 import io.airbyte.protocol.models.Field;
-import io.airbyte.protocol.models.JsonSchemaPrimitive;
-import io.airbyte.protocol.models.SyncMode;
+import io.airbyte.protocol.models.JsonSchemaType;
+import io.airbyte.protocol.models.v0.CatalogHelpers;
+import io.airbyte.protocol.models.v0.ConfiguredAirbyteCatalog;
+import io.airbyte.protocol.models.v0.ConfiguredAirbyteStream;
+import io.airbyte.protocol.models.v0.ConnectorSpecification;
+import io.airbyte.protocol.models.v0.DestinationSyncMode;
+import io.airbyte.protocol.models.v0.SyncMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import org.bson.BsonArray;
@@ -36,10 +40,10 @@ import org.junit.jupiter.api.Test;
 
 public class MongodbSourceStrictEncryptAcceptanceTest extends SourceAcceptanceTest {
 
+  private static final String DATABASE_NAME = "test";
+  private static final String COLLECTION_NAME = "acceptance_test1";
   private static final Path CREDENTIALS_PATH = Path.of("secrets/credentials.json");
-
-  protected static final String DATABASE_NAME = "test";
-  protected static final String COLLECTION_NAME = "acceptance_test";
+  private static final String INSTANCE_TYPE = "instance_type";
 
   protected JsonNode config;
   protected MongoDatabase database;
@@ -62,29 +66,14 @@ public class MongodbSourceStrictEncryptAcceptanceTest extends SourceAcceptanceTe
               + ". Override by setting setting path with the CREDENTIALS_PATH constant.");
     }
 
-    final String credentialsJsonString = new String(Files.readAllBytes(CREDENTIALS_PATH));
-    final JsonNode credentialsJson = Jsons.deserialize(credentialsJsonString);
+    config = Jsons.deserialize(Files.readString(CREDENTIALS_PATH));
+    ((ObjectNode) config).put(JdbcUtils.DATABASE_KEY, DATABASE_NAME);
 
-    final JsonNode instanceConfig = Jsons.jsonNode(ImmutableMap.builder()
-        .put("instance", STANDALONE.getType())
-        .put("host", credentialsJson.get("host").asText())
-        .put("port", credentialsJson.get("port").asInt())
-        .build());
-
-    config = Jsons.jsonNode(ImmutableMap.builder()
-        .put("user", credentialsJson.get("user").asText())
-        .put("password", credentialsJson.get("password").asText())
-        .put("instance_type", instanceConfig)
-        .put("database", DATABASE_NAME)
-        .put("auth_source", "admin")
-        .build());
-
-    final String connectionString = String.format("mongodb://%s:%s@%s:%s/%s?authSource=admin&directConnection=false&ssl=true",
+    final String connectionString = String.format("mongodb+srv://%s:%s@%s/%s?authSource=admin&retryWrites=true&w=majority&tls=true",
         config.get("user").asText(),
-        config.get("password").asText(),
-        config.get("instance_type").get("host").asText(),
-        config.get("instance_type").get("port").asText(),
-        config.get("database").asText());
+        config.get(JdbcUtils.PASSWORD_KEY).asText(),
+        config.get("instance_type").get("cluster_url").asText(),
+        config.get(JdbcUtils.DATABASE_KEY).asText());
 
     database = new MongoDatabase(connectionString, DATABASE_NAME);
 
@@ -101,7 +90,9 @@ public class MongodbSourceStrictEncryptAcceptanceTest extends SourceAcceptanceTe
 
   @Override
   protected void tearDown(final TestDestinationEnv testEnv) throws Exception {
-    database.getDatabase().getCollection(COLLECTION_NAME).drop();
+    for (final String collectionName : database.getCollectionNames()) {
+      database.getDatabase().getCollection(collectionName).drop();
+    }
     database.close();
   }
 
@@ -120,14 +111,14 @@ public class MongodbSourceStrictEncryptAcceptanceTest extends SourceAcceptanceTe
             .withCursorField(List.of("_id"))
             .withStream(CatalogHelpers.createAirbyteStream(
                 DATABASE_NAME + "." + COLLECTION_NAME,
-                Field.of("_id", JsonSchemaPrimitive.STRING),
-                Field.of("id", JsonSchemaPrimitive.STRING),
-                Field.of("name", JsonSchemaPrimitive.STRING),
-                Field.of("test", JsonSchemaPrimitive.STRING),
-                Field.of("test_array", JsonSchemaPrimitive.ARRAY),
-                Field.of("empty_test", JsonSchemaPrimitive.STRING),
-                Field.of("double_test", JsonSchemaPrimitive.NUMBER),
-                Field.of("int_test", JsonSchemaPrimitive.NUMBER))
+                Field.of("_id", JsonSchemaType.STRING),
+                Field.of("id", JsonSchemaType.STRING),
+                Field.of("name", JsonSchemaType.STRING),
+                Field.of("test", JsonSchemaType.STRING),
+                Field.of("test_array", JsonSchemaType.ARRAY),
+                Field.of("empty_test", JsonSchemaType.STRING),
+                Field.of("double_test", JsonSchemaType.NUMBER),
+                Field.of("int_test", JsonSchemaType.NUMBER))
                 .withSupportedSyncModes(Lists.newArrayList(SyncMode.INCREMENTAL))
                 .withDefaultCursorField(List.of("_id")))));
   }
@@ -137,17 +128,30 @@ public class MongodbSourceStrictEncryptAcceptanceTest extends SourceAcceptanceTe
     return Jsons.jsonNode(new HashMap<>());
   }
 
-  @Override
-  protected List<String> getRegexTests() throws Exception {
-    return Collections.emptyList();
-  }
-
   @Test
   void testSpec() throws Exception {
     final ConnectorSpecification actual = new MongodbSourceStrictEncrypt().spec();
     final ConnectorSpecification expected = getSpec();
 
     assertEquals(expected, actual);
+  }
+
+  @Test
+  void testCheck() throws Exception {
+    final JsonNode instanceConfig = Jsons.jsonNode(ImmutableMap.builder()
+        .put("instance", MongoInstanceType.STANDALONE.getType())
+        .put("tls", false)
+        .build());
+
+    final JsonNode invalidStandaloneConfig = Jsons.clone(getConfig());
+
+    ((ObjectNode) invalidStandaloneConfig).put(INSTANCE_TYPE, instanceConfig);
+
+    final Throwable throwable = catchThrowable(() -> new MongodbSourceStrictEncrypt().check(invalidStandaloneConfig));
+    assertThat(throwable).isInstanceOf(ConfigErrorException.class);
+    assertThat(((ConfigErrorException) throwable)
+        .getDisplayMessage()
+        .contains("TLS connection must be used to read from MongoDB."));
   }
 
 }

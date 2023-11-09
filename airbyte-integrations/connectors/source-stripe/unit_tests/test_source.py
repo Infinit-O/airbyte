@@ -1,27 +1,59 @@
 #
-# Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-import pendulum
+import logging
+from contextlib import nullcontext as does_not_raise
+from unittest.mock import patch
+
 import pytest
-from source_stripe.source import Invoices
+import source_stripe
+import stripe
+from airbyte_cdk.utils import AirbyteTracedException
+from source_stripe import SourceStripe
 
-now_dt = pendulum.now()
+logger = logging.getLogger("airbyte")
 
-SECONDS_IN_DAY = 24 * 60 * 60
+
+def _a_valid_config():
+    return {"account_id": 1, "client_secret": "secret"}
+
+
+@patch.object(source_stripe.source, "stripe")
+def test_source_check_connection_ok(mocked_client, config):
+    assert SourceStripe().check_connection(logger, config=config) == (True, None)
+
+
+def test_streams_are_unique(config):
+    stream_names = [s.name for s in SourceStripe().streams(config=config)]
+    assert len(stream_names) == len(set(stream_names)) == 46
 
 
 @pytest.mark.parametrize(
-    "lookback_window_days, current_state, expected, message",
-    [
-        (None, now_dt.timestamp(), now_dt.timestamp(), "if lookback_window_days is not set should not affect cursor value"),
-        (0, now_dt.timestamp(), now_dt.timestamp(), "if lookback_window_days is not set should not affect cursor value"),
-        (10, now_dt.timestamp(), int(now_dt.timestamp() - SECONDS_IN_DAY * 10), "Should calculate cursor value as expected"),
-        # ignore sign
-        (-10, now_dt.timestamp(), int(now_dt.timestamp() - SECONDS_IN_DAY * 10), "Should not care for the sign, use the module"),
-    ],
+    "input_config, expected_error_msg",
+    (
+        ({"lookback_window_days": "month"}, "Invalid lookback window month. Please use only positive integer values or 0."),
+        ({"start_date": "January First, 2022"}, "Invalid start date January First, 2022. Please use YYYY-MM-DDTHH:MM:SSZ format."),
+        ({"slice_range": -10}, "Invalid slice range value -10. Please use positive integer values only."),
+        (_a_valid_config(), None),
+    ),
 )
-def test_lookback_window(lookback_window_days, current_state, expected, message):
-    inv_stream = Invoices(account_id=213, start_date=1577836800, lookback_window_days=lookback_window_days)
-    inv_stream.cursor_field = "created"
-    assert inv_stream.get_start_timestamp({"created": current_state}) == expected, message
+@patch.object(source_stripe.source.stripe, "Account")
+def test_config_validation(mocked_client, input_config, expected_error_msg):
+    context = pytest.raises(AirbyteTracedException, match=expected_error_msg) if expected_error_msg else does_not_raise()
+    with context:
+        SourceStripe().check_connection(logger, config=input_config)
+
+
+@pytest.mark.parametrize(
+    "exception",
+    (
+        stripe.error.AuthenticationError,
+        stripe.error.PermissionError,
+    ),
+)
+@patch.object(source_stripe.source.stripe, "Account")
+def test_given_stripe_error_when_check_connection_then_connection_not_available(mocked_client, exception):
+    mocked_client.retrieve.side_effect = exception
+    is_available, _ = SourceStripe().check_connection(logger, config=_a_valid_config())
+    assert not is_available

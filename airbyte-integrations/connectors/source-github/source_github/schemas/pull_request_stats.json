@@ -1,9 +1,9 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "repository": {
-      "type": ["string"]
+      "type": "string"
     },
     "id": {
       "type": ["null", "integer"]
@@ -18,16 +18,42 @@
       "type": ["null", "boolean"]
     },
     "mergeable": {
+      "type": ["null", "string"]
+    },
+    "can_be_rebased": {
       "type": ["null", "boolean"]
     },
-    "rebaseable": {
-      "type": ["null", "boolean"]
-    },
-    "mergeable_state": {
+    "merge_state_status": {
       "type": ["null", "string"]
     },
     "merged_by": {
-      "$ref": "user.json"
+      "$ref": "user_graphql.json"
+    },
+    "merged_by": {
+      "type": ["null", "object"],
+      "properties": {
+        "login": {
+          "type": ["null", "string"]
+        },
+        "id": {
+          "type": ["null", "integer"]
+        },
+        "node_id": {
+          "type": ["null", "string"]
+        },
+        "avatar_url": {
+          "type": ["null", "string"]
+        },
+        "html_url": {
+          "type": ["null", "string"]
+        },
+        "type": {
+          "type": ["null", "string"]
+        },
+        "site_admin": {
+          "type": ["null", "boolean"]
+        }
+      }
     },
     "comments": {
       "type": ["null", "integer"]
@@ -51,7 +77,7 @@
       "type": ["null", "integer"]
     },
     "updated_at": {
-      "type": ["null", "string"],
+      "type": "string",
       "format": "date-time"
     }
   }

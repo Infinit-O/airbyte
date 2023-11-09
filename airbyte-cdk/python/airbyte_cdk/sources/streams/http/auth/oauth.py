@@ -1,15 +1,20 @@
 #
-# Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 
-from typing import Any, List, Mapping, MutableMapping, Tuple
+import logging
+from typing import Any, List, Mapping, MutableMapping, Optional, Tuple
 
+import backoff
 import pendulum
 import requests
 from deprecated import deprecated
 
+from ..exceptions import DefaultBackoffException
 from .core import HttpAuthenticator
+
+logger = logging.getLogger("airbyte")
 
 
 @deprecated(version="0.1.20", reason="Use airbyte_cdk.sources.streams.http.requests_native_auth.Oauth2Authenticator instead")
@@ -26,7 +31,8 @@ class Oauth2Authenticator(HttpAuthenticator):
         client_secret: str,
         refresh_token: str,
         scopes: List[str] = None,
-        refresh_access_token_headers: Mapping[str, Any] = None,
+        refresh_access_token_headers: Optional[Mapping[str, Any]] = None,
+        refresh_access_token_authenticator: Optional[HttpAuthenticator] = None,
     ):
         self.token_refresh_endpoint = token_refresh_endpoint
         self.client_secret = client_secret
@@ -34,6 +40,7 @@ class Oauth2Authenticator(HttpAuthenticator):
         self.refresh_token = refresh_token
         self.scopes = scopes
         self.refresh_access_token_headers = refresh_access_token_headers
+        self.refresh_access_token_authenticator = refresh_access_token_authenticator
 
         self._token_expiry_date = pendulum.now().subtract(days=1)
         self._access_token = None
@@ -67,6 +74,14 @@ class Oauth2Authenticator(HttpAuthenticator):
 
         return payload
 
+    @backoff.on_exception(
+        backoff.expo,
+        DefaultBackoffException,
+        on_backoff=lambda details: logger.info(
+            f"Caught retryable error after {details['tries']} tries. Waiting {details['wait']} seconds then retrying..."
+        ),
+        max_time=300,
+    )
     def refresh_access_token(self) -> Tuple[str, int]:
         """
         returns a tuple of (access_token, token_lifespan_in_seconds)
@@ -76,10 +91,23 @@ class Oauth2Authenticator(HttpAuthenticator):
                 method="POST",
                 url=self.token_refresh_endpoint,
                 data=self.get_refresh_request_body(),
-                headers=self.refresh_access_token_headers,
+                headers=self.get_refresh_access_token_headers(),
             )
             response.raise_for_status()
             response_json = response.json()
-            return response_json["access_token"], response_json["expires_in"]
+            return response_json["access_token"], int(response_json["expires_in"])
+        except requests.exceptions.RequestException as e:
+            if e.response.status_code == 429 or e.response.status_code >= 500:
+                raise DefaultBackoffException(request=e.response.request, response=e.response)
+            raise
         except Exception as e:
             raise Exception(f"Error while refreshing access token: {e}") from e
+
+    def get_refresh_access_token_headers(self):
+        headers = {}
+        if self.refresh_access_token_headers:
+            headers = self.refresh_access_token_headers
+        if self.refresh_access_token_authenticator:
+            refresh_auth_headers = self.refresh_access_token_authenticator.get_auth_header()
+            headers.update(refresh_auth_headers)
+        return headers

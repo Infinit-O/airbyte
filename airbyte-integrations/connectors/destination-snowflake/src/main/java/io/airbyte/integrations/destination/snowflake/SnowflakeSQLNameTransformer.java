@@ -1,20 +1,33 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.destination.snowflake;
 
-import io.airbyte.integrations.destination.ExtendedNameTransformer;
+import io.airbyte.cdk.integrations.destination.StandardNameTransformer;
 
-public class SnowflakeSQLNameTransformer extends ExtendedNameTransformer {
+public class SnowflakeSQLNameTransformer extends StandardNameTransformer {
 
   @Override
-  protected String applyDefaultCase(final String input) {
+  public String applyDefaultCase(final String input) {
     return input.toUpperCase();
   }
 
-  public String getStageName(String schemaName, String outputTableName) {
-    return schemaName.concat(outputTableName).replaceAll("-", "_").toUpperCase();
+  /**
+   * The first character can only be alphanumeric or an underscore.
+   */
+  @Override
+  public String convertStreamName(final String input) {
+    if (input == null) {
+      return null;
+    }
+
+    final String normalizedName = super.convertStreamName(input);
+    if (normalizedName.substring(0, 1).matches("[A-Za-z_]")) {
+      return normalizedName;
+    } else {
+      return "_" + normalizedName;
+    }
   }
 
 }

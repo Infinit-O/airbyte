@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 """
@@ -22,6 +22,7 @@ Poland	A1C3SOZRARQ6R3	PL
 Turkey	A33AVAJ2PDY3EV	TR
 United Arab Emirates	A2VIGQ35RCS4UG	AE
 India	A21TJRUUN4KGV	IN
+Belgium	AMEN7PMS3EDWL	BE
 Far East
 
 Country	marketplaceId	Country code
@@ -40,26 +41,27 @@ class AWSEnvironment(str, Enum):
 
 class AWSRegion(str, Enum):
     AE = "AE"
+    AU = "AU"
+    BE = "BE"
+    BR = "BR"
+    CA = "CA"
     DE = "DE"
-    PL = "PL"
     EG = "EG"
     ES = "ES"
     FR = "FR"
+    GB = "GB"
     IN = "IN"
     IT = "IT"
+    JP = "JP"
+    MX = "MX"
     NL = "NL"
+    PL = "PL"
     SA = "SA"
     SE = "SE"
+    SG = "SG"
     TR = "TR"
     UK = "UK"
-    AU = "AU"
-    JP = "JP"
-    SG = "SG"
     US = "US"
-    BR = "BR"
-    CA = "CA"
-    MX = "MX"
-    GB = "GB"
 
 
 def get_aws_base_url(aws_env: AWSEnvironment) -> str:
@@ -92,6 +94,7 @@ def get_marketplaces(aws_env: AWSEnvironment) -> Dict[AWSRegion, Tuple[str, str,
         AWSRegion.BR: (f"{base_url}-na.amazon.com", "A2Q3Y263D00KWC", "us-east-1"),
         AWSRegion.CA: (f"{base_url}-na.amazon.com", "A2EUQ1WTGCTBG2", "us-east-1"),
         AWSRegion.MX: (f"{base_url}-na.amazon.com", "A1AM78C64UM0Y8", "us-east-1"),
+        AWSRegion.BE: (f"{base_url}-eu.amazon.com", "AMEN7PMS3EDWL", "eu-west-1"),
     }
     marketplaces[AWSRegion.GB] = marketplaces[AWSRegion.UK]
     return marketplaces

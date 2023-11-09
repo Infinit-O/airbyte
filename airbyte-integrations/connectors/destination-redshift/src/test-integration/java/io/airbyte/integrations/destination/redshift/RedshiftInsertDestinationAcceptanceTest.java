@@ -1,32 +1,22 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.destination.redshift;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.airbyte.commons.io.IOs;
 import io.airbyte.commons.json.Jsons;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Integration test testing the {@link RedshiftInsertDestination}. As the Redshift test credentials
- * contain S3 credentials by default, we remove these credentials.
+ * Integration test testing the {@link RedshiftInsertDestination}.
  */
-public class RedshiftInsertDestinationAcceptanceTest extends RedshiftCopyDestinationAcceptanceTest {
+public class RedshiftInsertDestinationAcceptanceTest extends RedshiftStagingS3DestinationAcceptanceTest {
 
-  public JsonNode getStaticConfig() {
-    return purge(Jsons.deserialize(IOs.readFile(Path.of("secrets/config.json"))));
-  }
-
-  public static JsonNode purge(final JsonNode config) {
-    final var original = (ObjectNode) Jsons.clone(config);
-    original.remove("s3_bucket_name");
-    original.remove("s3_bucket_region");
-    original.remove("access_key_id");
-    original.remove("secret_access_key");
-    return original;
+  public JsonNode getStaticConfig() throws IOException {
+    return Jsons.deserialize(Files.readString(Path.of("secrets/config.json")));
   }
 
 }

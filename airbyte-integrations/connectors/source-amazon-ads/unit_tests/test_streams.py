@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 import json
@@ -16,11 +16,13 @@ from source_amazon_ads import SourceAmazonAds
 
 def setup_responses(
     profiles_response=None,
+    portfolios_response=None,
     campaigns_response=None,
     adgroups_response=None,
     targeting_response=None,
     product_ads_response=None,
     generic_response=None,
+    creatives_response=None,
 ):
     responses.add(
         responses.POST,
@@ -32,6 +34,12 @@ def setup_responses(
             responses.GET,
             "https://advertising-api.amazon.com/v2/profiles",
             body=profiles_response,
+        )
+    if portfolios_response:
+        responses.add(
+            responses.GET,
+            "https://advertising-api.amazon.com/v2/portfolios/extended",
+            body=portfolios_response,
         )
     if campaigns_response:
         responses.add(
@@ -57,6 +65,12 @@ def setup_responses(
             "https://advertising-api.amazon.com/sd/productAds",
             body=product_ads_response,
         )
+    if creatives_response:
+        responses.add(
+            responses.GET,
+            "https://advertising-api.amazon.com/sd/creatives",
+            body=creatives_response,
+        )
     if generic_response:
         responses.add(
             responses.GET,
@@ -65,8 +79,8 @@ def setup_responses(
         )
 
 
-def get_all_stream_records(stream):
-    records = stream.read_records(SyncMode.full_refresh)
+def get_all_stream_records(stream, stream_slice=None):
+    records = stream.read_records(SyncMode.full_refresh, stream_slice=stream_slice)
     return [r for r in records]
 
 
@@ -78,11 +92,11 @@ def get_stream_by_name(streams, stream_name):
 
 
 @responses.activate
-def test_streams_profile(test_config, profiles_response):
+def test_streams_profile(config, profiles_response):
     setup_responses(profiles_response=profiles_response)
 
     source = SourceAmazonAds()
-    streams = source.streams(test_config)
+    streams = source.streams(config)
 
     profile_stream = get_stream_by_name(streams, "profiles")
     schema = profile_stream.get_json_schema()
@@ -97,7 +111,25 @@ def test_streams_profile(test_config, profiles_response):
 
 
 @responses.activate
-def test_streams_campaigns_4_vendors(test_config, profiles_response, campaigns_response):
+def test_streams_portfolios(config, profiles_response, portfolios_response):
+    setup_responses(profiles_response=profiles_response, portfolios_response=portfolios_response)
+
+    source = SourceAmazonAds()
+    streams = source.streams(config)
+
+    portfolio_stream = get_stream_by_name(streams, "portfolios")
+    schema = portfolio_stream.get_json_schema()
+    records = get_all_stream_records(portfolio_stream)
+    assert len(responses.calls) == 6
+    assert len(records) == 8
+    expected_records = json.loads(portfolios_response)
+    for record, expected_record in zip(records, expected_records):
+        validate(schema=schema, instance=record)
+        assert record == expected_record
+
+
+@responses.activate
+def test_streams_campaigns_4_vendors(config, profiles_response, campaigns_response):
     profiles_response = json.loads(profiles_response)
     for profile in profiles_response:
         profile["accountInfo"]["type"] = "vendor"
@@ -105,7 +137,7 @@ def test_streams_campaigns_4_vendors(test_config, profiles_response, campaigns_r
     setup_responses(profiles_response=profiles_response, campaigns_response=campaigns_response)
 
     source = SourceAmazonAds()
-    streams = source.streams(test_config)
+    streams = source.streams(config)
     profile_stream = get_stream_by_name(streams, "profiles")
     campaigns_stream = get_stream_by_name(streams, "sponsored_display_campaigns")
     profile_records = get_all_stream_records(profile_stream)
@@ -118,7 +150,7 @@ def test_streams_campaigns_4_vendors(test_config, profiles_response, campaigns_r
     [1, 2, 5, 1000000],
 )
 @responses.activate
-def test_streams_campaigns_pagination(mocker, test_config, profiles_response, campaigns_response, page_size):
+def test_streams_campaigns_pagination(mocker, config, profiles_response, campaigns_response, page_size):
     mocker.patch("source_amazon_ads.streams.common.SubProfilesStream.page_size", page_size)
     profiles_response = json.loads(profiles_response)
     for profile in profiles_response:
@@ -127,7 +159,7 @@ def test_streams_campaigns_pagination(mocker, test_config, profiles_response, ca
     setup_responses(profiles_response=profiles_response)
 
     source = SourceAmazonAds()
-    streams = source.streams(test_config)
+    streams = source.streams(config)
     profile_stream = get_stream_by_name(streams, "profiles")
     campaigns_stream = get_stream_by_name(streams, "sponsored_display_campaigns")
     campaigns = json.loads(campaigns_response)
@@ -153,7 +185,7 @@ def test_streams_campaigns_pagination(mocker, test_config, profiles_response, ca
 
 @pytest.mark.parametrize(("status_code"), [HTTPStatus.FORBIDDEN, HTTPStatus.UNAUTHORIZED])
 @responses.activate
-def test_streams_campaigns_pagination_403_error(mocker, status_code, test_config, profiles_response, campaigns_response):
+def test_streams_campaigns_pagination_403_error(mocker, status_code, config, profiles_response, campaigns_response):
     setup_responses(profiles_response=profiles_response)
     responses.add(
         responses.GET,
@@ -162,7 +194,7 @@ def test_streams_campaigns_pagination_403_error(mocker, status_code, test_config
         status=status_code,
     )
     source = SourceAmazonAds()
-    streams = source.streams(test_config)
+    streams = source.streams(config)
     campaigns_stream = get_stream_by_name(streams, "sponsored_display_campaigns")
 
     with pytest.raises(requests.exceptions.HTTPError):
@@ -170,7 +202,7 @@ def test_streams_campaigns_pagination_403_error(mocker, status_code, test_config
 
 
 @responses.activate
-def test_streams_campaigns_pagination_403_error_expected(mocker, test_config, profiles_response, campaigns_response):
+def test_streams_campaigns_pagination_403_error_expected(mocker, config, profiles_response, campaigns_response):
     setup_responses(profiles_response=profiles_response)
     responses.add(
         responses.GET,
@@ -179,7 +211,7 @@ def test_streams_campaigns_pagination_403_error_expected(mocker, test_config, pr
         status=403,
     )
     source = SourceAmazonAds()
-    streams = source.streams(test_config)
+    streams = source.streams(config)
     campaigns_stream = get_stream_by_name(streams, "sponsored_display_campaigns")
 
     campaigns_records = get_all_stream_records(campaigns_stream)
@@ -192,27 +224,23 @@ def test_streams_campaigns_pagination_403_error_expected(mocker, test_config, pr
         ("sponsored_display_ad_groups", "sd/adGroups"),
         ("sponsored_display_product_ads", "sd/productAds"),
         ("sponsored_display_targetings", "sd/targets"),
+        ("sponsored_display_creatives", "sd/creatives"),
     ],
 )
 @responses.activate
 def test_streams_displays(
-    test_config,
-    stream_name,
-    endpoint,
-    profiles_response,
-    adgroups_response,
-    targeting_response,
-    product_ads_response,
+    config, stream_name, endpoint, profiles_response, adgroups_response, targeting_response, product_ads_response, creatives_response
 ):
     setup_responses(
         profiles_response=profiles_response,
         adgroups_response=adgroups_response,
         targeting_response=targeting_response,
         product_ads_response=product_ads_response,
+        creatives_response=creatives_response,
     )
 
     source = SourceAmazonAds()
-    streams = source.streams(test_config)
+    streams = source.streams(config)
     test_stream = get_stream_by_name(streams, stream_name)
 
     records = get_all_stream_records(test_stream)
@@ -238,13 +266,33 @@ def test_streams_displays(
     ],
 )
 @responses.activate
-def test_streams_brands_and_products(test_config, stream_name, endpoint, profiles_response):
+def test_streams_brands_and_products(config, stream_name, endpoint, profiles_response):
     setup_responses(profiles_response=profiles_response, generic_response=endpoint)
 
     source = SourceAmazonAds()
-    streams = source.streams(test_config)
+    streams = source.streams(config)
     test_stream = get_stream_by_name(streams, stream_name)
 
     records = get_all_stream_records(test_stream)
     assert records == []
     assert any([endpoint in call.request.url for call in responses.calls])
+
+
+@responses.activate
+def test_sponsored_product_ad_group_bid_recommendations_404_error(caplog, config, profiles_response):
+    setup_responses(profiles_response=profiles_response)
+    responses.add(
+        responses.GET,
+        "https://advertising-api.amazon.com/v2/sp/adGroups/xxx/bidRecommendations",
+        json={
+            "code": "404",
+            "details": "404 Either the specified ad group identifier was not found or the specified ad group was found but no associated bid was found.",
+        },
+        status=404,
+    )
+    source = SourceAmazonAds()
+    streams = source.streams(config)
+    test_stream = get_stream_by_name(streams, "sponsored_product_ad_group_bid_recommendations")
+    records = get_all_stream_records(test_stream, stream_slice={"profileId": "1231", "adGroupId": "xxx"})
+    assert records == []
+    assert "Skip current AdGroup because the specified ad group has no associated bid" in caplog.text
