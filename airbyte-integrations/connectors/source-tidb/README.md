@@ -1,6 +1,6 @@
-# Source Tidb
+# Source TiDB
 
-This is the repository for the Tidb source connector in Java.
+This is the repository for the TiDB source connector in Java.
 For information about how to use this connector within Airbyte, see [the User Documentation](https://docs.airbyte.io/integrations/sources/tidb).
 
 ## Local development
@@ -21,8 +21,9 @@ Note that the `secrets` directory is git-ignored by default, so there is no dang
 
 #### Build
 Build the connector image via Gradle:
+
 ```
-./gradlew :airbyte-integrations:connectors:source-tidb:airbyteDocker
+./gradlew :airbyte-integrations:connectors:source-tidb:buildConnectorImage
 ```
 When building via Gradle, the docker image name and tag, respectively, are the values of the `io.airbyte.name` and `io.airbyte.version` `LABEL`s in
 the Dockerfile.

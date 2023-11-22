@@ -1,22 +1,25 @@
 /*
- * Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.destination.elasticsearch;
 
 import co.elastic.clients.elasticsearch._core.BulkResponse;
+import co.elastic.clients.elasticsearch._core.bulk.IndexResponseItem;
+import co.elastic.clients.elasticsearch._types.ErrorCause;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.airbyte.commons.concurrency.VoidCallable;
-import io.airbyte.commons.functional.CheckedConsumer;
+import io.airbyte.cdk.integrations.base.AirbyteMessageConsumer;
+import io.airbyte.cdk.integrations.destination.buffered_stream_consumer.BufferedStreamConsumer;
+import io.airbyte.cdk.integrations.destination.buffered_stream_consumer.OnCloseFunction;
+import io.airbyte.cdk.integrations.destination.buffered_stream_consumer.OnStartFunction;
+import io.airbyte.cdk.integrations.destination.buffered_stream_consumer.RecordWriter;
+import io.airbyte.cdk.integrations.destination.record_buffer.InMemoryRecordBufferingStrategy;
 import io.airbyte.commons.functional.CheckedFunction;
-import io.airbyte.integrations.base.AirbyteMessageConsumer;
-import io.airbyte.integrations.destination.buffered_stream_consumer.BufferedStreamConsumer;
-import io.airbyte.integrations.destination.buffered_stream_consumer.RecordWriter;
-import io.airbyte.integrations.destination.record_buffer.InMemoryRecordBufferingStrategy;
-import io.airbyte.protocol.models.AirbyteMessage;
-import io.airbyte.protocol.models.AirbyteRecordMessage;
-import io.airbyte.protocol.models.ConfiguredAirbyteCatalog;
+import io.airbyte.protocol.models.v0.AirbyteMessage;
+import io.airbyte.protocol.models.v0.AirbyteRecordMessage;
+import io.airbyte.protocol.models.v0.ConfiguredAirbyteCatalog;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +62,7 @@ public class ElasticsearchAirbyteMessageConsumerFactory {
     return jsonNode -> true;
   }
 
-  private static CheckedConsumer<Boolean, Exception> onCloseFunction(final ElasticsearchConnection connection) {
+  private static OnCloseFunction onCloseFunction(final ElasticsearchConnection connection) {
 
     return (hasFailed) -> {
       if (!tempIndices.isEmpty() && !hasFailed) {
@@ -90,15 +93,33 @@ public class ElasticsearchAirbyteMessageConsumerFactory {
         response = connection.indexDocuments(config.getIndexName(), records, config);
       }
       if (Objects.nonNull(response) && response.errors()) {
-        final String msg = String.format("failed to write bulk records: %s", mapper.valueToTree(response));
-        throw new Exception(msg);
+        final List<String> errorReport = extractErrorReport(response);
+        throw new Exception(String.join("\n", errorReport));
       } else {
         log.info("bulk write took: {}ms", response.took());
       }
     };
   }
 
-  private static VoidCallable onStartFunction(final ElasticsearchConnection connection, final List<ElasticsearchWriteConfig> writeConfigs) {
+  private static List<String> extractErrorReport(BulkResponse response) {
+    final Map<String, ErrorCause> errorResult = new HashMap<>();
+    response.items().forEach(item -> {
+      IndexResponseItem index = item.index();
+      errorResult.put(index.index(), index.error());
+    });
+    final List<String> errorReport = new ArrayList<>();
+    errorResult.forEach((index, error) -> {
+
+      final String msg = String.format("""
+                                       failed to write bulk records for index: %s\s
+                                       error type: %s
+                                        reason: %s""", index, error.type(), error.reason());
+      errorReport.add(msg);
+    });
+    return errorReport;
+  }
+
+  private static OnStartFunction onStartFunction(final ElasticsearchConnection connection, final List<ElasticsearchWriteConfig> writeConfigs) {
     return () -> {
       for (final var config : writeConfigs) {
         if (config.useTempIndex()) {
