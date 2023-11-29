@@ -2,7 +2,7 @@
     "streams": [
         {
             "stream": {
-                "name": "desks",
+                "name": "spaces",
                 "json_schema": {},
                 "supported_sync_modes": ["full_refresh"]
             },
@@ -11,3 +11,4 @@
         }
     ]
 }
+
