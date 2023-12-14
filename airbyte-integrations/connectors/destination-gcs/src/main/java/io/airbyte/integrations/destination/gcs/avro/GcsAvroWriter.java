@@ -1,24 +1,26 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.destination.gcs.avro;
+
+import static io.airbyte.cdk.integrations.destination.s3.util.StreamTransferManagerFactory.DEFAULT_PART_SIZE_MB;
 
 import alex.mojaki.s3upload.MultiPartOutputStream;
 import alex.mojaki.s3upload.StreamTransferManager;
 import com.amazonaws.services.s3.AmazonS3;
 import com.fasterxml.jackson.databind.JsonNode;
+import io.airbyte.cdk.integrations.destination.s3.S3Format;
+import io.airbyte.cdk.integrations.destination.s3.avro.AvroRecordFactory;
+import io.airbyte.cdk.integrations.destination.s3.avro.JsonToAvroSchemaConverter;
+import io.airbyte.cdk.integrations.destination.s3.avro.S3AvroFormatConfig;
+import io.airbyte.cdk.integrations.destination.s3.util.StreamTransferManagerFactory;
+import io.airbyte.cdk.integrations.destination.s3.writer.DestinationFileWriter;
 import io.airbyte.integrations.destination.gcs.GcsDestinationConfig;
 import io.airbyte.integrations.destination.gcs.util.GcsUtils;
 import io.airbyte.integrations.destination.gcs.writer.BaseGcsWriter;
-import io.airbyte.integrations.destination.s3.S3Format;
-import io.airbyte.integrations.destination.s3.avro.AvroRecordFactory;
-import io.airbyte.integrations.destination.s3.avro.JsonToAvroSchemaConverter;
-import io.airbyte.integrations.destination.s3.avro.S3AvroFormatConfig;
-import io.airbyte.integrations.destination.s3.util.StreamTransferManagerHelper;
-import io.airbyte.integrations.destination.s3.writer.DestinationFileWriter;
-import io.airbyte.protocol.models.AirbyteRecordMessage;
-import io.airbyte.protocol.models.ConfiguredAirbyteStream;
+import io.airbyte.protocol.models.v0.AirbyteRecordMessage;
+import io.airbyte.protocol.models.v0.ConfiguredAirbyteStream;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -61,7 +63,7 @@ public class GcsAvroWriter extends BaseGcsWriter implements DestinationFileWrite
     super(config, s3Client, configuredStream);
 
     final Schema schema = jsonSchema == null
-        ? GcsUtils.getDefaultAvroSchema(stream.getName(), stream.getNamespace(), true)
+        ? GcsUtils.getDefaultAvroSchema(stream.getName(), stream.getNamespace(), true, false)
         : new JsonToAvroSchemaConverter().getAvroSchema(jsonSchema, stream.getName(),
             stream.getNamespace(), true, false, false, true);
     LOGGER.info("Avro schema for stream {}: {}", stream.getName(), schema.toString(false));
@@ -74,8 +76,10 @@ public class GcsAvroWriter extends BaseGcsWriter implements DestinationFileWrite
         objectKey);
 
     this.avroRecordFactory = new AvroRecordFactory(schema, converter);
-    this.uploadManager = StreamTransferManagerHelper.getDefault(
-        config.getBucketName(), objectKey, s3Client, config.getFormatConfig().getPartSize());
+    this.uploadManager = StreamTransferManagerFactory
+        .create(config.getBucketName(), objectKey, s3Client)
+        .setPartSize((long) DEFAULT_PART_SIZE_MB)
+        .get();
     // We only need one output stream as we only have one input stream. This is reasonably performant.
     this.outputStream = uploadManager.getMultiPartOutputStreams().get(0);
 

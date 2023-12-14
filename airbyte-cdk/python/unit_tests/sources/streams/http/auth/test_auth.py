@@ -1,11 +1,18 @@
 #
-# Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 
 import logging
 
-from airbyte_cdk.sources.streams.http.auth import MultipleTokenAuthenticator, NoAuth, Oauth2Authenticator, TokenAuthenticator
+import pytest
+from airbyte_cdk.sources.streams.http.auth import (
+    BasicHttpAuthenticator,
+    MultipleTokenAuthenticator,
+    NoAuth,
+    Oauth2Authenticator,
+    TokenAuthenticator,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +48,12 @@ def test_no_auth():
     assert {} == no_auth.get_auth_header()
 
 
+def test_basic_authenticator():
+    token = BasicHttpAuthenticator("client_id", "client_secret")
+    header = token.get_auth_header()
+    assert {"Authorization": "Basic Y2xpZW50X2lkOmNsaWVudF9zZWNyZXQ="} == header
+
+
 class TestOauth2Authenticator:
     """
     Test class for OAuth2Authenticator.
@@ -51,6 +64,7 @@ class TestOauth2Authenticator:
     client_secret = "client_secret"
     refresh_token = "refresh_token"
     refresh_access_token_headers = {"Header_1": "value 1", "Header_2": "value 2"}
+    refresh_access_token_authenticator = BasicHttpAuthenticator(client_id, client_secret)
 
     def test_get_auth_header_fresh(self, mocker):
         """
@@ -122,10 +136,38 @@ class TestOauth2Authenticator:
             refresh_access_token_headers=TestOauth2Authenticator.refresh_access_token_headers,
         )
 
-        token = oauth.refresh_access_token()
+        token, expires_in = oauth.refresh_access_token()
 
-        assert ("token", 10) == token
+        assert isinstance(expires_in, int)
+        assert ("token", 10) == (token, expires_in)
         for header in self.refresh_access_token_headers:
             assert header in mock_refresh_token_call.last_request.headers
             assert self.refresh_access_token_headers[header] == mock_refresh_token_call.last_request.headers[header]
         assert mock_refresh_token_call.called
+
+    @pytest.mark.parametrize("error_code", (429, 500, 502, 504))
+    def test_refresh_access_token_retry(self, error_code, requests_mock):
+        oauth = Oauth2Authenticator(
+            TestOauth2Authenticator.refresh_endpoint,
+            TestOauth2Authenticator.client_id,
+            TestOauth2Authenticator.client_secret,
+            TestOauth2Authenticator.refresh_token,
+        )
+        requests_mock.post(
+            TestOauth2Authenticator.refresh_endpoint,
+            [{"status_code": error_code}, {"status_code": error_code}, {"json": {"access_token": "token", "expires_in": 10}}],
+        )
+        token, expires_in = oauth.refresh_access_token()
+        assert (token, expires_in) == ("token", 10)
+        assert requests_mock.call_count == 3
+
+    def test_refresh_access_authenticator(self):
+        oauth = Oauth2Authenticator(
+            TestOauth2Authenticator.refresh_endpoint,
+            TestOauth2Authenticator.client_id,
+            TestOauth2Authenticator.client_secret,
+            TestOauth2Authenticator.refresh_token,
+            refresh_access_token_authenticator=TestOauth2Authenticator.refresh_access_token_authenticator,
+        )
+        expected_headers = {"Authorization": "Basic Y2xpZW50X2lkOmNsaWVudF9zZWNyZXQ="}
+        assert expected_headers == oauth.get_refresh_access_token_headers()

@@ -1,24 +1,44 @@
 #
-# Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 
 import inspect
 import logging
+import typing
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Union
+from functools import lru_cache
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple, Union
 
 import airbyte_cdk.sources.utils.casing as casing
-from airbyte_cdk.models import AirbyteStream, SyncMode
-from airbyte_cdk.sources.utils.schema_helpers import ResourceSchemaLoader
+from airbyte_cdk.models import AirbyteMessage, AirbyteStream, SyncMode
+from airbyte_cdk.models import Type as MessageType
+
+# list of all possible HTTP methods which can be used for sending of request bodies
+from airbyte_cdk.sources.utils.schema_helpers import InternalConfig, ResourceSchemaLoader
+from airbyte_cdk.sources.utils.slice_logger import SliceLogger
 from airbyte_cdk.sources.utils.transform import TransformConfig, TypeTransformer
 from deprecated.classic import deprecated
+
+if typing.TYPE_CHECKING:
+    from airbyte_cdk.sources import Source
+    from airbyte_cdk.sources.streams.availability_strategy import AvailabilityStrategy
+
+# A stream's read method can return one of the following types:
+# Mapping[str, Any]: The content of an AirbyteRecordMessage
+# AirbyteMessage: An AirbyteMessage. Could be of any type
+StreamData = Union[Mapping[str, Any], AirbyteMessage]
+
+JsonSchema = Mapping[str, Any]
 
 
 def package_name_from_class(cls: object) -> str:
     """Find the package name given a class name"""
-    module: Any = inspect.getmodule(cls)
-    return module.__name__.split(".")[0]
+    module = inspect.getmodule(cls)
+    if module is not None:
+        return module.__name__.split(".")[0]
+    else:
+        raise ValueError(f"Could not find package name for class {cls}")
 
 
 class IncrementalMixin(ABC):
@@ -51,7 +71,7 @@ class IncrementalMixin(ABC):
 
     @state.setter
     @abstractmethod
-    def state(self, value: MutableMapping[str, Any]):
+    def state(self, value: MutableMapping[str, Any]) -> None:
         """State setter, accept state serialized by state getter."""
 
 
@@ -62,7 +82,7 @@ class Stream(ABC):
 
     # Use self.logger in subclasses to log any messages
     @property
-    def logger(self):
+    def logger(self) -> logging.Logger:
         return logging.getLogger(f"airbyte.streams.{self.name}")
 
     # TypeTransformer object to perform output data transformation
@@ -75,18 +95,99 @@ class Stream(ABC):
         """
         return casing.camel_to_snake(self.__class__.__name__)
 
+    def get_error_display_message(self, exception: BaseException) -> Optional[str]:
+        """
+        Retrieves the user-friendly display message that corresponds to an exception.
+        This will be called when encountering an exception while reading records from the stream, and used to build the AirbyteTraceMessage.
+
+        The default implementation of this method does not return user-friendly messages for any exception type, but it should be overriden as needed.
+
+        :param exception: The exception that was raised
+        :return: A user-friendly message that indicates the cause of the error
+        """
+        return None
+
+    def read_full_refresh(
+        self,
+        cursor_field: Optional[List[str]],
+        logger: logging.Logger,
+        slice_logger: SliceLogger,
+    ) -> Iterable[StreamData]:
+        slices = self.stream_slices(sync_mode=SyncMode.full_refresh, cursor_field=cursor_field)
+        logger.debug(f"Processing stream slices for {self.name} (sync_mode: full_refresh)", extra={"stream_slices": slices})
+        for _slice in slices:
+            if slice_logger.should_log_slice_message(logger):
+                yield slice_logger.create_slice_log_message(_slice)
+            yield from self.read_records(
+                stream_slice=_slice,
+                sync_mode=SyncMode.full_refresh,
+                cursor_field=cursor_field,
+            )
+
+    def read_incremental(  # type: ignore  # ignoring typing for ConnectorStateManager because of circular dependencies
+        self,
+        cursor_field: Optional[List[str]],
+        logger: logging.Logger,
+        slice_logger: SliceLogger,
+        stream_state: MutableMapping[str, Any],
+        state_manager,
+        per_stream_state_enabled: bool,
+        internal_config: InternalConfig,
+    ) -> Iterable[StreamData]:
+        slices = self.stream_slices(
+            cursor_field=cursor_field,
+            sync_mode=SyncMode.incremental,
+            stream_state=stream_state,
+        )
+        logger.debug(f"Processing stream slices for {self.name} (sync_mode: incremental)", extra={"stream_slices": slices})
+
+        has_slices = False
+        record_counter = 0
+        for _slice in slices:
+            has_slices = True
+            if slice_logger.should_log_slice_message(logger):
+                yield slice_logger.create_slice_log_message(_slice)
+            records = self.read_records(
+                sync_mode=SyncMode.incremental,
+                stream_slice=_slice,
+                stream_state=stream_state,
+                cursor_field=cursor_field or None,
+            )
+            for record_data_or_message in records:
+                yield record_data_or_message
+                if isinstance(record_data_or_message, Mapping) or (
+                    hasattr(record_data_or_message, "type") and record_data_or_message.type == MessageType.RECORD
+                ):
+                    record_data = record_data_or_message if isinstance(record_data_or_message, Mapping) else record_data_or_message.record
+                    stream_state = self.get_updated_state(stream_state, record_data)
+                    checkpoint_interval = self.state_checkpoint_interval
+                    record_counter += 1
+                    if checkpoint_interval and record_counter % checkpoint_interval == 0:
+                        yield self._checkpoint_state(stream_state, state_manager, per_stream_state_enabled)
+
+                    if internal_config.is_limit_reached(record_counter):
+                        break
+
+            yield self._checkpoint_state(stream_state, state_manager, per_stream_state_enabled)
+
+        if not has_slices:
+            # Safety net to ensure we always emit at least one state message even if there are no slices
+            checkpoint = self._checkpoint_state(stream_state, state_manager, per_stream_state_enabled)
+            yield checkpoint
+
     @abstractmethod
     def read_records(
         self,
         sync_mode: SyncMode,
-        cursor_field: List[str] = None,
-        stream_slice: Mapping[str, Any] = None,
-        stream_state: Mapping[str, Any] = None,
-    ) -> Iterable[Mapping[str, Any]]:
+        cursor_field: Optional[List[str]] = None,
+        stream_slice: Optional[Mapping[str, Any]] = None,
+        stream_state: Optional[Mapping[str, Any]] = None,
+    ) -> Iterable[StreamData]:
         """
         This method should be overridden by subclasses to read records based on the inputs
         """
 
+    @lru_cache(maxsize=None)
     def get_json_schema(self) -> Mapping[str, Any]:
         """
         :return: A dict of the JSON schema representing this stream.
@@ -99,6 +200,9 @@ class Stream(ABC):
 
     def as_airbyte_stream(self) -> AirbyteStream:
         stream = AirbyteStream(name=self.name, json_schema=dict(self.get_json_schema()), supported_sync_modes=[SyncMode.full_refresh])
+
+        if self.namespace:
+            stream.namespace = self.namespace
 
         if self.supports_incremental:
             stream.source_defined_cursor = self.source_defined_cursor
@@ -130,11 +234,41 @@ class Stream(ABC):
         return []
 
     @property
+    def namespace(self) -> Optional[str]:
+        """
+        Override to return the namespace of this stream, e.g. the Postgres schema which this stream will emit records for.
+        :return: A string containing the name of the namespace.
+        """
+        return None
+
+    @property
     def source_defined_cursor(self) -> bool:
         """
         Return False if the cursor can be configured by the user.
         """
         return True
+
+    def check_availability(self, logger: logging.Logger, source: Optional["Source"] = None) -> Tuple[bool, Optional[str]]:
+        """
+        Checks whether this stream is available.
+
+        :param logger: source logger
+        :param source: (optional) source
+        :return: A tuple of (boolean, str). If boolean is true, then this stream
+          is available, and no str is required. Otherwise, this stream is unavailable
+          for some reason and the str should describe what went wrong and how to
+          resolve the unavailability, if possible.
+        """
+        if self.availability_strategy:
+            return self.availability_strategy.check_availability(self, logger, source)
+        return True, None
+
+    @property
+    def availability_strategy(self) -> Optional["AvailabilityStrategy"]:
+        """
+        :return: The AvailabilityStrategy used to check whether this stream is available.
+        """
+        return None
 
     @property
     @abstractmethod
@@ -145,7 +279,7 @@ class Stream(ABC):
         """
 
     def stream_slices(
-        self, *, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None
+        self, *, sync_mode: SyncMode, cursor_field: Optional[List[str]] = None, stream_state: Optional[Mapping[str, Any]] = None
     ) -> Iterable[Optional[Mapping[str, Any]]]:
         """
         Override to define the slices for this stream. See the stream slicing section of the docs for more information.
@@ -172,7 +306,9 @@ class Stream(ABC):
         return None
 
     @deprecated(version="0.1.49", reason="You should use explicit state property instead, see IncrementalMixin docs.")
-    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]):
+    def get_updated_state(
+        self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]
+    ) -> MutableMapping[str, Any]:
         """Override to extract state from the latest record. Needed to implement incremental sync.
 
         Inspects the latest record extracted from the data source and the current state object and return an updated state object.
@@ -185,6 +321,18 @@ class Stream(ABC):
         :return: An updated state object
         """
         return {}
+
+    def log_stream_sync_configuration(self) -> None:
+        """
+        Logs the configuration of this stream.
+        """
+        self.logger.debug(
+            f"Syncing stream instance: {self.name}",
+            extra={
+                "primary_key": self.primary_key,
+                "cursor_field": self.cursor_field,
+            },
+        )
 
     @staticmethod
     def _wrapped_primary_key(keys: Optional[Union[str, List[str], List[List[str]]]]) -> Optional[List[List[str]]]:
@@ -204,7 +352,25 @@ class Stream(ABC):
                 elif isinstance(component, list):
                     wrapped_keys.append(component)
                 else:
-                    raise ValueError("Element must be either list or str.")
+                    raise ValueError(f"Element must be either list or str. Got: {type(component)}")
             return wrapped_keys
         else:
-            raise ValueError("Element must be either list or str.")
+            raise ValueError(f"Element must be either list or str. Got: {type(keys)}")
+
+    def _checkpoint_state(  # type: ignore  # ignoring typing for ConnectorStateManager because of circular dependencies
+        self,
+        stream_state: Mapping[str, Any],
+        state_manager,
+        per_stream_state_enabled: bool,
+    ) -> AirbyteMessage:
+        # First attempt to retrieve the current state using the stream's state property. We receive an AttributeError if the state
+        # property is not implemented by the stream instance and as a fallback, use the stream_state retrieved from the stream
+        # instance's deprecated get_updated_state() method.
+        try:
+            state_manager.update_state_for_stream(
+                self.name, self.namespace, self.state  # type: ignore # we know the field might not exist...
+            )
+
+        except AttributeError:
+            state_manager.update_state_for_stream(self.name, self.namespace, stream_state)
+        return state_manager.create_state_message(self.name, self.namespace, send_per_stream_state=per_stream_state_enabled)

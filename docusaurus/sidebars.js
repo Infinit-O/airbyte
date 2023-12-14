@@ -1,1282 +1,583 @@
+const fs = require("fs");
+const path = require("path");
+const {
+  parseMarkdownContentTitle,
+  parseFrontMatter,
+} = require("@docusaurus/utils");
+
+const connectorsDocsRoot = "../docs/integrations";
+const sourcesDocs = `${connectorsDocsRoot}/sources`;
+const destinationDocs = `${connectorsDocsRoot}/destinations`;
+
+function getFilenamesInDir(prefix, dir, excludes) {
+  return fs
+    .readdirSync(dir)
+    .filter(
+      (fileName) =>
+        !(
+          fileName.endsWith(".inapp.md") ||
+          fileName.endsWith("-migrations.md") ||
+          fileName.endsWith(".js")
+        )
+    )
+    .map((fileName) => fileName.replace(".md", ""))
+    .filter((fileName) => excludes.indexOf(fileName.toLowerCase()) === -1)
+    .map((filename) => {
+      // If there is a migration doc for this connector nest this under the original doc as "Migration Guide"
+      const migrationDocPath = path.join(dir, `${filename}-migrations.md`);
+      if (fs.existsSync(migrationDocPath)) {
+        // Get the first header of the markdown document
+        const { contentTitle } = parseMarkdownContentTitle(
+          parseFrontMatter(fs.readFileSync(path.join(dir, `${filename}.md`)))
+            .content
+        );
+        if (!contentTitle) {
+          throw new Error(
+            `Could not parse title from ${path.join(
+              prefix,
+              filename
+            )}. Make sure there's no content above the first heading!`
+          );
+        }
+
+        return {
+          type: "category",
+          label: contentTitle,
+          link: { type: "doc", id: path.join(prefix, filename) },
+          items: [
+            {
+              type: "doc",
+              id: path.join(prefix, `${filename}-migrations`),
+              label: "Migration Guide",
+            },
+          ],
+        };
+      }
+
+      return { type: "doc", id: path.join(prefix, filename) };
+    });
+}
+
+function getSourceConnectors() {
+  return getFilenamesInDir("integrations/sources/", sourcesDocs, [
+    "readme",
+    "postgres",
+  ]);
+}
+
+function getDestinationConnectors() {
+  return getFilenamesInDir("integrations/destinations/", destinationDocs, [
+    "readme",
+  ]);
+}
+
+const sourcePostgres = {
+  type: "category",
+  label: "Postgres",
+  link: {
+    type: "doc",
+    id: "integrations/sources/postgres",
+  },
+  items: [
+    {
+      type: "doc",
+      label: "Cloud SQL for Postgres",
+      id: "integrations/sources/postgres/cloud-sql-postgres",
+    },
+    {
+      type: "doc",
+      label: "Troubleshooting",
+      id: "integrations/sources/postgres/postgres-troubleshooting",
+    },
+  ],
+};
+
+const sectionHeader = (title) => ({
+  type: "html",
+  value: title,
+  className: "navbar__category",
+});
+
+const buildAConnector = {
+  type: "category",
+  label: "Build a Connector",
+  items: [
+    {
+      type: "doc",
+      label: "Overview",
+      id: "connector-development/README",
+    },
+    {
+      type: "category",
+      label: "Connector Builder",
+      items: [
+        "connector-development/connector-builder-ui/overview",
+        "connector-development/connector-builder-ui/connector-builder-compatibility",
+        "connector-development/connector-builder-ui/tutorial",
+        {
+          type: "category",
+          label: "Concepts",
+          items: [
+            "connector-development/connector-builder-ui/authentication",
+            "connector-development/connector-builder-ui/record-processing",
+            "connector-development/connector-builder-ui/pagination",
+            "connector-development/connector-builder-ui/incremental-sync",
+            "connector-development/connector-builder-ui/partitioning",
+            "connector-development/connector-builder-ui/error-handling",
+          ],
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Low-code connector development",
+      items: [
+        {
+          label: "Low-code CDK Intro",
+          type: "doc",
+          id: "connector-development/config-based/low-code-cdk-overview",
+        },
+        {
+          type: "category",
+          label: "Tutorial",
+          items: [
+            "connector-development/config-based/tutorial/getting-started",
+            "connector-development/config-based/tutorial/create-source",
+            "connector-development/config-based/tutorial/install-dependencies",
+            "connector-development/config-based/tutorial/connecting-to-the-API-source",
+            "connector-development/config-based/tutorial/reading-data",
+            "connector-development/config-based/tutorial/incremental-reads",
+            "connector-development/config-based/tutorial/testing",
+          ],
+        },
+        {
+          type: "category",
+          label: "Understanding the YAML file",
+          link: {
+            type: "doc",
+            id: "connector-development/config-based/understanding-the-yaml-file/yaml-overview",
+          },
+          items: [
+            {
+              type: `category`,
+              label: `Requester`,
+              link: {
+                type: "doc",
+                id: "connector-development/config-based/understanding-the-yaml-file/requester",
+              },
+              items: [
+                "connector-development/config-based/understanding-the-yaml-file/request-options",
+                "connector-development/config-based/understanding-the-yaml-file/authentication",
+                "connector-development/config-based/understanding-the-yaml-file/error-handling",
+              ],
+            },
+            "connector-development/config-based/understanding-the-yaml-file/incremental-syncs",
+            "connector-development/config-based/understanding-the-yaml-file/pagination",
+            "connector-development/config-based/understanding-the-yaml-file/partition-router",
+            "connector-development/config-based/understanding-the-yaml-file/record-selector",
+            "connector-development/config-based/understanding-the-yaml-file/reference",
+          ],
+        },
+        "connector-development/config-based/advanced-topics",
+      ],
+    },
+
+    {
+      type: "category",
+      label: "Connector Development Kit",
+      link: {
+        type: "doc",
+        id: "connector-development/cdk-python/README",
+      },
+      items: [
+        "connector-development/cdk-python/basic-concepts",
+        "connector-development/cdk-python/schemas",
+        "connector-development/cdk-python/full-refresh-stream",
+        "connector-development/cdk-python/incremental-stream",
+        "connector-development/cdk-python/http-streams",
+        "connector-development/cdk-python/python-concepts",
+        "connector-development/cdk-python/stream-slices",
+      ],
+    },
+    {
+      type: "category",
+      label: "Testing Connectors",
+      link: {
+        type: "doc",
+        id: "connector-development/testing-connectors/README",
+      },
+      items: [
+        "connector-development/testing-connectors/connector-acceptance-tests-reference",
+        "connector-development/testing-connectors/testing-a-local-catalog-in-development",
+      ],
+    },
+    {
+      type: "category",
+      label: "Tutorials",
+      items: [
+        "connector-development/tutorials/cdk-speedrun",
+        {
+          type: "category",
+          label: "Python CDK: Creating a HTTP API Source",
+          items: [
+            "connector-development/tutorials/cdk-tutorial-python-http/getting-started",
+            "connector-development/tutorials/cdk-tutorial-python-http/creating-the-source",
+            "connector-development/tutorials/cdk-tutorial-python-http/install-dependencies",
+            "connector-development/tutorials/cdk-tutorial-python-http/define-inputs",
+            "connector-development/tutorials/cdk-tutorial-python-http/connection-checking",
+            "connector-development/tutorials/cdk-tutorial-python-http/declare-schema",
+            "connector-development/tutorials/cdk-tutorial-python-http/read-data",
+            "connector-development/tutorials/cdk-tutorial-python-http/use-connector-in-airbyte",
+            "connector-development/tutorials/cdk-tutorial-python-http/test-your-connector",
+          ],
+        },
+        "connector-development/tutorials/building-a-python-source",
+        "connector-development/tutorials/building-a-java-destination",
+        "connector-development/tutorials/profile-java-connector-memory",
+      ],
+    },
+    "connector-development/connector-specification-reference",
+    "connector-development/schema-reference",
+    "connector-development/connector-metadata-file",
+    "connector-development/best-practices",
+    "connector-development/ux-handbook",
+  ],
+};
+
+const connectorCatalog = {
+  type: "category",
+  label: "Connector Catalog",
+  link: {
+    type: "doc",
+    id: "integrations/README",
+  },
+  items: [
+    {
+      type: "category",
+      label: "Sources",
+      link: {
+        type: "generated-index",
+      },
+      items: [sourcePostgres, getSourceConnectors()],
+    },
+    {
+      type: "category",
+      label: "Destinations",
+      link: {
+        type: "generated-index",
+      },
+      items: getDestinationConnectors(),
+    },
+    {
+      type: "doc",
+      id: "integrations/custom-connectors",
+    },
+  ],
+};
+
+const contributeToAirbyte = {
+  type: "category",
+  label: "Contribute to Airbyte",
+  link: {
+    type: "doc",
+    id: "contributing-to-airbyte/README",
+  },
+  items: [
+    "contributing-to-airbyte/issues-and-requests",
+    "contributing-to-airbyte/change-cdk-connector",
+    "contributing-to-airbyte/submit-new-connector",
+    "contributing-to-airbyte/writing-docs",
+    {
+      type: "category",
+      label: "Resources",
+      items: [
+        "contributing-to-airbyte/resources/pull-requests-handbook",
+        "contributing-to-airbyte/resources/code-style",
+        "contributing-to-airbyte/resources/developing-locally",
+        "contributing-to-airbyte/resources/developing-on-docker",
+        "contributing-to-airbyte/resources/gradle",
+        "contributing-to-airbyte/resources/python-gradle-setup",
+      ],
+    },
+  ],
+};
+
+const airbyteCloud = [
+  {
+    type: "doc",
+    label: "Getting Started",
+    id: "cloud/getting-started-with-airbyte-cloud",
+  },
+  "cloud/core-concepts",
+  {
+    type: "category",
+    label: "Using Airbyte Cloud",
+    link: {
+      type: "generated-index",
+    },
+    items: [
+      "cloud/managing-airbyte-cloud/configuring-connections",
+      "cloud/managing-airbyte-cloud/review-connection-status",
+      "cloud/managing-airbyte-cloud/review-sync-history",
+      "cloud/managing-airbyte-cloud/manage-schema-changes",
+      "cloud/managing-airbyte-cloud/manage-airbyte-cloud-notifications",
+      "cloud/managing-airbyte-cloud/manage-data-residency",
+      "cloud/managing-airbyte-cloud/dbt-cloud-integration",
+      "cloud/managing-airbyte-cloud/manage-credits",
+      "cloud/managing-airbyte-cloud/manage-connection-state",
+      "cloud/managing-airbyte-cloud/manage-airbyte-cloud-workspace",
+      "cloud/managing-airbyte-cloud/understand-airbyte-cloud-limits",
+    ],
+  },
+];
+
+const ossGettingStarted = {
+  type: "category",
+  label: "Getting Started",
+  link: {
+    type: "generated-index",
+  },
+  items: [
+    "quickstart/deploy-airbyte",
+    "quickstart/add-a-source",
+    "quickstart/add-a-destination",
+    "quickstart/set-up-a-connection",
+  ],
+};
+
+const deployAirbyte = {
+  type: "category",
+  label: "Deploy Airbyte",
+  link: {
+    type: "generated-index",
+  },
+  items: [
+    {
+      type: "doc",
+      label: "On your local machine",
+      id: "deploying-airbyte/local-deployment",
+    },
+    {
+      type: "doc",
+      label: "On AWS EC2",
+      id: "deploying-airbyte/on-aws-ec2",
+    },
+
+    {
+      type: "doc",
+      label: "On Azure",
+      id: "deploying-airbyte/on-azure-vm-cloud-shell",
+    },
+    {
+      type: "doc",
+      label: "On Google (GCP)",
+      id: "deploying-airbyte/on-gcp-compute-engine",
+    },
+    {
+      type: "doc",
+      label: "On Kubernetes using Helm",
+      id: "deploying-airbyte/on-kubernetes-via-helm",
+    },
+    {
+      type: "doc",
+      label: "On Restack",
+      id: "deploying-airbyte/on-restack",
+    },
+    {
+      type: "doc",
+      label: "On Plural",
+      id: "deploying-airbyte/on-plural",
+    },
+    {
+      type: "doc",
+      label: "On Oracle Cloud",
+      id: "deploying-airbyte/on-oci-vm",
+    },
+    {
+      type: "doc",
+      label: "On DigitalOcean",
+      id: "deploying-airbyte/on-digitalocean-droplet",
+    },
+  ],
+};
+
+const operatorGuide = {
+  type: "category",
+  label: "Manage Airbyte",
+  link: {
+    type: "generated-index",
+  },
+  items: [
+    "operator-guides/upgrading-airbyte",
+    "operator-guides/reset",
+    "operator-guides/configuring-airbyte-db",
+    "operator-guides/configuring-connector-resources",
+    "operator-guides/browsing-output-logs",
+    "operator-guides/using-the-airflow-airbyte-operator",
+    "operator-guides/using-prefect-task",
+    "operator-guides/using-dagster-integration",
+    "operator-guides/using-kestra-plugin",
+    "operator-guides/locating-files-local-destination",
+    "operator-guides/collecting-metrics",
+    {
+      type: "category",
+      label: "Transformations and Normalization",
+      items: [
+        "operator-guides/transformation-and-normalization/transformations-with-sql",
+        "operator-guides/transformation-and-normalization/transformations-with-dbt",
+        "operator-guides/transformation-and-normalization/transformations-with-airbyte",
+      ],
+    },
+    "operator-guides/configuring-airbyte",
+    "operator-guides/using-custom-connectors",
+    "operator-guides/scaling-airbyte",
+    "operator-guides/configuring-sync-notifications",
+  ],
+};
+
+const understandingAirbyte = {
+  type: "category",
+  label: "Understand Airbyte",
+  items: [
+    "understanding-airbyte/beginners-guide-to-catalog",
+    "understanding-airbyte/airbyte-protocol",
+    "understanding-airbyte/airbyte-protocol-docker",
+    "understanding-airbyte/basic-normalization",
+    "understanding-airbyte/typing-deduping",
+    {
+      type: "category",
+      label: "Connections and Sync Modes",
+      items: [
+        {
+          type: "doc",
+          label: "Connections Overview",
+          id: "understanding-airbyte/connections/README",
+        },
+        "understanding-airbyte/connections/full-refresh-overwrite",
+        "understanding-airbyte/connections/full-refresh-append",
+        "understanding-airbyte/connections/incremental-append",
+        "understanding-airbyte/connections/incremental-append-deduped",
+      ],
+    },
+    "understanding-airbyte/operations",
+    "understanding-airbyte/high-level-view",
+    "understanding-airbyte/jobs",
+    "understanding-airbyte/tech-stack",
+    "understanding-airbyte/cdc",
+    "understanding-airbyte/namespaces",
+    "understanding-airbyte/supported-data-types",
+    "understanding-airbyte/json-avro-conversion",
+    "understanding-airbyte/database-data-catalog",
+  ],
+};
+
+const security = {
+  type: "doc",
+  id: "operator-guides/security",
+};
+
+const support = {
+  type: "doc",
+  id: "operator-guides/contact-support",
+};
+
 module.exports = {
   mySidebar: [
     {
-      type: 'doc',
+      type: "doc",
+      label: "Start here",
       id: "readme",
     },
+    sectionHeader("Airbyte Connectors"),
+    connectorCatalog,
+    buildAConnector,
+    sectionHeader("Airbyte Cloud"),
+    ...airbyteCloud,
+    sectionHeader("Airbyte Open Source (OSS)"),
+    ossGettingStarted,
+    deployAirbyte,
+    operatorGuide,
     {
-      type: 'category',
-      label: 'Airbyte Cloud QuickStart',
-      items: [
-          {
-            type: 'doc',
-            id: "cloud/getting-started-with-airbyte-cloud",
-          },
-          {
-            type: 'doc',
-            id: "cloud/core-concepts",
-          },
-          {
-            type: 'doc',
-            id: "cloud/managing-airbyte-cloud",
-          },
-      ]
+      type: "doc",
+      id: "troubleshooting",
     },
     {
-      type: 'category',
-      label: 'Airbyte Open Source QuickStart',
-      items: [
-        {
-          type: 'doc',
-          id: "quickstart/deploy-airbyte",
-        },
-        {
-          type: 'doc',
-          id: "quickstart/add-a-source",
-        },
-        {
-          type: 'doc',
-          id: "quickstart/add-a-destination",
-        },
-        {
-          type: 'doc',
-          id: "quickstart/set-up-a-connection",
-        },
-      ]
+      type: "doc",
+      id: "airbyte-enterprise",
     },
+    sectionHeader("Developer Guides"),
     {
-      type: 'category',
-      label: 'Deploying Airbyte Open Source',
-      items: [
-        {
-          type: 'doc',
-          id: "deploying-airbyte/local-deployment",
-        },
-        {
-          type: 'doc',
-          id: "deploying-airbyte/on-aws-ec2",
-        },
-        {
-          type: 'doc',
-          id: "deploying-airbyte/on-aws-ecs",
-        },
-        {
-          type: 'doc',
-          id: "deploying-airbyte/on-azure-vm-cloud-shell",
-        },
-        {
-          type: 'doc',
-          id: "deploying-airbyte/on-gcp-compute-engine",
-        },
-        {
-          type: 'doc',
-          id: "deploying-airbyte/on-kubernetes",
-        },
-        {
-          type: 'doc',
-          id: "deploying-airbyte/on-plural",
-        },
-        {
-          type: 'doc',
-          id: "deploying-airbyte/on-oci-vm",
-        },
-        {
-          type: 'doc',
-          id: "deploying-airbyte/on-digitalocean-droplet",
-        },
-      ]
-    },
-    {
-      type: 'category',
-      label: 'Operator Guides',
-      items: [
-        {
-          type: 'doc',
-          id: "operator-guides/upgrading-airbyte",
-        },
-        {
-          type: 'doc',
-          id: "operator-guides/reset",
-        },
-        {
-          type: 'doc',
-          id: "operator-guides/configuring-airbyte-db",
-        },
-        {
-          type: 'doc',
-          id: "operator-guides/browsing-output-logs",
-        },
-        {
-          type: 'doc',
-          id: "operator-guides/using-the-airflow-airbyte-operator",
-        },
-        {
-          type: 'doc',
-          id: "operator-guides/using-prefect-task",
-        },
-        {
-          type: 'doc',
-          id: "operator-guides/using-dagster-integration",
-        },
-        {
-          type: 'doc',
-          id: "operator-guides/locating-files-local-destination",
-        },
-        {
-          type: 'category',
-          label: 'Transformations and Normalization',
-          items: [
-            {
-              type: 'doc',
-              id: "operator-guides/transformation-and-normalization/transformations-with-sql",
-            },
-            {
-              type: 'doc',
-              id: "operator-guides/transformation-and-normalization/transformations-with-dbt",
-            },
-            {
-              type: 'doc',
-              id: "operator-guides/transformation-and-normalization/transformations-with-airbyte",
-            },
-            ]
-          },
-        {
-          type: 'category',
-          label: 'Configuring Airbyte',
-          items: [
-            {
-               type: 'doc',
-              id: "operator-guides/configuring-airbyte",
-            },
-            {
-              type: 'doc',
-              id: "operator-guides/sentry-integration",
-            },
-            ]
-        },
-        {
-          type: 'doc',
-          id: "operator-guides/using-custom-connectors",
-        },
-        {
-          type: 'doc',
-          id: "operator-guides/scaling-airbyte",
-        },
-        {
-          type: 'doc',
-          id: "operator-guides/securing-airbyte",
-        },
-      ]
-    },
-    {
-      type: 'category',
-      label: 'Connector Catalog',
-      items: [
-        {
-            type: 'doc',
-            id: "integrations/README",
-          },
-          {
-            type: 'category',
-            label: 'Sources',
-            items: [
-              {
-                type: 'doc',
-                id: "integrations/sources/tplcentral",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/airtable",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/amazon-sqs",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/amazon-seller-partner",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/amazon-ads",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/amplitude",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/apify-dataset",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/appstore",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/asana",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/aws-cloudtrail",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/azure-table",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/bamboo-hr",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/bing-ads",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/bigcommerce",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/bigquery",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/braintree",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/cart",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/chargebee",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/chartmogul",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/clickhouse",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/close-com",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/cockroachdb",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/confluence",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/customer-io",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/delighted",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/db2",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/dixa",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/drift",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/drupal",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/e2e-test",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/exchangeratesapi",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/facebook-marketing",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/facebook-pages",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/file",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/flexport",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/freshdesk",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/freshsales",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/freshservice",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/github",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/gitlab",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/google-ads",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/google-analytics-v4",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/google-directory",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/google-search-console",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/google-sheets",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/google-workspace-admin-reports",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/greenhouse",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/harvest",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/harness",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/http-request",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/hubspot",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/instagram",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/intercom",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/iterable",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/jenkins",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/jira",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/kafka",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/klaviyo",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/kustomer",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/lemlist",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/linkedin-ads",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/linnworks",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/lever-hiring",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/looker",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/magento",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/mailchimp",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/marketo",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/microsoft-dynamics-ax",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/microsoft-dynamics-customer-engagement",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/microsoft-dynamics-gp",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/microsoft-dynamics-nav",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/mssql",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/microsoft-teams",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/mixpanel",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/monday",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/mongodb-v2",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/my-hours",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/mysql",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/notion",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/okta",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/onesignal",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/openweather",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/oracle",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/oracle-peoplesoft",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/oracle-siebel-crm",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/orb",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/outreach",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/pagerduty",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/paypal-transaction",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/paystack",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/persistiq",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/plaid",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/pinterest",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/pipedrive",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/pokeapi",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/postgres",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/posthog",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/presta-shop",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/qualaroo",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/quickbooks",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/recharge",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/recurly",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/redshift",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/s3",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/sap-business-one",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/search-metrics",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/salesforce",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/salesloft",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/sendgrid",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/sentry",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/shopify",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/shortio",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/slack",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/smartsheets",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/snapchat-marketing",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/snowflake",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/spree-commerce",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/square",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/strava",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/stripe",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/sugar-crm",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/surveymonkey",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/tempo",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/tiktok-marketing",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/trello",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/twilio",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/typeform",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/us-census",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/victorops",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/woocommerce",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/wordpress",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/youtube-analytics",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/zencart",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/zendesk-chat",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/zendesk-sunshine",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/zendesk-support",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/zendesk-talk",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/zenloop",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/zoho-crm",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/zoom",
-              },
-              {
-                type: 'doc',
-                id: "integrations/sources/zuora",
-              },
-            ]
-          },
-          {
-            type: 'category',
-            label: 'Destinations',
-            items: [
-              {
-                type: 'doc',
-                id: "integrations/destinations/amazon-sqs",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/azureblobstorage",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/bigquery",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/clickhouse",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/databricks",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/dynamodb",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/elasticsearch",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/e2e-test",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/chargify",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/gcs",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/pubsub",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/kafka",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/keen",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/local-csv",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/local-json",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/mariadb-columnstore",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/meilisearch",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/mongodb",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/mqtt",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/mssql",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/mysql",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/oracle",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/postgres",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/pulsar",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/rabbitmq",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/redshift",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/rockset",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/s3",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/sftp-json",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/snowflake",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/cassandra",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/scylla",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/redis",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/kinesis",
-              },
-              {
-                type: 'doc',
-                id: "integrations/destinations/streamr",
-              },
-            ]
-          },
-          {
-            type: 'doc',
-            id: "integrations/custom-connectors",
-          },
-        ]
-
-      },
-    {
-      type: 'category',
-      label: 'Connector Development',
-      items: [
-        {
-          type: 'doc',
-          id: "connector-development/README",
-        },
-        {
-          type: 'doc',
-          id: "connector-development/tutorials/cdk-speedrun",
-        },
-        {
-          type: 'category',
-          label: 'Python CDK: Creating a HTTP API Source',
-          items: [
-            {
-              type: 'doc',
-              id: "connector-development/tutorials/cdk-tutorial-python-http/getting-started",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/tutorials/cdk-tutorial-python-http/creating-the-source",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/tutorials/cdk-tutorial-python-http/install-dependencies",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/tutorials/cdk-tutorial-python-http/define-inputs",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/tutorials/cdk-tutorial-python-http/connection-checking",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/tutorials/cdk-tutorial-python-http/declare-schema",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/tutorials/cdk-tutorial-python-http/read-data",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/tutorials/cdk-tutorial-python-http/use-connector-in-airbyte",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/tutorials/cdk-tutorial-python-http/test-your-connector",
-            },
-          ]
-        },
-        {
-          type: 'doc',
-          id: "connector-development/tutorials/building-a-python-source",
-        },
-        {
-          type: 'doc',
-          id: "connector-development/tutorials/building-a-python-destination",
-        },
-        {
-          type: 'doc',
-          id: "connector-development/tutorials/building-a-java-destination",
-        },
-        {
-          type: 'doc',
-          id: "connector-development/tutorials/profile-java-connector-memory",
-        },
-        {
-          type: 'category',
-          label: 'Connector Development Kit (Python)',
-          items: [
-            {
-              type: 'doc',
-              id: "connector-development/cdk-python/README",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/cdk-python/basic-concepts",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/cdk-python/schemas",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/cdk-python/full-refresh-stream",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/cdk-python/incremental-stream",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/cdk-python/http-streams",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/cdk-python/python-concepts",
-            },
-            {
-              type: 'doc',
-              id: "connector-development/cdk-python/stream-slices",
-            },
-          ]
-        },
-        {
-          type: 'doc',
-          id: "connector-development/cdk-faros-js",
-        },
-        {
-          type: 'doc',
-          id: "connector-development/airbyte101",
-        },
-        {
-          type: 'doc',
-          id: "connector-development/testing-connectors/README",
-        },
-        {
-          type: 'doc',
-          id: "connector-development/testing-connectors/source-acceptance-tests-reference",
-        },
-        {
-          type: 'doc',
-          id: "connector-development/connector-specification-reference",
-        },
-        {
-          type: 'doc',
-          id: "connector-development/best-practices",
-        },
-        {
-          type: 'doc',
-          id: "connector-development/ux-handbook",
-        },
-      ]
-    },
-    {
-      type: 'category',
-      label: 'Contributing to Airbyte',
-      items: [
-        {
-          type: 'doc',
-          id: "contributing-to-airbyte/README",
-        },
-        {
-          type: 'doc',
-          id: "contributing-to-airbyte/code-of-conduct",
-        },
-        {
-          type: 'doc',
-          id: "contributing-to-airbyte/developing-locally",
-        },
-        {
-          type: 'doc',
-          id: "contributing-to-airbyte/developing-on-docker",
-        },
-        {
-          type: 'doc',
-          id: "contributing-to-airbyte/developing-on-kubernetes",
-        },
-        {
-          type: 'doc',
-          id: "contributing-to-airbyte/monorepo-python-development",
-        },
-        {
-          type: 'doc',
-          id: "contributing-to-airbyte/code-style",
-        },
-        {
-          type: 'doc',
-          id: "contributing-to-airbyte/gradle-cheatsheet",
-        },
-        {
-          type: 'doc',
-          id: "contributing-to-airbyte/updating-documentation",
-        },
-        {
-          type: 'doc',
-          id: "contributing-to-airbyte/templates/README",
-        },
-        {
-          type: 'doc',
-          id: "contributing-to-airbyte/templates/integration-documentation-template",
-        },
-      ]
-    },
-    {
-      type: 'category',
-      label: 'Understanding Airbyte',
-      items: [
-        {
-          type: 'doc',
-          id: "understanding-airbyte/beginners-guide-to-catalog",
-        },
-        {
-          type: 'doc',
-          id: "understanding-airbyte/catalog",
-        },
-        {
-          type: 'doc',
-          id: "understanding-airbyte/airbyte-specification",
-        },
-        {
-          type: 'doc',
-          id: "understanding-airbyte/basic-normalization",
-        },
-        {
-          type: 'category',
-          label: 'Connections and Sync Modes',
-          items: [
-            {
-              type: 'doc',
-              id: "understanding-airbyte/connections/README",
-            },
-            {
-              type: 'doc',
-              id: "understanding-airbyte/connections/full-refresh-overwrite",
-            },
-            {
-              type: 'doc',
-              id: "understanding-airbyte/connections/full-refresh-append",
-            },
-            {
-              type: 'doc',
-              id: "understanding-airbyte/connections/incremental-append",
-            },
-            {
-              type: 'doc',
-              id: "understanding-airbyte/connections/incremental-deduped-history",
-            },
-          ]
-        },
-        {
-          type: 'doc',
-          id: "understanding-airbyte/operations",
-        },
-        {
-          type: 'doc',
-          id: "understanding-airbyte/high-level-view",
-        },
-        {
-          type: 'doc',
-          id: "understanding-airbyte/jobs",
-        },
-        {
-          type: 'doc',
-          id: "understanding-airbyte/tech-stack",
-        },
-        {
-          type: 'doc',
-          id: "understanding-airbyte/cdc",
-        },
-        {
-          type: 'doc',
-          id: "understanding-airbyte/namespaces",
-        },
-        {
-          type: 'doc',
-          id: "understanding-airbyte/supported-data-types",
-        },
-        {
-          type: 'doc',
-          id: "understanding-airbyte/json-avro-conversion",
-        },
-        {
-          type: 'doc',
-          id: "understanding-airbyte/glossary",
-        },
-      ]
-    },
-    {
-      type: 'doc',
+      type: "doc",
       id: "api-documentation",
     },
     {
-      type: 'link',
-      label: 'CLI documentation',
-      href: 'https://github.com/airbytehq/airbyte/blob/master/octavia-cli/README.md',
+      type: "doc",
+      id: "terraform-documentation",
     },
     {
-      type: 'category',
-      label: 'Project Overview',
+      type: "doc",
+      id: "cli-documentation",
+    },
+    understandingAirbyte,
+    contributeToAirbyte,
+    sectionHeader("Resources"),
+    support,
+    security,
+    {
+      type: "category",
+      label: "Project Overview",
       items: [
         {
-          type: 'link',
-          label: 'Roadmap',
-          href: 'https://app.harvestr.io/roadmap/view/pQU6gdCyc/airbyte-roadmap',
+          type: "link",
+          label: "Roadmap",
+          href: "https://go.airbyte.com/roadmap",
+        },
+        "project-overview/product-support-levels",
+        "project-overview/slack-code-of-conduct",
+        "project-overview/code-of-conduct",
+        {
+          type: "link",
+          label: "Airbyte Repository",
+          href: "https://github.com/airbytehq/airbyte",
         },
         {
-          type: 'category',
-          label: 'Changelog',
+          type: "category",
+          label: "Licenses",
+          link: {
+            type: "doc",
+            id: "project-overview/licenses/README",
+          },
           items: [
-            {
-              type: 'doc',
-              id: "project-overview/changelog/README",
-            },
-            {
-              type: 'doc',
-              id: "project-overview/changelog/platform",
-            },
-            {
-              type: 'doc',
-              id: "project-overview/changelog/connectors",
-            },
-          ]
+            "project-overview/licenses/license-faq",
+            "project-overview/licenses/elv2-license",
+            "project-overview/licenses/mit-license",
+            "project-overview/licenses/examples",
+          ],
         },
-        {
-          type: 'doc',
-          id: "project-overview/slack-code-of-conduct",
-        },
-        {
-          type: 'doc',
-          id: "project-overview/security",
-        },
-        {
-          type: 'category',
-          label: 'Licenses',
-          items: [
-            {
-              type: 'doc',
-              id: "project-overview/licenses/README",
-            },
-            {
-              type: 'doc',
-              id: "project-overview/licenses/license-faq",
-            },
-            {
-              type: 'doc',
-              id: "project-overview/licenses/elv2-license",
-            },
-            {
-              type: 'doc',
-              id: "project-overview/licenses/mit-license",
-            },
-            {
-              type: 'doc',
-              id: "project-overview/licenses/examples",
-            },
-          ]
-        },
-        {
-          type: 'doc',
-          id: "project-overview/product-release-stages",
-        },
-      ]
+      ],
     },
     {
-      type: 'category',
-      label: 'Troubleshooting & FAQ',
+      type: "category",
+      label: "Release Notes",
+      link: {
+        type: "generated-index",
+      },
       items: [
-       {
-          type: 'doc',
-          id: "troubleshooting/README",
-        },
-        {
-          type: 'doc',
-          id: "troubleshooting/on-deploying",
-        },
-        {
-          type: 'doc',
-          id: "troubleshooting/new-connection",
-        },
-        {
-          type: 'doc',
-          id: "troubleshooting/running-sync",
-        },
-        {
-          type: 'doc',
-          id: "troubleshooting/on-upgrading",
-        },
-      ]
-    },
-    {
-      type: 'link',
-      label: 'Airbyte Repository',
-      href: 'https://github.com/airbytehq/airbyte',
+        "release_notes/upgrading_to_destinations_v2",
+        "release_notes/july_2023",
+        "release_notes/june_2023",
+        "release_notes/may_2023",
+        "release_notes/april_2023",
+        "release_notes/march_2023",
+        "release_notes/february_2023",
+        "release_notes/january_2023",
+        "release_notes/december_2022",
+        "release_notes/november_2022",
+        "release_notes/october_2022",
+        "release_notes/september_2022",
+        "release_notes/august_2022",
+        "release_notes/july_2022",
+      ],
     },
   ],
-}
+};

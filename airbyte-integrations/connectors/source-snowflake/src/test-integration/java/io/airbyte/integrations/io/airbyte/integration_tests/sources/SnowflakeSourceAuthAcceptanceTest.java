@@ -1,18 +1,16 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.io.airbyte.integration_tests.sources;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.zaxxer.hikari.HikariDataSource;
+import io.airbyte.cdk.db.jdbc.JdbcUtils;
 import io.airbyte.commons.io.IOs;
 import io.airbyte.commons.json.Jsons;
-import io.airbyte.db.jdbc.JdbcDatabase;
-import io.airbyte.db.jdbc.JdbcUtils;
-import io.airbyte.db.jdbc.StreamingJdbcDatabase;
 import io.airbyte.integrations.source.snowflake.SnowflakeDataSourceUtils;
-import io.airbyte.integrations.source.snowflake.SnowflakeJdbcStreamingQueryConfiguration;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Properties;
@@ -21,51 +19,44 @@ import javax.sql.DataSource;
 public class SnowflakeSourceAuthAcceptanceTest extends SnowflakeSourceAcceptanceTest {
 
   @Override
-  protected JdbcDatabase setupDataBase() {
+  protected DataSource createDataSource() {
+    final HikariDataSource dataSource = new HikariDataSource();
+    final Properties properties = new Properties();
     config = getStaticConfig();
-    final DataSource dataSource = createDataSource(getStaticConfig());
-    return new StreamingJdbcDatabase(dataSource,
-        JdbcUtils.getDefaultSourceOperations(),
-        new SnowflakeJdbcStreamingQueryConfiguration());
-  }
-
-  private HikariDataSource createDataSource(final JsonNode config) {
-    HikariDataSource dataSource = new HikariDataSource();
-    Properties properties = new Properties();
 
     final StringBuilder jdbcUrl = new StringBuilder(
-        String.format("jdbc:snowflake://%s/?", config.get("host").asText()));
+        String.format("jdbc:snowflake://%s/?", config.get(JdbcUtils.HOST_KEY).asText()));
     jdbcUrl.append(String.format(
-        "role=%s&warehouse=%s&database=%s&schema=%s&JDBC_QUERY_RESULT_FORMAT=%s&CLIENT_SESSION_KEEP_ALIVE=%s",
+        "role=%s&warehouse=%s&database=%s&schema=%s&CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX=true&JDBC_QUERY_RESULT_FORMAT=%s&CLIENT_SESSION_KEEP_ALIVE=%s",
         config.get("role").asText(),
         config.get("warehouse").asText(),
-        config.get("database").asText(),
+        config.get(JdbcUtils.DATABASE_KEY).asText(),
         config.get("schema").asText(),
         // Needed for JDK17 - see
         // https://stackoverflow.com/questions/67409650/snowflake-jdbc-driver-internal-error-fail-to-retrieve-row-count-for-first-arrow
         "JSON",
         true));
-    if (config.has("jdbc_url_params")) {
-      jdbcUrl.append(config.get("jdbc_url_params").asText());
+    if (config.has(JdbcUtils.JDBC_URL_PARAMS_KEY)) {
+      jdbcUrl.append(config.get(JdbcUtils.JDBC_URL_PARAMS_KEY).asText());
     }
 
-    var credentials = config.get("credentials");
+    final var credentials = config.get("credentials");
     try {
       properties.setProperty("client_id", credentials.get("client_id").asText());
       properties.setProperty("client_secret", credentials.get("client_secret").asText());
       properties.setProperty("refresh_token", credentials.get("refresh_token").asText());
-      properties.setProperty("host", config.get("host").asText());
-      var accessToken = SnowflakeDataSourceUtils.getAccessTokenUsingRefreshToken(
-          config.get("host").asText(), credentials.get("client_id").asText(),
+      properties.setProperty(JdbcUtils.HOST_KEY, config.get(JdbcUtils.HOST_KEY).asText());
+      final var accessToken = SnowflakeDataSourceUtils.getAccessTokenUsingRefreshToken(
+          config.get(JdbcUtils.HOST_KEY).asText(), credentials.get("client_id").asText(),
           credentials.get("client_secret").asText(), credentials.get("refresh_token").asText());
       properties.put("authenticator", "oauth");
       properties.put("token", accessToken);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new RuntimeException(e);
     }
 
     properties.put("warehouse", config.get("warehouse").asText());
-    properties.put("account", config.get("host").asText());
+    properties.put("account", config.get(JdbcUtils.HOST_KEY).asText());
     properties.put("role", config.get("role").asText());
     // allows queries to contain any number of statements
     properties.put("MULTI_STATEMENT_COUNT", "0");
@@ -83,12 +74,15 @@ public class SnowflakeSourceAuthAcceptanceTest extends SnowflakeSourceAcceptance
   }
 
   JsonNode getStaticConfig() {
-    return Jsons
+    final JsonNode node = Jsons
         .deserialize(IOs.readFile(Path.of("secrets/config_auth.json")));
+    ((ObjectNode) node).put("schema", SCHEMA_NAME);
+    return node;
   }
 
   @Override
   public void testBackwardCompatibilityAfterAddingOAuth() throws Exception {
     // this test case is not valid for OAuth method
   }
+
 }

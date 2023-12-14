@@ -65,4 +65,3 @@ is capped by `SQL_MAX_CONNS`.
 The advice here is best-effort and by no means comprehensive. Please reach out on Slack if anything doesn't make sense or if something can be improved.
 
 If you've been running Airbyte in production and have more tips up your sleeve, we welcome contributions!
-

@@ -6,7 +6,7 @@ description: Using Airbyte and MeiliSearch
 
 ![](../../.gitbook/assets/slack-history-ui-title.png)
 
-The [Slack free tier](https://slack.com/pricing/paid-vs-free) saves only the last 10K messages. For social Slack instances, it may be impractical to upgrade to a paid plan to retain these messages. Similarly, for an open-source project like [Airbyte](../../understanding-airbyte/catalog.md) where we interact with our community through a public Slack instance, the cost of paying for a seat for every Slack member is prohibitive.
+The [Slack free tier](https://slack.com/pricing/paid-vs-free) saves only the last 10K messages. For social Slack instances, it may be impractical to upgrade to a paid plan to retain these messages. Similarly, for an open-source project like [Airbyte](../../understanding-airbyte/airbyte-protocol.md#catalog) where we interact with our community through a public Slack instance, the cost of paying for a seat for every Slack member is prohibitive.
 
 However, searching through old messages can be really helpful. Losing that history feels like some advanced form of memory loss. What was that joke about Java 8 Streams? This contributor question sounds familiar—haven't we seen it before? But you just can't remember!
 
@@ -53,7 +53,7 @@ Once you see an Airbyte banner, the UI is ready to go at [http://localhost:8000/
 
 ### b. Set Up Airbyte’s Slack Source Connector
 
-In the Airbyte UI, select Slack from the dropdown. We provide step-by-step instructions for setting up the Slack source in Airbyte [here](https://docs.airbyte.io/integrations/sources/slack#setup-guide). These will walk you through how to complete the form on this page.
+In the Airbyte UI, select Slack from the dropdown. We provide step-by-step instructions for setting up the Slack source in Airbyte [here](https://docs.airbyte.com/integrations/sources/slack#setup-guide). These will walk you through how to complete the form on this page.
 
 ![](../../.gitbook/assets/slack-history-setup-wizard.png)
 
@@ -102,9 +102,8 @@ Download \(or copy and paste\) this [html file](https://github.com/airbytehq/air
 
 ## 5. "Productionizing" Saving Slack History
 
-You can find instructions for how to host Airbyte on various cloud platforms [here](../../deploying-airbyte).
+You can find instructions for how to host Airbyte on various cloud platforms [here](../../deploying-airbyte/README.md).
 
 Documentation on how to host MeiliSearch on cloud platforms can be found [here](https://docs.meilisearch.com/running-production/#a-quick-introduction).
 
 If you want to use the UI mentioned in the section above, we recommend statically hosting it on S3, GCS, or equivalent.
-
