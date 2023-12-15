@@ -3,5 +3,6 @@
     "type": "object",
     "name": "accounts",
     "properties": {
+        "id": {"type": "string"}
     }
 }
