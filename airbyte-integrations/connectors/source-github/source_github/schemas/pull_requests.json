@@ -1,9 +1,9 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "repository": {
-      "type": ["string"]
+      "type": "string"
     },
     "url": {
       "type": ["null", "string"]
@@ -128,11 +128,11 @@
           "type": ["null", "integer"]
         },
         "created_at": {
-          "type": ["null", "string"],
+          "type": "string",
           "format": "date-time"
         },
         "updated_at": {
-          "type": ["null", "string"],
+          "type": "string",
           "format": "date-time"
         },
         "closed_at": {
@@ -149,11 +149,11 @@
       "type": ["null", "string"]
     },
     "created_at": {
-      "type": ["null", "string"],
+      "type": "string",
       "format": "date-time"
     },
     "updated_at": {
-      "type": ["null", "string"],
+      "type": "string",
       "format": "date-time"
     },
     "closed_at": {
@@ -340,7 +340,21 @@
       "type": ["null", "string"]
     },
     "auto_merge": {
-      "type": ["null", "boolean"]
+      "type": ["null", "object"],
+      "properties": {
+        "enabled_by": {
+          "$ref": "user.json"
+        },
+        "commit_title": {
+          "type": ["null", "string"]
+        },
+        "merge_method": {
+          "type": ["null", "string"]
+        },
+        "commit_message": {
+          "type": ["null", "string"]
+        }
+      }
     },
     "draft": {
       "type": ["null", "boolean"]

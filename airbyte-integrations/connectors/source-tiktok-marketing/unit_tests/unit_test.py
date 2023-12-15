@@ -1,20 +1,22 @@
 #
-# Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 import json
 import random
 from typing import Any, Dict, Iterable, List, Mapping, Tuple
+from unittest.mock import patch
 
 import pendulum
 import pytest
 import requests_mock
 import timeout_decorator
+from airbyte_cdk.models import ConnectorSpecification
 from airbyte_cdk.sources.streams.http.exceptions import UserDefinedBackoffException
 from source_tiktok_marketing import SourceTiktokMarketing
 from source_tiktok_marketing.streams import Ads, Advertisers, JsonUpdatedState
 
-SANDBOX_CONFIG_FILE = "secrets/config.json"
+SANDBOX_CONFIG_FILE = "secrets/sandbox_config.json"
 PROD_CONFIG_FILE = "secrets/prod_config.json"
 
 
@@ -33,13 +35,14 @@ def prepared_prod_args():
 
 
 @timeout_decorator.timeout(20)
-def test_backoff(prepared_sandbox_args):
+@pytest.mark.parametrize("error_code", (40100, 50002))
+def test_backoff(prepared_sandbox_args, error_code):
     """TiktokMarketing sends the header 'Retry-After' about needed delay.
     All streams have to handle it"""
     stream = Advertisers(**prepared_sandbox_args)
     with requests_mock.Mocker() as m:
         url = stream.url_base + stream.path()
-        m.get(url, text=json.dumps({"code": 40100}))
+        m.get(url, text=json.dumps({"code": error_code}))
         with pytest.raises(UserDefinedBackoffException):
             list(stream.read_records(sync_mode=None))
 
@@ -59,12 +62,7 @@ def generate_pages(items: List[Mapping[str, Any]], page_size: int, last_empty: b
                 "code": 0,
                 "request_id": "unique_request_id",
                 "data": {
-                    "page_info": {
-                        "total_number": total_number,
-                        "page": page_number,
-                        "page_size": page_size,
-                        "total_page": len(page_items),
-                    },
+                    "page_info": {"total_number": total_number, "page": page_number, "page_size": page_size, "total_page": len(page_items)},
                     "list": page_items,
                 },
             },
@@ -83,16 +81,17 @@ def unixtime2str(unix_time: int) -> str:
 def test_random_items(prepared_prod_args):
     stream = Ads(**prepared_prod_args)
     advertiser_count = 100
-    test_advertiser_ids = set([random_integer() for _ in range(advertiser_count)])
+    test_advertiser_ids = set([str(random_integer()) for _ in range(advertiser_count)])
     advertiser_count = len(test_advertiser_ids)
     page_size = 100
     with requests_mock.Mocker() as m:
         # mock for advertisers' list
         advertisers = [{"advertiser_id": i, "advertiser_name": str(i)} for i in test_advertiser_ids]
         for _, page_response in generate_pages(items=advertisers, page_size=advertiser_count):
-            m.register_uri("GET", "/open_api/v1.2/oauth2/advertiser/get/", json=page_response)
+            m.register_uri("GET", "/open_api/v1.3/oauth2/advertiser/get/", json=page_response)
         stream = Ads(**prepared_prod_args)
         stream.page_size = page_size
+        stream.get_advertiser_ids()
         assert not set(test_advertiser_ids).symmetric_difference(stream._advertiser_ids), "stream found not all  advertiser IDs"
 
         current_state = None
@@ -113,9 +112,10 @@ def test_random_items(prepared_prod_args):
                 )
                 if not max_updated_value or max_updated_value < ad_items[-1][stream.cursor_field]:
                     max_updated_value = ad_items[-1][stream.cursor_field]
+
             # mock for ads
             for page, page_response in generate_pages(items=ad_items, page_size=page_size, last_empty=True):
-                uri = f"/open_api/v1.2/ad/get/?page_size={page_size}&advertiser_id={advertiser_id}"
+                uri = f"/open_api/v1.3/ad/get/?page_size={page_size}&advertiser_id={advertiser_id}"
                 if page != 1:
                     uri += f"&page={page}"
                 m.register_uri("GET", uri, complete_qs=True, json=page_response)
@@ -129,3 +129,70 @@ def test_random_items(prepared_prod_args):
                     ), "max updated cursor value should be returned for last slice only"
         assert len(stream._advertiser_ids) == 0, "all advertisers should be popped"
         assert current_state[stream.cursor_field].dict() == max_updated_value
+
+
+@pytest.mark.parametrize(
+    "config, stream_len",
+    [
+        (PROD_CONFIG_FILE, 36),
+        (SANDBOX_CONFIG_FILE, 28),
+    ],
+)
+def test_source_streams(config, stream_len):
+    with open(config) as f:
+        config = json.load(f)
+    streams = SourceTiktokMarketing().streams(config=config)
+    assert len(streams) == stream_len
+
+
+def test_source_spec():
+    spec = SourceTiktokMarketing().spec(logger=None)
+    assert isinstance(spec, ConnectorSpecification)
+
+
+@pytest.fixture(name="config")
+def config_fixture():
+    config = {
+        "account_id": 123,
+        "access_token": "TOKEN",
+        "start_date": "2019-10-10T00:00:00",
+        "end_date": "2020-10-10T00:00:00",
+    }
+    return config
+
+
+@pytest.fixture(name="logger_mock")
+def logger_mock_fixture():
+    return patch("source_tiktok_marketing.source.logger")
+
+
+def test_source_check_connection_ok(config, logger_mock):
+    with patch.object(Advertisers, "stream_slices"):
+        with patch.object(Advertisers, "read_records", return_value=iter([1])):
+            assert SourceTiktokMarketing().check_connection(logger_mock, config=config) == (True, None)
+
+
+def test_source_check_connection_failed(config, logger_mock):
+    with patch.object(Advertisers, "read_records", return_value=0):
+        assert SourceTiktokMarketing().check_connection(logger_mock, config=config)[0] is False
+
+
+@pytest.mark.parametrize(
+    "config_file",
+    ["integration_tests/invalid_config_oauth.json", "integration_tests/invalid_config_access_token.json", "secrets/config.json"],
+)
+def test_source_prepare_stream_args(config_file):
+    with open(config_file) as f:
+        config = json.load(f)
+        args = SourceTiktokMarketing._prepare_stream_args(config)
+        assert "authenticator" in args
+
+
+def test_minimum_start_date(config, caplog):
+    config["start_date"] = "2000-01-01"
+    source = SourceTiktokMarketing()
+    streams = source.streams(config)
+
+    for stream in streams:
+        assert stream._start_time == "2012-01-01 00:00:00"
+    assert "The start date is too far in the past. Setting it to 2012-01-01" in caplog.text

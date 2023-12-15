@@ -1,8 +1,14 @@
 {
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "Ticket Comments",
+  "type": ["null", "object"],
   "properties": {
     "created_at": {
       "type": ["null", "string"],
       "format": "date-time"
+    },
+    "timestamp": {
+      "type": ["null", "integer"]
     },
     "body": {
       "type": ["null", "string"]
@@ -13,8 +19,14 @@
     "ticket_id": {
       "type": ["null", "integer"]
     },
+    "event_type": {
+      "type": ["null", "string"]
+    },
     "type": {
       "type": ["null", "string"]
+    },
+    "via_reference_id": {
+      "type": ["null", "integer"]
     },
     "html_body": {
       "type": ["null", "string"]
@@ -31,9 +43,17 @@
     "author_id": {
       "type": ["null", "integer"]
     },
-    "via": { "$ref": "via.json" },
-    "metadata": { "$ref": "metadata.json" },
-    "attachments": { "$ref": "attachments.json" }
-  },
-  "type": ["null", "object"]
+    "via": {
+      "$ref": "via.json"
+    },
+    "metadata": {
+      "$ref": "metadata.json"
+    },
+    "attachments": {
+      "$ref": "attachments.json"
+    },
+    "uploads": {
+      "type": ["null", "array"]
+    }
+  }
 }

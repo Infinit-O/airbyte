@@ -1,19 +1,17 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.source.scaffold_java_jdbc;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.airbyte.cdk.integrations.standardtest.source.SourceAcceptanceTest;
+import io.airbyte.cdk.integrations.standardtest.source.TestDestinationEnv;
 import io.airbyte.commons.json.Jsons;
 import io.airbyte.commons.resources.MoreResources;
-import io.airbyte.integrations.standardtest.source.SourceAcceptanceTest;
-import io.airbyte.integrations.standardtest.source.TestDestinationEnv;
-import io.airbyte.protocol.models.ConfiguredAirbyteCatalog;
-import io.airbyte.protocol.models.ConnectorSpecification;
-import java.util.Collections;
+import io.airbyte.protocol.models.v0.ConfiguredAirbyteCatalog;
+import io.airbyte.protocol.models.v0.ConnectorSpecification;
 import java.util.HashMap;
-import java.util.List;
 
 public class ScaffoldJavaJdbcSourceAcceptanceTest extends SourceAcceptanceTest {
 
@@ -53,11 +51,6 @@ public class ScaffoldJavaJdbcSourceAcceptanceTest extends SourceAcceptanceTest {
   protected ConfiguredAirbyteCatalog getConfiguredCatalog() {
     // TODO Return the ConfiguredAirbyteCatalog with ConfiguredAirbyteStream objects
     return null;
-  }
-
-  @Override
-  protected List<String> getRegexTests() {
-    return Collections.emptyList();
   }
 
   @Override

@@ -18,6 +18,10 @@ Json schema types are mapped to Avro types as follows:
 | object | record |
 | array | array |
 
+### Nullable Fields
+
+All fields are nullable. For example, a `string` Json field will be typed as `["null", "string"]` in Avro. This is necessary because the incoming data stream may have optional fields.
+
 ### Built-in Formats
 
 The following built-in Json formats will be mapped to Avro logical types.
@@ -27,6 +31,8 @@ The following built-in Json formats will be mapped to Avro logical types.
 | `string` | `date` | `int` | `date` | Number of epoch days from 1970-01-01 ([reference](https://avro.apache.org/docs/current/spec.html#Date)). |
 | `string` | `time` | `long` | `time-micros` | Number of microseconds after midnight ([reference](https://avro.apache.org/docs/current/spec.html#Time+%28microsecond+precision%29)). |
 | `string` | `date-time` | `long` | `timestamp-micros` | Number of microseconds from `1970-01-01T00:00:00Z` ([reference](https://avro.apache.org/docs/current/spec.html#Timestamp+%28microsecond+precision%29)). |
+
+In the final Avro schema, these Avro logical type fields will be a union of the logical type and string. The rationale is that the incoming Json objects may contain invalid Json built-in formats. If that's the case, and the conversion from the Json built-in format to Avro built-in format fails, the field will fall back to a string. The extra string type can cause problem for some users in the destination. We may re-evaluate this conversion rule in the future. This issue is tracked [here](https://github.com/airbytehq/airbyte/issues/17011).
 
 **Date**
 
@@ -41,12 +47,27 @@ A date logical type annotates an Avro int, where the int stores the number of da
 }
 ```
 
-will become in Avro schema:
+is mapped to:
 
 ```json
 {
   "type": "int",
   "logicalType": "date"
+}
+```
+
+and the Avro schema is:
+
+```json
+{
+  "type": [
+    "null",
+    {
+      "type": "int",
+      "logicalType": "date"
+    },
+    "string"
+  ]
 }
 ```
 
@@ -63,12 +84,27 @@ A time-micros logical type annotates an Avro long, where the long stores the num
 }
 ```
 
-will become in Avro schema:
+is mapped to:
 
 ```json
 {
   "type": "long",
   "logicalType": "time-micros"
+}
+```
+
+and the Avro schema is:
+
+```json
+{
+  "type": [
+    "null",
+    {
+      "type": "long",
+      "logicalType": "time-micros"
+    },
+    "string"
+  ]
 }
 ```
 
@@ -85,12 +121,27 @@ A timestamp-micros logical type annotates an Avro long, where the long stores th
 }
 ```
 
-will become in Avro schema:
+is mapped to:
 
 ```json
 {
   "type": "long",
   "logicalType": "timestamp-micros"
+}
+```
+
+and the Avro schema is:
+
+```json
+{
+  "type": [
+    "null",
+    {
+      "type": "long",
+      "logicalType": "timestamp-micros"
+    },
+    "string"
+  ]
 }
 ```
 
@@ -125,10 +176,6 @@ Only alphanumeric characters and underscores \(`/a-zA-Z0-9_/`\) are allowed in a
 
 Field name cannot start with a number, so an underscore will be added to those field names at the beginning.
 
-### Nullable Fields
-
-All field will be nullable. For example, a `string` Json field will be typed as `["null", "string"]` in Avro. This is necessary because the incoming data stream may have optional fields.
-
 ### Array Types
 
 For array fields in Json schema, when the `items` property is an array, it means that each element in the array should follow its own schema sequentially. For example, the following specification means the first item in the array should be a string, and the second a number.
@@ -161,7 +208,7 @@ This is not supported in Avro schema. As a compromise, the converter creates a u
 }
 ```
 
-If the Json array has multiple object items, these objects will be recursively merged into one Avro record. For example, the following Json array expects two different objects, each with a different `id` field.
+If the Json array has multiple object items, these objects will be recursively merged into one Avro record. For example, the following Json array expects two different objects. The first object has an `id` field, and second has an `id` and `message` field. Their `id` fields have slightly different types.
 
 Json schema:
 
@@ -223,7 +270,7 @@ Json object:
 }
 ```
 
-Furthermore, the fields under the `id` record, `id_part_1` and `id_part_2`, will also have their schemas merged.
+After conversion, the two object schemas will be merged into one. Furthermore, the fields under the `id` record, `id_part_1` and `id_part_2`, will also be merged. In this way, all possible valid elements from the Json array can be converted to Avro records.
 
 Avro schema:
 
@@ -468,6 +515,10 @@ the corresponding Avro schema and record will be:
 }
 ```
 
+### Untyped Field
+
+Any field without property type specification will default to a `string` field, and its value will be serialized to string.
+
 ## Example
 
 Based on the above rules, here is an overall example. Given the following Json schema:
@@ -572,8 +623,8 @@ Its corresponding Avro schema will be:
 }
 ```
 
-More examples can be found in the Json to Avro conversion [test cases](https://github.com/airbytehq/airbyte/blob/master/airbyte-integrations/connectors/destination-s3/src/test/resources/parquet/json_schema_converter/json_conversion_test_cases.json).
+More examples can be found in the Json to Avro conversion [test cases](https://github.com/airbytehq/airbyte/tree/master/airbyte-integrations/bases/base-java-s3/src/test/resources/parquet/json_schema_converter).
 
 ## Implementation
-- Schema conversion: [JsonToAvroSchemaConverter](https://github.com/airbytehq/airbyte/blob/master/airbyte-integrations/connectors/destination-s3/src/main/java/io/airbyte/integrations/destination/s3/avro/JsonToAvroSchemaConverter.java)
+- Schema conversion: [JsonToAvroSchemaConverter](https://github.com/airbytehq/airbyte/blob/master/airbyte-integrations/bases/base-java-s3/src/main/java/io/airbyte/integrations/destination/s3/avro/JsonToAvroSchemaConverter.java)
 - Object conversion: [airbytehq/json-avro-converter](https://github.com/airbytehq/json-avro-converter) (forked and modified from [allegro/json-avro-converter](https://github.com/allegro/json-avro-converter)).

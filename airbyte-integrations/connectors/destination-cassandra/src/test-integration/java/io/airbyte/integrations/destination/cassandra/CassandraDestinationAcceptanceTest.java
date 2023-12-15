@@ -1,22 +1,20 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.destination.cassandra;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.airbyte.cdk.integrations.standardtest.destination.DestinationAcceptanceTest;
+import io.airbyte.cdk.integrations.util.HostPortResolver;
 import io.airbyte.commons.json.Jsons;
-import io.airbyte.integrations.standardtest.destination.DestinationAcceptanceTest;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CassandraDestinationAcceptanceTest extends DestinationAcceptanceTest {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(CassandraDestinationAcceptanceTest.class);
 
   private JsonNode configJson;
 
@@ -32,21 +30,21 @@ public class CassandraDestinationAcceptanceTest extends DestinationAcceptanceTes
   }
 
   @Override
-  protected void setup(TestDestinationEnv testEnv) {
+  protected void setup(final TestDestinationEnv testEnv, final HashSet<String> TEST_SCHEMAS) {
     configJson = TestDataFactory.createJsonConfig(
         cassandraContainer.getUsername(),
         cassandraContainer.getPassword(),
-        cassandraContainer.getHost(),
-        cassandraContainer.getFirstMappedPort());
-    var cassandraConfig = new CassandraConfig(configJson);
+        HostPortResolver.resolveHost(cassandraContainer),
+        HostPortResolver.resolvePort(cassandraContainer));
+    final var cassandraConfig = new CassandraConfig(configJson);
     cassandraCqlProvider = new CassandraCqlProvider(cassandraConfig);
     cassandraNameTransformer = new CassandraNameTransformer(cassandraConfig);
   }
 
   @Override
-  protected void tearDown(TestDestinationEnv testEnv) {
+  protected void tearDown(final TestDestinationEnv testEnv) {
     cassandraCqlProvider.retrieveMetadata().forEach(meta -> {
-      var keyspace = meta.value1();
+      final var keyspace = meta.value1();
       meta.value2().forEach(table -> cassandraCqlProvider.truncate(keyspace, table));
     });
   }
@@ -76,12 +74,12 @@ public class CassandraDestinationAcceptanceTest extends DestinationAcceptanceTes
   }
 
   @Override
-  protected List<JsonNode> retrieveRecords(TestDestinationEnv testEnv,
-                                           String streamName,
-                                           String namespace,
-                                           JsonNode streamSchema) {
-    var keyspace = cassandraNameTransformer.outputKeyspace(namespace);
-    var table = cassandraNameTransformer.outputTable(streamName);
+  protected List<JsonNode> retrieveRecords(final TestDestinationEnv testEnv,
+                                           final String streamName,
+                                           final String namespace,
+                                           final JsonNode streamSchema) {
+    final var keyspace = cassandraNameTransformer.outputKeyspace(namespace);
+    final var table = cassandraNameTransformer.outputTable(streamName);
     return cassandraCqlProvider.select(keyspace, table).stream()
         .sorted(Comparator.comparing(CassandraRecord::getTimestamp))
         .map(CassandraRecord::getData)

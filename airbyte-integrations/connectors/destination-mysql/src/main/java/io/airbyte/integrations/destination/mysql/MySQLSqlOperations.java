@@ -1,23 +1,26 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.destination.mysql;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.airbyte.db.jdbc.JdbcDatabase;
-import io.airbyte.integrations.base.JavaBaseConstants;
-import io.airbyte.integrations.destination.StandardNameTransformer;
-import io.airbyte.integrations.destination.jdbc.JdbcSqlOperations;
-import io.airbyte.protocol.models.AirbyteRecordMessage;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.airbyte.cdk.db.jdbc.JdbcDatabase;
+import io.airbyte.cdk.integrations.base.JavaBaseConstants;
+import io.airbyte.cdk.integrations.destination.StandardNameTransformer;
+import io.airbyte.cdk.integrations.destination.jdbc.JdbcSqlOperations;
+import io.airbyte.protocol.models.v0.AirbyteRecordMessage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
-import java.util.stream.Collectors;
 
+@SuppressFBWarnings(
+                    value = {"SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE"},
+                    justification = "There is little chance of SQL injection. There is also little need for statement reuse. The basic statement is more readable than the prepared statement.")
 public class MySQLSqlOperations extends JdbcSqlOperations {
 
   private boolean isLocalFileEnabled = false;
@@ -100,9 +103,10 @@ public class MySQLSqlOperations extends JdbcSqlOperations {
   }
 
   private double getVersion(final JdbcDatabase database) throws SQLException {
-    final List<String> value = database.resultSetQuery(connection -> connection.createStatement().executeQuery("select version()"),
-        resultSet -> resultSet.getString("version()")).collect(Collectors.toList());
-    return Double.parseDouble(value.get(0).substring(0, 3));
+    final List<String> versions = database.queryStrings(
+        connection -> connection.createStatement().executeQuery("select version()"),
+        resultSet -> resultSet.getString("version()"));
+    return Double.parseDouble(versions.get(0).substring(0, 3));
   }
 
   VersionCompatibility isCompatibleVersion(final JdbcDatabase database) throws SQLException {
@@ -116,11 +120,10 @@ public class MySQLSqlOperations extends JdbcSqlOperations {
   }
 
   private boolean checkIfLocalFileIsEnabled(final JdbcDatabase database) throws SQLException {
-    final List<String> value =
-        database.resultSetQuery(connection -> connection.createStatement().executeQuery("SHOW GLOBAL VARIABLES LIKE 'local_infile'"),
-            resultSet -> resultSet.getString("Value")).collect(Collectors.toList());
-
-    return value.get(0).equalsIgnoreCase("on");
+    final List<String> localFiles = database.queryStrings(
+        connection -> connection.createStatement().executeQuery("SHOW GLOBAL VARIABLES LIKE 'local_infile'"),
+        resultSet -> resultSet.getString("Value"));
+    return localFiles.get(0).equalsIgnoreCase("on");
   }
 
   @Override

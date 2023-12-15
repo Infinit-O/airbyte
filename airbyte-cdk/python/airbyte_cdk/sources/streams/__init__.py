@@ -1,8 +1,8 @@
 #
-# Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 # Initialize Streams Package
-from .core import Stream
+from .core import IncrementalMixin, Stream
 
-__all__ = ["Stream"]
+__all__ = ["IncrementalMixin", "Stream"]

@@ -1,59 +1,59 @@
 #
-# Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-
 import calendar
-import time
-from abc import ABC, abstractmethod
-from collections import defaultdict
+import logging
+import re
+from abc import ABC
 from datetime import datetime
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Union
 from urllib.parse import parse_qsl, urlparse
 
+import pendulum
 import pytz
 import requests
 from airbyte_cdk.models import SyncMode
-from airbyte_cdk.sources.streams.http import HttpStream
-from airbyte_cdk.sources.streams.http.auth.core import HttpAuthenticator
+from airbyte_cdk.sources.streams.core import StreamData, package_name_from_class
+from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
+from airbyte_cdk.sources.utils.schema_helpers import ResourceSchemaLoader
 from airbyte_cdk.sources.utils.transform import TransformConfig, TypeTransformer
+from airbyte_cdk.utils import AirbyteTracedException
+from airbyte_protocol.models import FailureType
 
-DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-LAST_END_TIME_KEY = "_last_end_time"
+DATETIME_FORMAT: str = "%Y-%m-%dT%H:%M:%SZ"
+LAST_END_TIME_KEY: str = "_last_end_time"
+END_OF_STREAM_KEY: str = "end_of_stream"
+
+logger = logging.getLogger("airbyte")
 
 
-class SourceZendeskException(Exception):
-    """default exception of custom SourceZendesk logic"""
+def to_int(s):
+    """https://github.com/airbytehq/airbyte/issues/13673"""
+    if isinstance(s, str):
+        res = re.findall(r"[-+]?\d+", s)
+        if res:
+            return res[0]
+    return s
 
 
-class SourceZendeskSupportStream(HttpStream, ABC):
-    """ "Basic Zendesk class"""
+class ZendeskConfigException(AirbyteTracedException):
+    """default config exception to custom SourceZendesk logic"""
 
-    primary_key = "id"
+    def __init__(self, **kwargs):
+        failure_type: FailureType = FailureType.config_error
+        super(ZendeskConfigException, self).__init__(failure_type=failure_type, **kwargs)
 
-    page_size = 100
-    created_at_field = "created_at"
-    updated_at_field = "updated_at"
 
-    transformer = TypeTransformer(TransformConfig.DefaultSchemaNormalization)
+class BaseZendeskSupportStream(HttpStream, ABC):
+    raise_on_http_errors = True
 
-    def __init__(self, subdomain: str, **kwargs):
+    def __init__(self, subdomain: str, start_date: str, ignore_pagination: bool = False, **kwargs):
         super().__init__(**kwargs)
 
-        # add the custom value for generation of a zendesk domain
+        self._start_date = start_date
         self._subdomain = subdomain
-
-    @property
-    def url_base(self) -> str:
-        return f"https://{self._subdomain}.zendesk.com/api/v2/"
-
-    @staticmethod
-    def _parse_next_page_number(response: requests.Response) -> Optional[int]:
-        """Parses a response and tries to find next page number"""
-        next_page = response.json().get("next_page")
-        if next_page:
-            return dict(parse_qsl(urlparse(next_page).query)).get("page")
-        return None
+        self._ignore_pagination = ignore_pagination
 
     def backoff_time(self, response: requests.Response) -> Union[int, float]:
         """
@@ -63,15 +63,14 @@ class SourceZendeskSupportStream(HttpStream, ABC):
         The response has a Retry-After header that tells you for how many seconds to wait before retrying.
         """
 
-        retry_after = int(response.headers.get("Retry-After", 0))
-        if retry_after and retry_after > 0:
-            return int(retry_after)
+        retry_after = int(to_int(response.headers.get("Retry-After", 0)))
+        if retry_after > 0:
+            return retry_after
 
-        # the header X-Rate-Limit returns a amount of requests per minute
-        # we try to wait twice as long
+        # the header X-Rate-Limit returns the amount of requests per minute
         rate_limit = float(response.headers.get("X-Rate-Limit", 0))
         if rate_limit and rate_limit > 0:
-            return (60.0 / rate_limit) * 2
+            return 60.0 / rate_limit
         return super().backoff_time(response)
 
     @staticmethod
@@ -90,8 +89,701 @@ class SourceZendeskSupportStream(HttpStream, ABC):
         """
         return datetime.strftime(dt.replace(tzinfo=pytz.UTC), DATETIME_FORMAT)
 
+    @staticmethod
+    def str2unixtime(str_dt: str) -> Optional[int]:
+        """convert string to unixtime number
+        Input example: '2021-07-22T06:55:55Z' FORMAT : "%Y-%m-%dT%H:%M:%SZ"
+        Output example: 1626936955"
+        """
+        if not str_dt:
+            return None
+        dt = datetime.strptime(str_dt, DATETIME_FORMAT)
+        return calendar.timegm(dt.utctimetuple())
 
-class UserSettingsStream(SourceZendeskSupportStream):
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
+        """try to select relevant data only"""
+
+        try:
+            records = response.json().get(self.response_list_name or self.name) or []
+        except requests.exceptions.JSONDecodeError:
+            records = []
+
+        if not self.cursor_field:
+            yield from records
+        else:
+            cursor_date = (stream_state or {}).get(self.cursor_field)
+            for record in records:
+                updated = record[self.cursor_field]
+                if not cursor_date or updated > cursor_date:
+                    yield record
+
+    def should_retry(self, response: requests.Response) -> bool:
+        status_code = response.status_code
+        if status_code == 403 or status_code == 404:
+            try:
+                error = response.json().get("error")
+            except requests.exceptions.JSONDecodeError:
+                reason = response.reason
+                error = {"title": f"{reason}", "message": "Received empty JSON response"}
+            self.logger.error(
+                f"Skipping stream {self.name}, error message: {error}. Please ensure the authenticated user has access to this stream. If the issue persists, contact Zendesk support."
+            )
+            setattr(self, "raise_on_http_errors", False)
+            return False
+        return super().should_retry(response)
+
+    def read_records(
+        self,
+        sync_mode: SyncMode,
+        cursor_field: Optional[List[str]] = None,
+        stream_slice: Optional[Mapping[str, Any]] = None,
+        stream_state: Optional[Mapping[str, Any]] = None,
+    ) -> Iterable[StreamData]:
+        try:
+            yield from super().read_records(
+                sync_mode=sync_mode, cursor_field=cursor_field, stream_slice=stream_slice, stream_state=stream_state
+            )
+        except requests.exceptions.JSONDecodeError:
+            self.logger.error(
+                f"Skipping stream {self.name}: Non-JSON response received. Please ensure that you have enough permissions for this stream."
+            )
+
+
+class SourceZendeskSupportStream(BaseZendeskSupportStream):
+    """Basic Zendesk class"""
+
+    primary_key = "id"
+
+    page_size = 100
+    cursor_field = "updated_at"
+
+    response_list_name: str = None
+
+    transformer = TypeTransformer(TransformConfig.DefaultSchemaNormalization)
+
+    @property
+    def url_base(self) -> str:
+        return f"https://{self._subdomain}.zendesk.com/api/v2/"
+
+    def path(self, **kwargs):
+        return self.name
+
+    def next_page_token(self, *args, **kwargs):
+        return None
+
+    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
+        latest_benchmark = latest_record[self.cursor_field]
+        if current_stream_state.get(self.cursor_field):
+            return {self.cursor_field: max(latest_benchmark, current_stream_state[self.cursor_field])}
+        return {self.cursor_field: latest_benchmark}
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        params = {}
+        stream_state = stream_state or {}
+        # try to search all records with generated_timestamp > start_time
+        current_state = stream_state.get(self.cursor_field)
+        if current_state and isinstance(current_state, str) and not current_state.isdigit():
+            current_state = self.str2unixtime(current_state)
+        start_time = current_state or calendar.timegm(pendulum.parse(self._start_date).utctimetuple())
+        # +1 because the API returns all records where generated_timestamp >= start_time
+
+        now = calendar.timegm(datetime.now().utctimetuple())
+        if start_time > now - 60:
+            # start_time must be more than 60 seconds ago
+            start_time = now - 61
+        params["start_time"] = start_time
+
+        return params
+
+
+class FullRefreshZendeskSupportStream(BaseZendeskSupportStream):
+    """
+    Endpoints don't provide the updated_at/created_at fields
+    Thus we can't implement an incremental logic for them
+    """
+
+    page_size = 100
+    primary_key = "id"
+    response_list_name: str = None
+
+    @property
+    def url_base(self) -> str:
+        return f"https://{self._subdomain}.zendesk.com/api/v2/"
+
+    def path(self, **kwargs):
+        return self.name
+
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        if self._ignore_pagination:
+            return None
+
+        meta = response.json().get("meta", {}) if response.content else {}
+        return {"page[after]": meta.get("after_cursor")} if meta.get("has_more") else None
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        params = {"page[size]": self.page_size}
+        if next_page_token:
+            params.update(next_page_token)
+        return params
+
+
+class IncrementalZendeskSupportStream(FullRefreshZendeskSupportStream):
+    """
+    Endpoints provide a cursor pagination and sorting mechanism
+    """
+
+    cursor_field = "updated_at"
+    next_page_field = "next_page"
+    prev_start_time = None
+
+    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
+        # try to save maximum value of a cursor field
+        old_value = str((current_stream_state or {}).get(self.cursor_field, ""))
+        new_value = str((latest_record or {}).get(self.cursor_field, ""))
+        return {self.cursor_field: max(new_value, old_value)}
+
+    def check_stream_state(self, stream_state: Mapping[str, Any] = None) -> int:
+        """
+        Returns the state value, if exists. Otherwise, returns user defined `Start Date`.
+        """
+        state = stream_state.get(self.cursor_field) or self._start_date if stream_state else self._start_date
+        return calendar.timegm(pendulum.parse(state).utctimetuple())
+
+
+class CursorPaginationZendeskSupportStream(IncrementalZendeskSupportStream):
+    """Zendesk Support Cursor Pagination, see https://developer.zendesk.com/api-reference/introduction/pagination/#using-cursor-pagination"""
+
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        if self._ignore_pagination:
+            return None
+
+        meta = response.json().get("meta", {})
+        return {"page[after]": meta.get("after_cursor")} if meta.get("has_more") else None
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        params = {
+            "start_time": self.check_stream_state(stream_state),
+            "page[size]": self.page_size,
+        }
+        if next_page_token:
+            params.pop("start_time", None)
+            params.update(next_page_token)
+        return params
+
+
+class TimeBasedPaginationZendeskSupportStream(IncrementalZendeskSupportStream):
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        if self._ignore_pagination:
+            return None
+        start_time = dict(parse_qsl(urlparse(response.json().get(self.next_page_field), "").query)).get("start_time")
+        if start_time != self.prev_start_time:
+            self.prev_start_time = start_time
+            return {self.cursor_field: int(start_time)}
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        next_page_token = next_page_token or {}
+        parsed_state = self.check_stream_state(stream_state)
+        if self.cursor_field:
+            params = {"start_time": next_page_token.get(self.cursor_field, parsed_state)}
+        else:
+            params = {"start_time": calendar.timegm(pendulum.parse(self._start_date).utctimetuple())}
+        return params
+
+
+class SourceZendeskIncrementalExportStream(IncrementalZendeskSupportStream):
+    """Incremental Export from Tickets stream:
+    https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-ticket-export-time-based
+
+    @ param response_list_name: the main nested entity to look at inside of response, default = response_list_name
+    @ param sideload_param : parameter variable to include various information to response
+        more info: https://developer.zendesk.com/documentation/ticketing/using-the-zendesk-api/side_loading/#supported-endpoints
+    """
+
+    response_list_name: str = None
+    sideload_param: str = None
+
+    @staticmethod
+    def check_start_time_param(requested_start_time: int, value: int = 1) -> int:
+        """
+        Requesting tickets in the future is not allowed, hits 400 - bad request.
+        We get current UNIX timestamp minus `value` from now(), default = 1 (minute).
+
+        Returns: either close to now UNIX timestamp or previously requested UNIX timestamp.
+        """
+        now = calendar.timegm(pendulum.now().subtract(minutes=value).utctimetuple())
+        return now if requested_start_time > now else requested_start_time
+
+    def path(self, **kwargs) -> str:
+        return f"incremental/{self.response_list_name}.json"
+
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        """
+        Returns next_page_token based on `end_of_stream` parameter inside of response
+        """
+        if self._ignore_pagination:
+            return None
+        response_json = response.json()
+        return None if response_json.get(END_OF_STREAM_KEY, True) else {"cursor": response_json.get("after_cursor")}
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        params = super().request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
+        # check "start_time" is not in the future
+        params["start_time"] = self.check_start_time_param(params["start_time"])
+        if self.sideload_param:
+            params["include"] = self.sideload_param
+        if next_page_token:
+            params.pop("start_time", None)
+            params.update(next_page_token)
+        return params
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        for record in response.json().get(self.response_list_name, []):
+            yield record
+
+
+class SourceZendeskSupportTicketEventsExportStream(SourceZendeskIncrementalExportStream):
+    """Incremental Export from TicketEvents stream:
+    https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-ticket-event-export
+
+    @ param response_list_name: the main nested entity to look at inside of response, default = "ticket_events"
+    @ param response_target_entity: nested property inside of `response_list_name`, default = "child_events"
+    @ param list_entities_from_event : the list of nested child_events entities to include from parent record
+    @ param event_type : specific event_type to check ["Audit", "Change", "Comment", etc]
+    """
+
+    cursor_field = "created_at"
+    response_list_name: str = "ticket_events"
+    response_target_entity: str = "child_events"
+    list_entities_from_event: List[str] = None
+    event_type: str = None
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        return f"incremental/{self.response_list_name}.json"
+
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        """
+        Returns next_page_token based on `end_of_stream` parameter inside of response
+        """
+        response_json = response.json()
+        return None if response_json.get(END_OF_STREAM_KEY, True) else {"start_time": response_json.get("end_time")}
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        next_page_token = next_page_token or {}
+        parsed_state = self.check_stream_state(stream_state)
+        params = {"start_time": next_page_token.get(self.cursor_field, parsed_state)}
+        # check "start_time" is not in the future
+        params["start_time"] = self.check_start_time_param(params["start_time"])
+        if self.sideload_param:
+            params["include"] = self.sideload_param
+        if next_page_token:
+            params.update(next_page_token)
+        return params
+
+    @property
+    def update_event_from_record(self) -> bool:
+        """Returns True/False based on list_entities_from_event property"""
+        return True if len(self.list_entities_from_event) > 0 else False
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        for record in super().parse_response(response, **kwargs):
+            for event in record.get(self.response_target_entity, []):
+                if event.get("event_type") == self.event_type:
+                    if self.update_event_from_record:
+                        for prop in self.list_entities_from_event:
+                            event[prop] = record.get(prop)
+                    yield event
+
+
+class OrganizationMemberships(CursorPaginationZendeskSupportStream):
+    """OrganizationMemberships stream: https://developer.zendesk.com/api-reference/ticketing/organizations/organization_memberships/"""
+
+
+class OrganizationFields(CursorPaginationZendeskSupportStream):
+    """OrganizationMemberships stream: https://developer.zendesk.com/api-reference/ticketing/organizations/organization_fields/#list-organization-fields"""
+
+
+class AuditLogs(CursorPaginationZendeskSupportStream):
+    """AuditLogs stream: https://developer.zendesk.com/api-reference/ticketing/account-configuration/audit_logs/#list-audit-logs"""
+
+    # can request a maximum of 100 results
+    page_size = 100
+    # audit_logs doesn't have the 'updated_by' field
+    cursor_field = "created_at"
+
+
+class Users(SourceZendeskIncrementalExportStream):
+    """Users stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-user-export"""
+
+    response_list_name: str = "users"
+
+    def path(self, **kwargs) -> str:
+        return "incremental/users/cursor.json"
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        next_page_token = next_page_token or {}
+        parsed_state = self.check_stream_state(stream_state)
+        params = {"start_time": next_page_token.get(self.cursor_field, parsed_state)}
+        # check "start_time" is not in the future
+        params["start_time"] = self.check_start_time_param(params["start_time"])
+        if self.sideload_param:
+            params["include"] = self.sideload_param
+        if next_page_token:
+            params.update(next_page_token)
+        return params
+
+
+class Organizations(SourceZendeskIncrementalExportStream):
+    """Organizations stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/"""
+
+    response_list_name: str = "organizations"
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        next_page_token = next_page_token or {}
+        parsed_state = self.check_stream_state(stream_state)
+        params = {"start_time": next_page_token.get(self.cursor_field, parsed_state)}
+        # check "start_time" is not in the future
+        params["start_time"] = self.check_start_time_param(params["start_time"])
+        if self.sideload_param:
+            params["include"] = self.sideload_param
+        if next_page_token:
+            params.update(next_page_token)
+        return params
+
+
+class Posts(CursorPaginationZendeskSupportStream):
+    """Posts stream: https://developer.zendesk.com/api-reference/help_center/help-center-api/posts/#list-posts"""
+
+    use_cache = True
+
+    cursor_field = "updated_at"
+
+    def path(self, **kwargs):
+        return "community/posts"
+
+
+class Tickets(SourceZendeskIncrementalExportStream):
+    """Tickets stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/#incremental-ticket-export-time-based"""
+
+    response_list_name: str = "tickets"
+    transformer: TypeTransformer = TypeTransformer(TransformConfig.DefaultSchemaNormalization)
+
+    cursor_field = "generated_timestamp"
+
+    def path(self, **kwargs) -> str:
+        return "incremental/tickets/cursor.json"
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        parsed_state = self.check_stream_state(stream_state)
+        params = {"start_time": self.check_start_time_param(parsed_state)}
+        if self.sideload_param:
+            params["include"] = self.sideload_param
+        if next_page_token:
+            params.update(next_page_token)
+        return params
+
+    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
+        old_value = (current_stream_state or {}).get(self.cursor_field, pendulum.parse(self._start_date).int_timestamp)
+        new_value = (latest_record or {}).get(self.cursor_field, pendulum.parse(self._start_date).int_timestamp)
+        return {self.cursor_field: max(new_value, old_value)}
+
+    def check_stream_state(self, stream_state: Mapping[str, Any] = None) -> int:
+        """
+        Returns the state value, if exists. Otherwise, returns user defined `Start Date`.
+        """
+        return stream_state.get(self.cursor_field) if stream_state else pendulum.parse(self._start_date).int_timestamp
+
+    def check_start_time_param(self, requested_start_time: int, value: int = 1) -> int:
+        """
+        The stream returns 400 Bad Request StartTimeTooRecent when requesting tasks 1 second before now.
+        Figured out during experiments that the most recent time needed for request to be successful is 3 seconds before now.
+        """
+        return super().check_start_time_param(requested_start_time, value=3)
+
+
+class TicketComments(SourceZendeskSupportTicketEventsExportStream):
+    """
+    Fetch the TicketComments incrementaly from TicketEvents Export stream
+    """
+
+    list_entities_from_event = ["via_reference_id", "ticket_id", "timestamp"]
+    sideload_param = "comment_events"
+    event_type = "Comment"
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        for record in super().parse_response(response, **kwargs):
+            # https://github.com/airbytehq/oncall/issues/1001
+            if type(record.get("via")) is not dict:
+                record["via"] = None
+            yield record
+
+
+class Groups(SourceZendeskSupportStream):
+    """Groups stream: https://developer.zendesk.com/api-reference/ticketing/groups/groups/"""
+
+
+class GroupMemberships(CursorPaginationZendeskSupportStream):
+    """GroupMemberships stream: https://developer.zendesk.com/api-reference/ticketing/groups/group_memberships/"""
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        params = super().request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
+        params.update({"sort_by": "asc"})
+        return params
+
+
+class SatisfactionRatings(CursorPaginationZendeskSupportStream):
+    """
+    SatisfactionRatings stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/satisfaction_ratings/
+    """
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        params = super().request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
+        params.update({"sort_by": "asc"})
+        return params
+
+
+class TicketFields(SourceZendeskSupportStream):
+    """TicketFields stream: https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_fields/"""
+
+
+class TicketForms(TimeBasedPaginationZendeskSupportStream):
+    """TicketForms stream: https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms"""
+
+
+class TicketMetrics(CursorPaginationZendeskSupportStream):
+    """TicketMetric stream: https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_metrics/"""
+
+
+class TicketSkips(CursorPaginationZendeskSupportStream):
+    """TicketSkips stream: https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_skips/"""
+
+    response_list_name = "skips"
+
+    def path(self, **kwargs):
+        return "skips.json"
+
+
+class TicketMetricEvents(CursorPaginationZendeskSupportStream):
+    """
+    TicketMetricEvents stream: https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_metric_events/
+    """
+
+    cursor_field = "time"
+
+    def path(self, **kwargs):
+        return "incremental/ticket_metric_events"
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        params = {
+            "start_time": self.check_stream_state(stream_state),
+            "page[size]": self.page_size,
+        }
+        if next_page_token:  # need keep start_time for this stream
+            params.update(next_page_token)
+        return params
+
+
+class Macros(SourceZendeskSupportStream):
+    """Macros stream: https://developer.zendesk.com/api-reference/ticketing/business-rules/macros/"""
+
+
+class TicketAudits(IncrementalZendeskSupportStream):
+    """TicketAudits stream: https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_audits/"""
+
+    # can request a maximum of 1,000 results
+    page_size = 1000
+    # ticket audits doesn't have the 'updated_by' field
+    cursor_field = "created_at"
+
+    # Root of response is 'audits'. As rule as an endpoint name is equal a response list name
+    response_list_name = "audits"
+
+    transformer = TypeTransformer(TransformConfig.DefaultSchemaNormalization)
+
+    # This endpoint uses a variant of cursor pagination with some differences from cursor pagination used in other endpoints.
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        params = {"sort_by": self.cursor_field, "sort_order": "desc", "limit": self.page_size}
+        if next_page_token:
+            params.pop("start_time", None)
+            params.update(next_page_token)
+        return params
+
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        if self._ignore_pagination:
+            return None
+        response_json = response.json()
+        return {"cursor": response.json().get("before_cursor")} if response_json.get("before_cursor") else None
+
+
+class Tags(FullRefreshZendeskSupportStream):
+    """Tags stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags/"""
+
+    # doesn't have the 'id' field
+    primary_key = "name"
+
+
+class Topics(CursorPaginationZendeskSupportStream):
+    """
+    Topics stream: https://developer.zendesk.com/api-reference/help_center/help-center-api/topics/#list-topics
+    """
+
+    cursor_field = "updated_at"
+
+    def path(self, **kwargs):
+        return "community/topics"
+
+
+class SlaPolicies(IncrementalZendeskSupportStream):
+    """SlaPolicies stream: https://developer.zendesk.com/api-reference/ticketing/business-rules/sla_policies/"""
+
+    def path(self, *args, **kwargs) -> str:
+        return "slas/policies.json"
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        return {}
+
+
+class Brands(FullRefreshZendeskSupportStream):
+    """Brands stream: https://developer.zendesk.com/api-reference/ticketing/account-configuration/brands/#list-brands"""
+
+
+class CustomRoles(IncrementalZendeskSupportStream):
+    """CustomRoles stream: https://developer.zendesk.com/api-reference/ticketing/account-configuration/custom_roles/#list-custom-roles"""
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        return {}
+
+
+class Schedules(IncrementalZendeskSupportStream):
+    """Schedules stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/schedules/#list-schedules"""
+
+    def path(self, *args, **kwargs) -> str:
+        return "business_hours/schedules.json"
+
+
+class AccountAttributes(FullRefreshZendeskSupportStream):
+    """Account attributes stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/skill_based_routing/#list-account-attributes"""
+
+    response_list_name = "attributes"
+
+    def path(self, *args, **kwargs) -> str:
+        return "routing/attributes"
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        return {}
+
+
+class AttributeDefinitions(FullRefreshZendeskSupportStream):
+    """Attribute definitions stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/skill_based_routing/#list-routing-attribute-definitions"""
+
+    primary_key = None
+
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
+        for definition in response.json()["definitions"]["conditions_all"]:
+            definition["condition"] = "all"
+            yield definition
+        for definition in response.json()["definitions"]["conditions_any"]:
+            definition["condition"] = "any"
+            yield definition
+
+    def path(self, *args, **kwargs) -> str:
+        return "routing/attributes/definitions"
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        return {}
+
+
+class UserSettingsStream(FullRefreshZendeskSupportStream):
     """Stream for checking of a request token and permissions"""
 
     def path(self, *args, **kwargs) -> str:
@@ -110,533 +802,156 @@ class UserSettingsStream(SourceZendeskSupportStream):
     def get_settings(self) -> Mapping[str, Any]:
         for resp in self.read_records(SyncMode.full_refresh):
             return resp
-        raise SourceZendeskException("not found settings")
-
-
-class IncrementalEntityStream(SourceZendeskSupportStream, ABC):
-    """Stream for endpoints where an entity name can be used in a path value
-    https://<subdomain>.zendesk.com/api/v2/<self.name>.json
-    """
-
-    # default sorted field
-    cursor_field = SourceZendeskSupportStream.updated_at_field
-
-    # for partial cases when JSON root name of responses is not equal a name value
-    response_list_name: str = None
-
-    def __init__(self, start_date: str, **kwargs):
-        super().__init__(**kwargs)
-        # add the custom value for skipping of not relevant records
-        self._start_date = self.str2datetime(start_date) if isinstance(start_date, str) else start_date
-        # Flag for marking of completed process
-        self._finished = False
-
-    @property
-    def authenticator(self) -> HttpAuthenticator:
-        """This function was redefined because CDK return NoAuth for some authenticator class.
-        It is bug and I hope it will be fixed in the future
-        """
-        return self._session.auth or super().authenticator
-
-    @property
-    def is_finished(self):
-        return self._finished
-
-    def path(self, **kwargs) -> str:
-        return f"{self.name}.json"
-
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
-        """returns a list of records"""
-        # filter by start date
-        for record in response.json().get(self.response_list_name or self.name) or []:
-            if record.get(self.created_at_field) and self.str2datetime(record[self.created_at_field]) < self._start_date:
-                continue
-            yield record
-
-    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
-        # try to save maximum value of a cursor field
-        old_value = str((current_stream_state or {}).get(self.cursor_field, ""))
-        new_value = str((latest_record or {}).get(self.cursor_field, ""))
-        return {self.cursor_field: max(new_value, old_value)}
-
-    @staticmethod
-    def str2unixtime(str_dt: str) -> Optional[int]:
-        """convert string to unixtime number
-        Input example: '2021-07-22T06:55:55Z' FORMAT : "%Y-%m-%dT%H:%M:%SZ"
-        Output example: 1626936955"
-        """
-        if not str_dt:
-            return None
-        dt = datetime.strptime(str_dt, DATETIME_FORMAT)
-        return calendar.timegm(dt.utctimetuple())
-
-
-class IncrementalExportStream(IncrementalEntityStream, ABC):
-    """Use the incremental export API to get items that changed or
-    were created in Zendesk Support since the last request
-    See: https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/
-
-    You can make up to 10 requests per minute to these endpoints.
-    """
-
-    # maximum of 1,000
-    page_size = 1000
-
-    # try to save a stage after every 100 records
-    # this endpoint provides responses in ascending order.
-    state_checkpoint_interval = 100
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        # for saving of last page cursor value
-        # endpoints can have different cursor format but incremental logic uses unixtime format only
-        self.last_end_time = None
-
-    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
-        if self.is_finished:
-            return None
-        return {"start_time": self.last_end_time}
-
-    def path(self, *args, **kwargs) -> str:
-        return f"incremental/{self.name}.json"
+        raise ZendeskConfigException(message="Can not get access to settings endpoint; Please check provided credentials")
 
     def request_params(
-        self, stream_state: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None, **kwargs
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
     ) -> MutableMapping[str, Any]:
+        return {}
 
-        params = {"per_page": self.page_size}
-        if not next_page_token:
-            current_state = stream_state.get(LAST_END_TIME_KEY)
-            if not current_state:
-                # try to search all records with generated_timestamp > start_time
-                current_state = stream_state.get(self.cursor_field)
-                if current_state and isinstance(current_state, str) and not current_state.isdigit():
-                    current_state = self.str2unixtime(current_state)
-            elif not self.last_end_time:
-                self.last_end_time = current_state
-            start_time = int(current_state or time.mktime(self._start_date.timetuple()))
-            # +1 because the API returns all records where generated_timestamp >= start_time
 
-            now = calendar.timegm(datetime.now().utctimetuple())
-            if start_time > now - 60:
-                # start_time must be more than 60 seconds ago
-                start_time = now - 61
-            params["start_time"] = start_time
+class UserFields(FullRefreshZendeskSupportStream):
+    """User Fields stream: https://developer.zendesk.com/api-reference/ticketing/users/user_fields/#list-user-fields"""
 
-        else:
+    def path(self, *args, **kwargs) -> str:
+        return "user_fields"
+
+
+class PostComments(CursorPaginationZendeskSupportStream, HttpSubStream):
+    """Post Comments Stream: https://developer.zendesk.com/api-reference/help_center/help-center-api/post_comments/"""
+
+    response_list_name = "comments"
+
+    def __init__(self, **kwargs):
+        parent = Posts(**kwargs)
+        super().__init__(parent=parent, **kwargs)
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        post_id = stream_slice.get("parent").get("id")
+        return f"community/posts/{post_id}/comments"
+
+
+class AbstractVotes(CursorPaginationZendeskSupportStream, ABC):
+    response_list_name = "votes"
+
+    def get_json_schema(self) -> Mapping[str, Any]:
+        return ResourceSchemaLoader(package_name_from_class(self.__class__)).get_schema("votes")
+
+
+class PostVotes(AbstractVotes, HttpSubStream):
+    def __init__(self, **kwargs):
+        parent = Posts(**kwargs)
+        super().__init__(parent=parent, **kwargs)
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        post_id = stream_slice.get("parent").get("id")
+        return f"community/posts/{post_id}/votes"
+
+
+class PostCommentVotes(AbstractVotes, HttpSubStream):
+    def __init__(self, **kwargs):
+        parent = PostComments(**kwargs)
+        super().__init__(parent=parent, **kwargs)
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        post_id = stream_slice.get("parent").get("post_id")
+        comment_id = stream_slice.get("parent").get("id")
+        return f"community/posts/{post_id}/comments/{comment_id}/votes"
+
+
+class Articles(SourceZendeskIncrementalExportStream):
+    """Articles Stream: https://developer.zendesk.com/api-reference/help_center/help-center-api/articles/#list-articles"""
+
+    response_list_name: str = "articles"
+
+    def path(self, **kwargs) -> str:
+        return "help_center/incremental/articles"
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> MutableMapping[str, Any]:
+        next_page_token = next_page_token or {}
+        parsed_state = self.check_stream_state(stream_state)
+        params = {"sort_by": "updated_at", "sort_order": "asc", "start_time": next_page_token.get(self.cursor_field, parsed_state)}
+        # check "start_time" is not in the future
+        params["start_time"] = self.check_start_time_param(params["start_time"])
+        if self.sideload_param:
+            params["include"] = self.sideload_param
+        if next_page_token:
             params.update(next_page_token)
         return params
 
-    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
-        # try to save maximum value of a cursor field
 
-        state = super().get_updated_state(current_stream_state=current_stream_state, latest_record=latest_record)
-
-        if self.last_end_time:
-            state[LAST_END_TIME_KEY] = self.last_end_time
-        current_stream_state.update(state)
-        return current_stream_state
-
-    def get_last_end_time(self) -> Optional[Union[str, int]]:
-        """Updating of last_end_time for comparing with cursor fields"""
-        if not self.last_end_time:
-            return self.last_end_time
-        return self.datetime2str(datetime.fromtimestamp(self.last_end_time))
-
-    def parse_response(
-        self, response: requests.Response, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, **kwargs
-    ) -> Iterable[Mapping]:
-
-        # save  previous end time for filtering of a current response
-        previous_end_time = self.get_last_end_time()
-
-        data = response.json()
-        # save a last end time for the next attempt
-        self.last_end_time = data["end_time"]
-        # end_of_stream is true if the current request has returned all the results up to the current time; false otherwise
-        self._finished = data["end_of_stream"]
-        for record in super().parse_response(response, stream_state=stream_state, stream_slice=stream_slice, **kwargs):
-            if previous_end_time and record.get(self.cursor_field) <= previous_end_time:
-                continue
-            yield record
-
-
-class IncrementalUnsortedStream(IncrementalEntityStream, ABC):
-    """Stream for loading without sorting
-
-    Some endpoints don't provide approaches for data filtration
-    We can load all records fully and select updated data only
-    """
-
+class ArticleVotes(AbstractVotes, HttpSubStream):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # For saving of a relevant last updated date
-        self._max_cursor_date = None
+        parent = Articles(**kwargs)
+        super().__init__(parent=parent, **kwargs)
 
-    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
-        """try to select relevant data only"""
-
-        if not self.cursor_field:
-            yield from super().parse_response(response, stream_state=stream_state, **kwargs)
-        else:
-            send_cnt = 0
-            cursor_date = (stream_state or {}).get(self.cursor_field)
-            for record in super().parse_response(response, stream_state=stream_state, **kwargs):
-                updated = record[self.cursor_field]
-                if not self._max_cursor_date or self._max_cursor_date < updated:
-                    self._max_cursor_date = updated
-                if not cursor_date or updated > cursor_date:
-                    send_cnt += 1
-                    yield record
-            if not send_cnt:
-                self._finished = True
-
-    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
-        return {self.cursor_field: max(self._max_cursor_date or "", (current_stream_state or {}).get(self.cursor_field, ""))}
-
-    @abstractmethod
-    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
-        """can be different for each case"""
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        article_id = stream_slice.get("parent").get("id")
+        return f"help_center/articles/{article_id}/votes"
 
 
-class IncrementalUnsortedPageStream(IncrementalUnsortedStream, ABC):
-    """Stream for loading without sorting but with pagination
-    This logic can be used for a small data size when this data is loaded fast
-    """
-
-    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
-        next_page = self._parse_next_page_number(response)
-        if not next_page:
-            self._finished = True
-            return None
-        return next_page
-
-    def request_params(self, next_page_token: Mapping[str, Any] = None, **kwargs) -> MutableMapping[str, Any]:
-        params = super().request_params(next_page_token=next_page_token, **kwargs)
-        params.update(
-            {
-                "page": next_page_token or 1,
-                "per_page": self.page_size,
-            }
-        )
-        return params
-
-
-class IncrementalUnsortedCursorStream(IncrementalUnsortedStream, ABC):
-    """Stream for loading without sorting but with cursor based pagination"""
-
-    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
-        has_more = response.json().get("meta", {}).get("has_more")
-        if not has_more:
-            self._finished = True
-            return None
-        return response.json().get("meta", {}).get("after_cursor")
-
-    def request_params(self, next_page_token: Mapping[str, Any] = None, **kwargs) -> MutableMapping[str, Any]:
-        params = super().request_params(next_page_token=next_page_token, **kwargs)
-        params["page[size]"] = self.page_size
-        if next_page_token:
-            params["page[after]"] = next_page_token
-        return params
-
-
-class FullRefreshStream(IncrementalUnsortedPageStream, ABC):
-    """ "Stream for endpoints where there are not any created_at or updated_at fields"""
-
-    # reset to default value
-    cursor_field = SourceZendeskSupportStream.cursor_field
-
-
-class IncrementalSortedCursorStream(IncrementalUnsortedCursorStream, ABC):
-    """Stream for loading sorting data with cursor based pagination"""
-
-    def request_params(self, **kwargs) -> MutableMapping[str, Any]:
-        params = super().request_params(**kwargs)
-        if params:
-            params.update({"sort_by": self.cursor_field, "sort_order": "desc"})
-        return params
-
-
-class IncrementalSortedPageStream(IncrementalUnsortedPageStream, ABC):
-    """Stream for loading sorting data with normal pagination"""
-
-    def request_params(self, **kwargs) -> MutableMapping[str, Any]:
-        params = super().request_params(**kwargs)
-        if params:
-            params.update({"sort_by": self.cursor_field, "sort_order": "desc", "limit": self.page_size})
-        return params
-
-
-class TicketComments(IncrementalSortedCursorStream):
-    """TicketComments stream: https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_comments/
-    ZenDesk doesn't provide API for loading of all comments by one direct endpoints.
-    Thus at first we loads all updated tickets and after this tries to load all created/updated
-    comments per every ticket"""
-
-    # Tickets can be removed throughout synchronization. The ZendDesk API will return a response
-    # with 404 code if a ticket is not exists. But it shouldn't break loading of other comments.
-    raise_on_http_errors = False
-
+class ArticleComments(CursorPaginationZendeskSupportStream, HttpSubStream):
     response_list_name = "comments"
-    cursor_field = IncrementalSortedCursorStream.created_at_field
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # need to save a slice ticket state
-        # because the function get_updated_state doesn't have a stream_slice as argument
-        self._ticket_last_end_time = None
-
-    def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, **kwargs) -> str:
-        ticket_id = stream_slice["id"]
-        return f"tickets/{ticket_id}/comments.json"
-
-    def stream_slices(
-        self, sync_mode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None
-    ) -> Iterable[Optional[Mapping[str, Any]]]:
-        """Loads all updated tickets after last stream state"""
-        stream_state = stream_state or {}
-        # convert a comment state value to a ticket one
-        # tickets and comments have different cursor formats. For example:
-        # Ticket state {"generated_timestamp": 1627637409}
-        # Comment state: {"created_at": "2021-07-30T12:30:09Z"}
-        # At the first try to find a ticket cursor value
-        ticket_stream_value = stream_state.get(Tickets.cursor_field)
-        if not ticket_stream_value:
-            # for backward compatibility because not all relevant states can have some last ticket state
-            ticket_stream_value = self.str2unixtime(stream_state.get(self.cursor_field))
-
-        tickets_stream = Tickets(start_date=self._start_date, subdomain=self._subdomain, authenticator=self.authenticator)
-        ticket_pages = defaultdict(list)
-        last_end_time = stream_state.get(LAST_END_TIME_KEY, 0)
-        ticket_count = 0
-        for ticket in tickets_stream.read_records(
-            sync_mode=sync_mode,
-            cursor_field=cursor_field,
-            stream_state={Tickets.cursor_field: ticket_stream_value, LAST_END_TIME_KEY: last_end_time},
-        ):
-            if not ticket["comment_count"]:
-                # skip tickets without comments
-                continue
-            ticket_count += 1
-            ticket_pages[tickets_stream.last_end_time].append(
-                {
-                    "id": ticket["id"],
-                    Tickets.cursor_field: ticket[Tickets.cursor_field],
-                }
-            )
-
-        if ticket_pages:
-            last_times = sorted(ticket_pages.keys())
-            # tickets' loading is implemented per page but the stream 'tickets' has
-            # the addl stream state fields "_last_end_time" and its value is not compatible
-            # with comments' cursor fields. Thus we need to save it separately and add
-            # last_end_time info for every slice
-            last_page = {last_times[-1]: [ticket_pages[last_times[-1]].pop(-1)]}
-
-            new_last_times = [last_end_time] + last_times[:-1]
-            ticket_pages = {new_last_times[i]: ticket_pages[last_times[i]] for i in range(len(last_times))}
-            ticket_pages.update(last_page)
-
-        self.logger.info(f"Found {ticket_count} ticket(s) with comments")
-        for end_time, tickets in sorted(ticket_pages.items(), key=lambda t: t[0]):
-            self._ticket_last_end_time = end_time
-            yield from sorted(tickets, key=lambda ticket: ticket[Tickets.cursor_field])
-
-    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
-        """Adds a last cursor ticket updated time for a comment state"""
-        new_state = super().get_updated_state(current_stream_state=current_stream_state, latest_record=latest_record)
-        if self._ticket_last_end_time:
-
-            new_state[LAST_END_TIME_KEY] = self._ticket_last_end_time
-        return new_state
-
-    def parse_response(
-        self, response: requests.Response, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, **kwargs
-    ) -> Iterable[Mapping]:
-        """Handle response status"""
-        if response.status_code == 200:
-            # Ticket ID not included in ticket comments response.
-            # Manually add ticket_id to ticket_comments dict.
-            ticket_id = stream_slice["id"]
-            result = super().parse_response(response, stream_state=stream_state, stream_slice=stream_slice, **kwargs)
-            enriched_result = map(lambda x: x.update({"ticket_id": ticket_id}) or x, result)
-            yield from enriched_result
-        elif response.status_code == 404:
-            ticket_id = stream_slice["id"]
-            # skip 404 errors for not found tickets
-            self.logger.info(f"ticket {ticket_id} not found (404 error). It could have been deleted.")
-        else:
-            response.raise_for_status()
-
-
-# NOTE: all Zendesk endpoints can be split into several templates of data loading.
-# 1) with API built-in incremental approach
-# 2) pagination and sorting mechanism
-# 3) cursor pagination and sorting mechanism
-# 4) without sorting but with pagination
-# 5) without sorting but with cursor pagination
-# 6) without created_at/updated_at fields
-
-# endpoints provide a built-in incremental approach
-
-
-class Users(IncrementalExportStream):
-    """Users stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/"""
-
-
-class Organizations(IncrementalExportStream):
-    """Organizations stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/"""
-
-
-class Tickets(IncrementalExportStream):
-    """Tickets stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/incremental_exports/"""
-
-    # The API compares the start_time with the ticket's generated_timestamp value, not its updated_at value.
-    # The generated_timestamp value is updated for all entity updates, including system updates.
-    # If a system update occurs after a event, the unchanged updated_at time will become earlier relative to the updated generated_timestamp time.
-    cursor_field = "generated_timestamp"
-
-    def request_params(self, **kwargs) -> MutableMapping[str, Any]:
-        """Adds the field 'comment_count'"""
-        params = super().request_params(**kwargs)
-        params["include"] = "comment_count"
-        return params
-
-    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
-        """Need to save a cursor values as integer"""
-        state = super().get_updated_state(current_stream_state=current_stream_state, latest_record=latest_record)
-        if state and state.get(self.cursor_field):
-            state[self.cursor_field] = int(state[self.cursor_field])
-        return state
-
-    def get_last_end_time(self) -> Optional[Union[str, int]]:
-        """A response with tickets provides cursor data as unixtime"""
-        return self.last_end_time
-
-
-# endpoints provide a pagination mechanism but we can't manage a response order
-
-
-class Groups(IncrementalUnsortedCursorStream):
-    """Groups stream: https://developer.zendesk.com/api-reference/ticketing/groups/groups/"""
-
-
-class GroupMemberships(IncrementalUnsortedCursorStream):
-    """GroupMemberships stream: https://developer.zendesk.com/api-reference/ticketing/groups/group_memberships/"""
-
-
-class SatisfactionRatings(IncrementalUnsortedCursorStream):
-    """SatisfactionRatings stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/satisfaction_ratings/
-
-    The ZenDesk API for this stream provides the filter "start_time" that can be used for incremental logic
-    """
-
-    def request_params(
-        self, stream_state: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None, **kwargs
-    ) -> MutableMapping[str, Any]:
-        """Adds the filtering field 'start_time'"""
-        params = super().request_params(stream_state=stream_state, next_page_token=next_page_token, **kwargs)
-        start_time = self.str2unixtime((stream_state or {}).get(self.cursor_field))
-
-        if not start_time:
-            start_time = int(time.mktime(self._start_date.timetuple()))
-        params.update(
-            {
-                "start_time": start_time,
-                "sort_by": "asc",
-            }
-        )
-        return params
-
-
-class TicketFields(IncrementalUnsortedPageStream):
-    """TicketFields stream: https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_fields/"""
-
-
-class TicketForms(IncrementalUnsortedPageStream):
-    """TicketForms stream: https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_forms/"""
-
-
-class TicketMetrics(IncrementalUnsortedCursorStream):
-    """TicketMetric stream: https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_metrics/"""
-
-    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
-        # Tickets are ordered chronologically by created date, from newest to oldest.
-        # No need to get next page once cursor passed initial state
-        if self.is_finished:
-            return None
-
-        return super().next_page_token(response)
-
-
-class TicketMetricEvents(IncrementalExportStream):
-    """TicketMetricEvents stream: https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_metric_events/"""
-
-    cursor_field = "time"
-
-
-class Macros(IncrementalSortedCursorStream):
-    """Macros stream: https://developer.zendesk.com/api-reference/ticketing/business-rules/macros/"""
-
-
-# endpoints provide a cursor pagination and sorting mechanism
-
-
-class TicketAudits(IncrementalUnsortedStream):
-    """TicketAudits stream: https://developer.zendesk.com/api-reference/ticketing/tickets/ticket_audits/"""
-
-    # can request a maximum of 1,000 results
-    page_size = 1000
-    # ticket audits doesn't have the 'updated_by' field
-    cursor_field = "created_at"
-
-    # Root of response is 'audits'. As rule as an endpoint name is equal a response list name
-    response_list_name = "audits"
-
-    # This endpoint uses a variant of cursor pagination with some differences from cursor pagination used in other endpoints.
-    def request_params(self, next_page_token: Mapping[str, Any] = None, **kwargs) -> MutableMapping[str, Any]:
-        params = super().request_params(next_page_token=next_page_token, **kwargs)
-        params.update({"sort_by": self.cursor_field, "sort_order": "desc", "limit": self.page_size})
-
-        if next_page_token:
-            params["cursor"] = next_page_token
-        return params
-
-    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
-        if self.is_finished:
-            return None
-        return response.json().get("before_cursor")
-
-
-# endpoints don't provide the updated_at/created_at fields
-# thus we can't implement an incremental logic for them
-
-
-class Tags(FullRefreshStream):
-    """Tags stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/tags/"""
-
-    # doesn't have the 'id' field
-    primary_key = "name"
-
-
-class SlaPolicies(FullRefreshStream):
-    """SlaPolicies stream: https://developer.zendesk.com/api-reference/ticketing/business-rules/sla_policies/"""
-
-    def path(self, *args, **kwargs) -> str:
-        return "slas/policies.json"
-
-
-class Brands(FullRefreshStream):
-    """Brands stream: https://developer.zendesk.com/api-reference/ticketing/account-configuration/brands/#list-brands"""
-
-
-class CustomRoles(FullRefreshStream):
-    """CustomRoles stream: https://developer.zendesk.com/api-reference/ticketing/account-configuration/custom_roles/#list-custom-roles"""
-
-
-class Schedules(FullRefreshStream):
-    """Schedules stream: https://developer.zendesk.com/api-reference/ticketing/ticket-management/schedules/#list-schedules"""
-
-    def path(self, *args, **kwargs) -> str:
-        return "business_hours/schedules.json"
+        parent = Articles(**kwargs)
+        super().__init__(parent=parent, **kwargs)
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        article_id = stream_slice.get("parent").get("id")
+        return f"help_center/articles/{article_id}/comments"
+
+
+class ArticleCommentVotes(AbstractVotes, HttpSubStream):
+    def __init__(self, **kwargs):
+        parent = ArticleComments(**kwargs)
+        super().__init__(parent=parent, **kwargs)
+
+    def path(
+        self,
+        *,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None,
+    ) -> str:
+        article_id = stream_slice.get("parent").get("source_id")
+        comment_id = stream_slice.get("parent").get("id")
+        return f"help_center/articles/{article_id}/comments/{comment_id}/votes"

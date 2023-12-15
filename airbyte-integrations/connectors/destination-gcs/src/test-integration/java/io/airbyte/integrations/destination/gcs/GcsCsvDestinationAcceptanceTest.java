@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.destination.gcs;
@@ -8,9 +8,11 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.airbyte.cdk.integrations.base.JavaBaseConstants;
+import io.airbyte.cdk.integrations.destination.s3.S3Format;
+import io.airbyte.cdk.integrations.destination.s3.util.Flattening;
+import io.airbyte.cdk.integrations.standardtest.destination.ProtocolVersion;
 import io.airbyte.commons.json.Jsons;
-import io.airbyte.integrations.base.JavaBaseConstants;
-import io.airbyte.integrations.destination.s3.S3Format;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -33,11 +35,16 @@ public class GcsCsvDestinationAcceptanceTest extends GcsDestinationAcceptanceTes
   }
 
   @Override
+  public ProtocolVersion getProtocolVersion() {
+    return ProtocolVersion.V1;
+  }
+
+  @Override
   protected JsonNode getFormatConfig() {
-    return Jsons.deserialize("{\n"
-        + "  \"format_type\": \"CSV\",\n"
-        + "  \"flattening\": \"Root level flattening\"\n"
-        + "}");
+    return Jsons.jsonNode(Map.of(
+        "format_type", outputFormat,
+        "flattening", Flattening.ROOT_LEVEL.getValue(),
+        "compression", Jsons.jsonNode(Map.of("compression_type", "No Compression"))));
   }
 
   /**
@@ -49,7 +56,9 @@ public class GcsCsvDestinationAcceptanceTest extends GcsDestinationAcceptanceTes
     final Iterator<Entry<String, JsonNode>> iterator = fieldDefinitions.fields();
     while (iterator.hasNext()) {
       final Map.Entry<String, JsonNode> entry = iterator.next();
-      fieldTypes.put(entry.getKey(), entry.getValue().get("type").asText());
+      JsonNode fieldValue = entry.getValue();
+      JsonNode typeValue = fieldValue.get("type") == null ? fieldValue.get("$ref") : fieldValue.get("type");
+      fieldTypes.put(entry.getKey(), typeValue.asText());
     }
     return fieldTypes;
   }
@@ -76,10 +85,20 @@ public class GcsCsvDestinationAcceptanceTest extends GcsDestinationAcceptanceTes
         case "boolean" -> json.put(key, Boolean.valueOf(value));
         case "integer" -> json.put(key, Integer.valueOf(value));
         case "number" -> json.put(key, Double.valueOf(value));
+        case "" -> addNoTypeValue(json, key, value);
         default -> json.put(key, value);
       }
     }
     return json;
+  }
+
+  private static void addNoTypeValue(final ObjectNode json, final String key, final String value) {
+    if (value != null && (value.matches("^\\[.*\\]$")) || value.matches("^\\{.*\\}$")) {
+      final var newNode = Jsons.deserialize(value);
+      json.set(key, newNode);
+    } else {
+      json.put(key, value);
+    }
   }
 
   @Override
@@ -94,8 +113,8 @@ public class GcsCsvDestinationAcceptanceTest extends GcsDestinationAcceptanceTes
     final List<JsonNode> jsonRecords = new LinkedList<>();
 
     for (final S3ObjectSummary objectSummary : objectSummaries) {
-      final S3Object object = s3Client.getObject(objectSummary.getBucketName(), objectSummary.getKey());
-      try (final Reader in = new InputStreamReader(object.getObjectContent(), StandardCharsets.UTF_8)) {
+      try (final S3Object object = s3Client.getObject(objectSummary.getBucketName(), objectSummary.getKey());
+          final Reader in = getReader(object)) {
         final Iterable<CSVRecord> records = CSVFormat.DEFAULT
             .withQuoteMode(QuoteMode.NON_NUMERIC)
             .withFirstRecordAsHeader()
@@ -106,6 +125,10 @@ public class GcsCsvDestinationAcceptanceTest extends GcsDestinationAcceptanceTes
     }
 
     return jsonRecords;
+  }
+
+  protected Reader getReader(final S3Object s3Object) throws IOException {
+    return new InputStreamReader(s3Object.getObjectContent(), StandardCharsets.UTF_8);
   }
 
 }

@@ -1,74 +1,63 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.destination.s3;
 
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.airbyte.cdk.integrations.destination.s3.S3BaseParquetDestinationAcceptanceTest;
+import io.airbyte.cdk.integrations.standardtest.destination.ProtocolVersion;
+import io.airbyte.cdk.integrations.standardtest.destination.argproviders.DataArgumentsProvider;
+import io.airbyte.cdk.integrations.standardtest.destination.comparator.TestDataComparator;
 import io.airbyte.commons.json.Jsons;
-import io.airbyte.integrations.destination.s3.avro.AvroConstants;
-import io.airbyte.integrations.destination.s3.avro.JsonFieldNameUpdater;
-import io.airbyte.integrations.destination.s3.parquet.S3ParquetWriter;
-import io.airbyte.integrations.destination.s3.util.AvroRecordHelper;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.LinkedList;
+import io.airbyte.commons.resources.MoreResources;
+import io.airbyte.protocol.models.v0.AirbyteCatalog;
+import io.airbyte.protocol.models.v0.AirbyteMessage;
+import io.airbyte.protocol.models.v0.CatalogHelpers;
+import io.airbyte.protocol.models.v0.ConfiguredAirbyteCatalog;
 import java.util.List;
-import org.apache.avro.generic.GenericData;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.parquet.avro.AvroReadSupport;
-import org.apache.parquet.hadoop.ParquetReader;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.Test;
 
-public class S3ParquetDestinationAcceptanceTest extends S3DestinationAcceptanceTest {
+public class S3ParquetDestinationAcceptanceTest extends S3BaseParquetDestinationAcceptanceTest {
 
-  protected S3ParquetDestinationAcceptanceTest() {
-    super(S3Format.PARQUET);
+  @Override
+  public ProtocolVersion getProtocolVersion() {
+    return ProtocolVersion.V1;
   }
 
   @Override
-  protected JsonNode getFormatConfig() {
-    return Jsons.deserialize("{\n"
-        + "  \"format_type\": \"Parquet\",\n"
-        + "  \"compression_codec\": \"GZIP\"\n"
-        + "}");
+  protected TestDataComparator getTestDataComparator() {
+    return new S3AvroParquetTestDataComparator();
   }
 
   @Override
-  protected List<JsonNode> retrieveRecords(final TestDestinationEnv testEnv,
-                                           final String streamName,
-                                           final String namespace,
-                                           final JsonNode streamSchema)
-      throws IOException, URISyntaxException {
-    final JsonFieldNameUpdater nameUpdater = AvroRecordHelper.getFieldNameUpdater(streamName, namespace, streamSchema);
+  protected JsonNode getBaseConfigJson() {
+    return S3DestinationTestUtils.getBaseConfigJsonFilePath();
+  }
 
-    final List<S3ObjectSummary> objectSummaries = getAllSyncedObjects(streamName, namespace);
-    final List<JsonNode> jsonRecords = new LinkedList<>();
+  /**
+   * Quick and dirty test to verify that lzo compression works. Probably has some blind spots related
+   * to cpu architecture.
+   * <p>
+   * Only verifies that it runs successfully, which is sufficient to catch any issues with installing
+   * the lzo libraries.
+   */
+  @Test
+  public void testLzoCompression() throws Exception {
+    final JsonNode config = getConfig().deepCopy();
+    ((ObjectNode) config.get("format")).put("compression_codec", "LZO");
 
-    for (final S3ObjectSummary objectSummary : objectSummaries) {
-      final S3Object object = s3Client.getObject(objectSummary.getBucketName(), objectSummary.getKey());
-      final URI uri = new URI(String.format("s3a://%s/%s", object.getBucketName(), object.getKey()));
-      final var path = new org.apache.hadoop.fs.Path(uri);
-      final Configuration hadoopConfig = S3ParquetWriter.getHadoopConfig(config);
+    final AirbyteCatalog catalog = Jsons.deserialize(
+        MoreResources.readResource(DataArgumentsProvider.EXCHANGE_RATE_CONFIG.getCatalogFileVersion(ProtocolVersion.V0)), AirbyteCatalog.class);
+    final ConfiguredAirbyteCatalog configuredCatalog = CatalogHelpers.toDefaultConfiguredCatalog(catalog);
+    final List<AirbyteMessage> messages =
+        MoreResources.readResource(DataArgumentsProvider.EXCHANGE_RATE_CONFIG.getMessageFileVersion(ProtocolVersion.V0)).lines()
+            .map(record -> Jsons.deserialize(record, AirbyteMessage.class))
+            .collect(Collectors.toList());
 
-      try (final ParquetReader<GenericData.Record> parquetReader = ParquetReader.<GenericData.Record>builder(new AvroReadSupport<>(), path)
-          .withConf(hadoopConfig)
-          .build()) {
-        final ObjectReader jsonReader = MAPPER.reader();
-        GenericData.Record record;
-        while ((record = parquetReader.read()) != null) {
-          final byte[] jsonBytes = AvroConstants.JSON_CONVERTER.convertToJson(record);
-          JsonNode jsonRecord = jsonReader.readTree(jsonBytes);
-          jsonRecord = nameUpdater.getJsonWithOriginalFieldNames(jsonRecord);
-          jsonRecords.add(AvroRecordHelper.pruneAirbyteJson(jsonRecord));
-        }
-      }
-    }
-
-    return jsonRecords;
+    runSyncAndVerifyStateOutput(config, messages, configuredCatalog, false);
   }
 
 }

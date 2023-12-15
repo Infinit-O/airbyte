@@ -1,5 +1,5 @@
 {
-  "documentationUrl": "https://docs.airbyte.io/integrations/destinations/azureblobstorage",
+  "documentationUrl": "https://docs.airbyte.com/integrations/destinations/azure-blob-storage",
   "supportsIncremental": true,
   "supportsNormalization": false,
   "supportsDBT": false,
@@ -35,12 +35,29 @@
         "examples": ["airbyte5storage"]
       },
       "azure_blob_storage_account_key": {
+        "title": "Azure Blob Storage account key",
         "description": "The Azure blob storage account key.",
         "airbyte_secret": true,
         "type": "string",
         "examples": [
           "Z8ZkZpteggFx394vm+PJHnGTvdRncaYS+JhLKdj789YNmD+iyGTnG+PV+POiuYNhBg/ACS+LKjd%4FG3FHGN12Nd=="
         ]
+      },
+      "azure_blob_storage_output_buffer_size": {
+        "title": "Azure Blob Storage output buffer size (Megabytes)",
+        "type": "integer",
+        "description": "The amount of megabytes to buffer for the output stream to Azure. This will impact memory footprint on workers, but may need adjustment for performance and appropriate block size in Azure.",
+        "minimum": 1,
+        "maximum": 2047,
+        "default": 5,
+        "examples": [5]
+      },
+      "azure_blob_storage_spill_size": {
+        "title": "Azure Blob Storage file spill size",
+        "type": "integer",
+        "description": "The amount of megabytes after which the connector should spill the records in a new blob object. Make sure to configure size greater than individual records. Enter 0 if not applicable",
+        "default": 500,
+        "examples": [500]
       },
       "format": {
         "title": "Output Format",

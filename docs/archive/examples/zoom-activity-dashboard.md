@@ -4,7 +4,7 @@ description: Using Airbyte and Tableau
 
 # Visualizing the Time Spent by Your Team in Zoom Calls
 
-In this article, we will show you how you can understand how much your team leverages Zoom, or spends time in meetings, in a couple of minutes. We will be using [Airbyte](https://airbyte.io) \(an open-source data integration platform\) and [Tableau](https://www.tableau.com) \(a business intelligence and analytics software\) for this tutorial.
+In this article, we will show you how you can understand how much your team leverages Zoom, or spends time in meetings, in a couple of minutes. We will be using [Airbyte](https://airbyte.com) \(an open-source data integration platform\) and [Tableau](https://www.tableau.com) \(a business intelligence and analytics software\) for this tutorial.
 
 Here is what we will cover:
 
@@ -28,11 +28,11 @@ Let’s get started by replicating Zoom data using Airbyte.
 
 ### Launching Airbyte
 
-In order to replicate Zoom data, we will need to use [Airbyte’s Zoom connector](https://docs.airbyte.io/integrations/sources/zoom). To do this, you need to start off Airbyte’s web app by opening up your terminal and navigating to Airbyte and running:
+In order to replicate Zoom data, we will need to use [Airbyte’s Zoom connector](https://docs.airbyte.com/integrations/sources/zoom). To do this, you need to start off Airbyte’s web app by opening up your terminal and navigating to Airbyte and running:
 
 `docker-compose up`
 
-You can find more details about this in the [Getting Started FAQ](https://discuss.airbyte.io/c/faq/15) on our Discourse Forum.
+You can find more details about this in the [Getting Started FAQ](https://discuss.airbyte.io/c/faq/15) on our [Airbyte Forum](https://github.com/airbytehq/airbyte/discussions).
 
 This will start up Airbyte on `localhost:8000`; open that address in your browser to access the Airbyte dashboard.
 
@@ -56,7 +56,7 @@ Once you are in, you need to click on the **Develop** dropdown and then click on
 
 Clicking on **Build App** for the first time will display a modal for you to accept the Zoom’s API license and terms of use. Do accept if you agree and you will be presented with the below screen.
 
-![](../../.gitbook/assets/zoom-marketplace-build-screen%20(3)%20(3)%20(1).png)
+![](../../.gitbook/assets/zoom-marketplace-build-screen%20(3)%20(3).png)
 
 Select **JWT** as the app you want to build and click on the **Create** button on the card. You will be presented with a modal to enter the app name; type in `airbyte-zoom`.
 
@@ -120,7 +120,7 @@ Select a **Sync frequency** of **manual** and then click on **Set up connection*
 
 After successfully making the connection, you will see your PostgreSQL destination. Click on the Launch button to start the data replication.
 
-![](../../.gitbook/assets/launch%20(3)%20(3)%20(1).png)
+![](../../.gitbook/assets/launch%20(3)%20(3).png)
 
 Then click on the **airbyte-zoom-destination** to see the Sync page.
 
@@ -144,7 +144,7 @@ Go ahead and install Tableau on your machine. After the installation is complete
 
 Once your activation is successful, you will see your Tableau dashboard.
 
-![](../../.gitbook/assets/tableau-dashboard%20(3)%20(3)%20(1).png)
+![](../../.gitbook/assets/tableau-dashboard%20(3)%20(3).png)
 
 On the sidebar menu under the **To a Server** section, click on the **More…** menu. You will see a list of datasource connectors you can connect Tableau with.
 
@@ -194,7 +194,7 @@ Tableau should now look like this:
 
 Now, to finish up, we need to add the **meetings\(Count\) measure** Tableau already calculated for us in the **Rows** section. So drag **meetings\(Count\)** onto the Columns section to complete the chart.
 
-![](../../.gitbook/assets/evolution-of-meetings-per-week%20(3)%20(3)%20(2).png)
+![](../../.gitbook/assets/evolution-of-meetings-per-week%20(3)%20(3).png)
 
 And now we are done with the very first chart. Let's save the sheet and create a new Dashboard that we will add this sheet to as well as the others we will be creating.
 
@@ -245,8 +245,6 @@ The rest of the charts will be needing the **webinars** and `report_webinar_part
 ### Hours a week spends in webinars per week
 
 For this chart, as for the meeting’s counterpart, we will get a calculated field off the Duration field to get the **Webinar Duration in Hours**, and then plot **Created At** against the **Sum of Webinar Duration in Hours**, as shown in the screenshot below. Note: Make sure you create a new sheet for each of these graphs.
-
-![](../../.gitbook/assets/duration-spent-in-weekly-webinars%20(3)%20(3).png)
 
 ### Participants for all webinars per week
 

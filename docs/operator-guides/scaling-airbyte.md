@@ -57,7 +57,7 @@ Temporal maintains multiple idle connections. By the default value is `20` and y
 that temporal creates multiple pools and the number specified in the `SQL_MAX_IDLE_CONNS` environment variable of the `docker.compose.yaml` file
 might end up allowing 4-5 times more connections than expected.
 
-If you want tho increase the amount of allowed idle connexion, you will also need to increase `SQL_MAX_CONNS` as well because `SQL_MAX_IDLE_CONNS`
+If you want to increase the amount of allowed idle connexion, you will also need to increase `SQL_MAX_CONNS` as well because `SQL_MAX_IDLE_CONNS`
 is capped by `SQL_MAX_CONNS`.
 
 ## Feedback
@@ -65,4 +65,3 @@ is capped by `SQL_MAX_CONNS`.
 The advice here is best-effort and by no means comprehensive. Please reach out on Slack if anything doesn't make sense or if something can be improved.
 
 If you've been running Airbyte in production and have more tips up your sleeve, we welcome contributions!
-

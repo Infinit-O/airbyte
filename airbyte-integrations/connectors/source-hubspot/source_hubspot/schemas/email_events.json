@@ -8,6 +8,18 @@
     "appName": {
       "type": ["null", "string"]
     },
+    "bcc": {
+      "type": ["null", "array"]
+    },
+    "cc": {
+      "type": ["null", "array"]
+    },
+    "attempt": {
+      "type": ["null", "integer"]
+    },
+    "bounced": {
+      "type": ["null", "boolean"]
+    },
     "browser": {
       "type": ["null", "object"],
       "properties": {
@@ -28,6 +40,26 @@
         },
         "url": {
           "type": ["null", "string"]
+        },
+        "version": {
+          "type": ["null", "array"],
+          "items": {
+            "type": ["null", "string"]
+          }
+        }
+      }
+    },
+    "category": {
+      "type": ["null", "string"]
+    },
+    "causedBy": {
+      "type": ["null", "object"],
+      "properties": {
+        "created": {
+          "type": ["null", "integer"]
+        },
+        "id": {
+          "type": ["null", "string"]
         }
       }
     },
@@ -35,6 +67,12 @@
       "type": ["null", "integer"]
     },
     "deviceType": {
+      "type": ["null", "string"]
+    },
+    "dropMessage": {
+      "type": ["null", "string"]
+    },
+    "dropReason": {
       "type": ["null", "string"]
     },
     "duration": {
@@ -73,7 +111,27 @@
         "country": {
           "type": ["null", "string"]
         },
+        "latitude": {
+          "type": ["null", "number"]
+        },
+        "longitude": {
+          "type": ["null", "number"]
+        },
         "state": {
+          "type": ["null", "string"]
+        },
+        "zipcode": {
+          "type": ["null", "string"]
+        }
+      }
+    },
+    "obsoletedBy": {
+      "type": ["null", "object"],
+      "properties": {
+        "created": {
+          "type": ["null", "integer"]
+        },
+        "id": {
           "type": ["null", "string"]
         }
       }
@@ -81,8 +139,26 @@
     "portalId": {
       "type": ["null", "integer"]
     },
+    "portalSubscriptionStatus": {
+      "type": ["null", "string"]
+    },
     "recipient": {
       "type": ["null", "string"]
+    },
+    "referer": {
+      "type": ["null", "string"]
+    },
+    "replyTo": {
+      "type": ["null", "array"],
+      "items": {
+        "type": ["null", "string"]
+      }
+    },
+    "requestedBy": {
+      "type": ["null", "string"]
+    },
+    "requestedByUserId": {
+      "type": ["null", "integer"]
     },
     "response": {
       "type": ["null", "string"]
@@ -99,6 +175,43 @@
       }
     },
     "smtpId": {
+      "type": ["null", "string"]
+    },
+    "source": {
+      "type": ["null", "string"]
+    },
+    "sourceId": {
+      "type": ["null", "string"]
+    },
+    "subscriptions": {
+      "type": ["null", "array"],
+      "items": {
+        "type": ["null", "object"],
+        "properties": {
+          "id": {
+            "type": ["null", "integer"]
+          },
+          "legalBasisChange": {
+            "type": ["null", "object"],
+            "properties": {
+              "legalBasisExplanation": {
+                "type": ["null", "string"]
+              },
+              "legalBasisType": {
+                "type": ["null", "string"]
+              },
+              "optState": {
+                "type": ["null", "string"]
+              }
+            }
+          },
+          "status": {
+            "type": ["null", "string"]
+          }
+        }
+      }
+    },
+    "status": {
       "type": ["null", "string"]
     },
     "subject": {

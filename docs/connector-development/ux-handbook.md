@@ -99,9 +99,9 @@ Without repeating too many details mentioned elsewhere, the important thing to k
 
 | **Persona**        | **Level of technical knowledge**                                                                                                                                                                                                                                                                                                |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Data Analyst       | <p>Proficient with:<br><br>Data manipulation tools like Excel or SQL<br>Dashboard tools like Looker<br><br>Not very familiar with reading API docs and doesn't know what a curl request is. But might be able to generate an API key if you tell them exactly how.</p>                                                          |
-| Analytics Engineer | <p>Proficient with:<br><br>SQL &#x26; DBT<br>Git<br>A scripting language like Python<br>Shallow familiarity with infra tools like Docker<br><br>Much more technical than a data analyst, but not as much as a data engineer</p>                                                                                                 |
-| Data Engineer      | <p>Proficient with:<br><br>SQL &#x26; DBT<br>Git<br>2 or more programming languages<br>Infra tools like Docker or Kubernetes<br>Cloud technologies like AWS or GCP<br>Building or consuming APIs<br>orhestartion tools like Airflow<br><br>The most technical persona we serve. Think of them like an engineer on your team</p> |
+| Data Analyst       | <p>Proficient with:<br/><br/>Data manipulation tools like Excel or SQL<br/>Dashboard tools like Looker<br/><br/>Not very familiar with reading API docs and doesn't know what a curl request is. But might be able to generate an API key if you tell them exactly how.</p>                                                          |
+| Analytics Engineer | <p>Proficient with:<br/><br/>SQL &#x26; DBT<br/>Git<br/>A scripting language like Python<br/>Shallow familiarity with infra tools like Docker<br/><br/>Much more technical than a data analyst, but not as much as a data engineer</p>                                                                                                 |
+| Data Engineer      | <p>Proficient with:<br/><br/>SQL &#x26; DBT<br/>Git<br/>2 or more programming languages<br/>Infra tools like Docker or Kubernetes<br/>Cloud technologies like AWS or GCP<br/>Building or consuming APIs<br/>orhestartion tools like Airflow<br/><br/>The most technical persona we serve. Think of them like an engineer on your team</p> |
 
 Keep in mind that the distribution of served personas will differ per connector. Data analysts are highly unlikely to form the majority of users for a very technical connector like say, Kafka.
 
@@ -187,6 +187,10 @@ Adding a parameter “attribution\_lookback\_window” with no explanation might
 
 If a user needs to obtain an API key or host name, tell them exactly where to find it. Ideally you would show them screenshots, though include a date and API version in those if possible, so it’s clear when they’ve aged out of date.
 
+**Links should point to page anchors where applicable**. 
+
+Often, you are trying to redirect the user to a specific part of the page. For example, if you wanted to point someone to the "Input Configuration" section of this doc, it is better to point them to `https://docs.airbyte.com/connector-development/ux-handbook#input-configuration` instead of `https://docs.airbyte.com/connector-development/ux-handbook`.
+
 **Fail fast & actionably**
 
 A user should not be able to configure something that will not work. If a user’s configuration is invalid, we should inform them as precisely as possible about what they need to do to fix the issue.
@@ -235,7 +239,7 @@ In some cases, describing schemas is impossible to do reliably. For example, Mon
 
 That is, we would rather not describe a schema at all than describe it incorrectly, as incorrect descriptions **will** lead to failures downstream.
 
-To keep schema descriptions reliable, [automate schema generation](https://docs.airbyte.io/connector-development/cdk-python/schemas#generating-schemas-from-openapi-definitions) whenever possible.
+To keep schema descriptions reliable, [automate schema generation](https://docs.airbyte.com/connector-development/cdk-python/schemas#generating-schemas-from-openapi-definitions) whenever possible.
 
 #### Be very cautious about breaking changes to output schemas
 
@@ -262,7 +266,7 @@ For example, to set up CDC for databases, a user must create logical replication
 
 ### External Documentation
 
-This section is concerned with the external-facing documentation of a connector that goes in [https://docs.airbyte.io](https://docs.airbyte.io) e.g: [this one](https://docs.airbyte.io/integrations/sources/amazon-seller-partner)
+This section is concerned with the external-facing documentation of a connector that goes in [https://docs.airbyte.com](https://docs.airbyte.com) e.g: [this one](https://docs.airbyte.com/integrations/sources/amazon-seller-partner)
 
 **Documentation should communicate persona-impacting behaviors**
 

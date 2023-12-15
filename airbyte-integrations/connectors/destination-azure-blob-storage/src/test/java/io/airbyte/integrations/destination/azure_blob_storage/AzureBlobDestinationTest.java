@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.destination.azure_blob_storage;
@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 import io.airbyte.commons.json.Jsons;
-import io.airbyte.protocol.models.ConnectorSpecification;
+import io.airbyte.protocol.models.v0.ConnectorSpecification;
 import org.junit.jupiter.api.Test;
 
 public class AzureBlobDestinationTest {
@@ -78,6 +78,40 @@ public class AzureBlobDestinationTest {
     final JsonNode connectionSpecification = spec.getConnectionSpecification();
 
     assertNotNull(connectionSpecification);
+  }
+
+  @Test
+  public void testConfigObjectCustomOutputBufferSize() {
+    final JsonNode config = Jsons.jsonNode(ImmutableMap.builder()
+        .put("azure_blob_storage_account_name", "accName")
+        .put("azure_blob_storage_account_key", "accKey")
+        .put("azure_blob_storage_endpoint_domain_name", "accDomainName.com")
+        .put("azure_blob_storage_output_buffer_size", 10)
+        .put("format", getFormatConfig())
+        .build());
+    final AzureBlobStorageDestinationConfig azureBlobStorageConfig = AzureBlobStorageDestinationConfig
+        .getAzureBlobStorageConfig(config);
+
+    assertEquals(10 * 1024 * 1024,
+        azureBlobStorageConfig.getOutputStreamBufferSize());
+  }
+
+  @Test
+  void testConfigBlobStorageSpillSize() {
+    final JsonNode config = Jsons.jsonNode(ImmutableMap.builder()
+        .put("azure_blob_storage_account_name", "accName")
+        .put("azure_blob_storage_account_key", "accKey")
+        .put("azure_blob_storage_endpoint_domain_name", "accDomainName.com")
+        .put("azure_blob_storage_output_buffer_size", 10)
+        .put("azure_blob_storage_spill_size", 500)
+        .put("format", getFormatConfig())
+        .build());
+
+    final AzureBlobStorageDestinationConfig azureBlobStorageConfig = AzureBlobStorageDestinationConfig
+        .getAzureBlobStorageConfig(config);
+
+    assertEquals((long) 500 * 1024 * 1024,
+        azureBlobStorageConfig.getBlobSpillSize());
   }
 
   private JsonNode getFormatConfig() {

@@ -1,21 +1,22 @@
 /*
- * Copyright (c) 2021 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.source.mssql;
 
-import static io.airbyte.db.jdbc.JdbcConstants.INTERNAL_COLUMN_NAME;
-import static io.airbyte.db.jdbc.JdbcConstants.INTERNAL_COLUMN_TYPE;
-import static io.airbyte.db.jdbc.JdbcConstants.INTERNAL_COLUMN_TYPE_NAME;
-import static io.airbyte.db.jdbc.JdbcConstants.INTERNAL_SCHEMA_NAME;
-import static io.airbyte.db.jdbc.JdbcConstants.INTERNAL_TABLE_NAME;
+import static io.airbyte.cdk.db.jdbc.JdbcConstants.INTERNAL_COLUMN_NAME;
+import static io.airbyte.cdk.db.jdbc.JdbcConstants.INTERNAL_COLUMN_TYPE;
+import static io.airbyte.cdk.db.jdbc.JdbcConstants.INTERNAL_COLUMN_TYPE_NAME;
+import static io.airbyte.cdk.db.jdbc.JdbcConstants.INTERNAL_SCHEMA_NAME;
+import static io.airbyte.cdk.db.jdbc.JdbcConstants.INTERNAL_TABLE_NAME;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.microsoft.sqlserver.jdbc.Geography;
 import com.microsoft.sqlserver.jdbc.Geometry;
 import com.microsoft.sqlserver.jdbc.SQLServerResultSetMetaData;
-import io.airbyte.db.jdbc.JdbcSourceOperations;
+import io.airbyte.cdk.db.jdbc.JdbcSourceOperations;
+import java.nio.charset.Charset;
 import java.sql.JDBCType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,7 +34,7 @@ public class MssqlSourceOperations extends JdbcSourceOperations {
    * @throws SQLException
    */
   @Override
-  public void setJsonField(final ResultSet resultSet, final int colIndex, final ObjectNode json)
+  public void copyToJsonField(final ResultSet resultSet, final int colIndex, final ObjectNode json)
       throws SQLException {
 
     final SQLServerResultSetMetaData metadata = (SQLServerResultSetMetaData) resultSet
@@ -43,7 +44,7 @@ public class MssqlSourceOperations extends JdbcSourceOperations {
     final JDBCType columnType = safeGetJdbcType(metadata.getColumnType(colIndex));
 
     if (columnTypeName.equalsIgnoreCase("time")) {
-      putString(json, columnName, resultSet, colIndex);
+      putTime(json, columnName, resultSet, colIndex);
     } else if (columnTypeName.equalsIgnoreCase("geometry")) {
       putGeometry(json, columnName, resultSet, colIndex);
     } else if (columnTypeName.equalsIgnoreCase("geography")) {
@@ -53,7 +54,7 @@ public class MssqlSourceOperations extends JdbcSourceOperations {
     }
   }
 
-  private void putValue(JDBCType columnType,
+  private void putValue(final JDBCType columnType,
                         final ResultSet resultSet,
                         final String columnName,
                         final int colIndex,
@@ -79,7 +80,7 @@ public class MssqlSourceOperations extends JdbcSourceOperations {
   }
 
   @Override
-  public JDBCType getFieldType(final JsonNode field) {
+  public JDBCType getDatabaseFieldType(final JsonNode field) {
     try {
       final String typeName = field.get(INTERNAL_COLUMN_TYPE_NAME).asText();
       if (typeName.equalsIgnoreCase("geography")
@@ -104,8 +105,8 @@ public class MssqlSourceOperations extends JdbcSourceOperations {
                            final ResultSet resultSet,
                            final int index)
       throws SQLException {
-    byte[] bytes = resultSet.getBytes(index);
-    String value = new String(bytes);
+    final byte[] bytes = resultSet.getBytes(index);
+    final String value = new String(bytes, Charset.defaultCharset());
     node.put(columnName, value);
   }
 
