@@ -1,15 +1,17 @@
 #
-# Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+from dataclasses import dataclass
 from typing import Union
 
 import requests
 from airbyte_cdk.sources.declarative.requesters.error_handlers.response_status import ResponseStatus
 
 
-class ErrorHandler(ABC):
+@dataclass
+class ErrorHandler:
     """
     Defines whether a request was successful and how to handle a failure.
     """
@@ -22,8 +24,16 @@ class ErrorHandler(ABC):
         """
         pass
 
+    @property
     @abstractmethod
-    def should_retry(self, response: requests.Response) -> ResponseStatus:
+    def max_time(self) -> Union[int, None]:
+        """
+        Specifies maximum total waiting time (in seconds) for backoff policy. Return None for no limit.
+        """
+        pass
+
+    @abstractmethod
+    def interpret_response(self, response: requests.Response) -> ResponseStatus:
         """
         Evaluate response status describing whether a failing request should be retried or ignored.
 

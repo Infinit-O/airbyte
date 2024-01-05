@@ -1,15 +1,18 @@
 #
-# Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Any, List, Mapping, Optional
 
 import requests
 from airbyte_cdk.sources.declarative.requesters.request_options.request_options_provider import RequestOptionsProvider
+from airbyte_cdk.sources.declarative.types import Record
 
 
-class Paginator(RequestOptionsProvider):
+@dataclass
+class Paginator(ABC, RequestOptionsProvider):
     """
     Defines the token to use to fetch the next page of records from the API.
 
@@ -18,7 +21,13 @@ class Paginator(RequestOptionsProvider):
     """
 
     @abstractmethod
-    def next_page_token(self, response: requests.Response, last_records: List[Mapping[str, Any]]) -> Optional[Mapping[str, Any]]:
+    def reset(self) -> None:
+        """
+        Reset the pagination's inner state
+        """
+
+    @abstractmethod
+    def next_page_token(self, response: requests.Response, last_records: List[Record]) -> Optional[Mapping[str, Any]]:
         """
         Returns the next_page_token to use to fetch the next page of records.
 
@@ -36,41 +45,5 @@ class Paginator(RequestOptionsProvider):
         e.g: if you wanted to hit https://myapi.com/v1/some_entity then this will return "some_entity"
 
         :return: path to hit to fetch the next request. Returning None means the path is not defined by the next_page_token
-        """
-        pass
-
-    @abstractmethod
-    def request_params(self) -> Mapping[str, Any]:
-        """
-        Specifies the query parameters that should be set on an outgoing HTTP request to fetch the next page of records.
-
-        :return: the request parameters to set to fetch the next page
-        """
-        pass
-
-    @abstractmethod
-    def request_headers(self) -> Mapping[str, str]:
-        """
-        Specifies the request headers that should be set on an outgoing HTTP request to fetch the next page of records.
-
-        :return: the request headers to set to fetch the next page
-        """
-        pass
-
-    @abstractmethod
-    def request_body_data(self) -> Mapping[str, Any]:
-        """
-        Specifies the body data that should be set on an outgoing HTTP request to fetch the next page of records.
-
-        :return: the request body data to set to fetch the next page
-        """
-        pass
-
-    @abstractmethod
-    def request_body_json(self) -> Mapping[str, Any]:
-        """
-        Specifies the json content that should be set on an outgoing HTTP request to fetch the next page of records.
-
-        :return: the request body to set (as a json object) to fetch the next page
         """
         pass

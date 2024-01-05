@@ -1,46 +1,53 @@
 #
-# Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 import datetime as dt
-from typing import Any, Mapping, Optional, Union
+from dataclasses import InitVar, dataclass, field
+from typing import Any, Mapping, Union
 
+from airbyte_cdk.sources.declarative.datetime.datetime_parser import DatetimeParser
 from airbyte_cdk.sources.declarative.interpolation.interpolated_string import InterpolatedString
 
 
+@dataclass
 class MinMaxDatetime:
     """
     Compares the provided date against optional minimum or maximum times. If date is earlier than
     min_date, then min_date is returned. If date is greater than max_date, then max_date is returned.
     If neither, the input date is returned.
+
+    The timestamp format accepts the same format codes as datetime.strfptime, which are
+    all the format codes required by the 1989 C standard.
+    Full list of accepted format codes: https://man7.org/linux/man-pages/man3/strftime.3.html
+
+    Attributes:
+        datetime (Union[InterpolatedString, str]): InterpolatedString or string representing the datetime in the format specified by `datetime_format`
+        datetime_format (str): Format of the datetime passed as argument
+        min_datetime (Union[InterpolatedString, str]): Represents the minimum allowed datetime value.
+        max_datetime (Union[InterpolatedString, str]): Represents the maximum allowed datetime value.
     """
 
-    def __init__(
-        self,
-        datetime: Union[InterpolatedString, str],
-        datetime_format: str = "",
-        min_datetime: Union[InterpolatedString, str] = "",
-        max_datetime: Union[InterpolatedString, str] = "",
-        **options: Optional[Mapping[str, Any]],
-    ):
-        """
-        :param datetime: InterpolatedString or string representing the datetime in the format specified by `datetime_format`
-        :param datetime_format: Format of the datetime passed as argument
-        :param min_datetime: InterpolatedString or string representing the min datetime
-        :param max_datetime: InterpolatedString or string representing the max datetime
-        :param options: Additional runtime parameters to be used for string interpolation
-        """
-        self._datetime_interpolator = InterpolatedString.create(datetime, options=options)
-        self._datetime_format = datetime_format
-        self._timezone = dt.timezone.utc
-        self._min_datetime_interpolator = InterpolatedString.create(min_datetime, options=options) if min_datetime else None
-        self._max_datetime_interpolator = InterpolatedString.create(max_datetime, options=options) if max_datetime else None
+    datetime: Union[InterpolatedString, str]
+    parameters: InitVar[Mapping[str, Any]]
+    # datetime_format is a unique case where we inherit it from the parent if it is not specified before using the default value
+    # which is why we need dedicated getter/setter methods and private dataclass field
+    datetime_format: str = ""
+    _datetime_format: str = field(init=False, repr=False, default="")
+    min_datetime: Union[InterpolatedString, str] = ""
+    max_datetime: Union[InterpolatedString, str] = ""
 
-    def get_datetime(self, config, **additional_options) -> dt.datetime:
+    def __post_init__(self, parameters: Mapping[str, Any]):
+        self.datetime = InterpolatedString.create(self.datetime, parameters=parameters or {})
+        self._parser = DatetimeParser()
+        self.min_datetime = InterpolatedString.create(self.min_datetime, parameters=parameters) if self.min_datetime else None
+        self.max_datetime = InterpolatedString.create(self.max_datetime, parameters=parameters) if self.max_datetime else None
+
+    def get_datetime(self, config, **additional_parameters) -> dt.datetime:
         """
         Evaluates and returns the datetime
         :param config: The user-provided configuration as specified by the source's spec
-        :param additional_options: Additional arguments to be passed to the strings for interpolation
+        :param additional_parameters: Additional arguments to be passed to the strings for interpolation
         :return: The evaluated datetime
         """
         # We apply a default datetime format here instead of at instantiation, so it can be set by the parent first
@@ -48,20 +55,18 @@ class MinMaxDatetime:
         if not datetime_format:
             datetime_format = "%Y-%m-%dT%H:%M:%S.%f%z"
 
-        time = dt.datetime.strptime(self._datetime_interpolator.eval(config, **additional_options), datetime_format).replace(
-            tzinfo=self._timezone
-        )
+        time = self._parser.parse(str(self.datetime.eval(config, **additional_parameters)), datetime_format)
 
-        if self._min_datetime_interpolator:
-            min_time = dt.datetime.strptime(self._min_datetime_interpolator.eval(config, **additional_options), datetime_format).replace(
-                tzinfo=self._timezone
-            )
-            time = max(time, min_time)
-        if self._max_datetime_interpolator:
-            max_time = dt.datetime.strptime(self._max_datetime_interpolator.eval(config, **additional_options), datetime_format).replace(
-                tzinfo=self._timezone
-            )
-            time = min(time, max_time)
+        if self.min_datetime:
+            min_time = str(self.min_datetime.eval(config, **additional_parameters))
+            if min_time:
+                min_time = self._parser.parse(min_time, datetime_format)
+                time = max(time, min_time)
+        if self.max_datetime:
+            max_time = str(self.max_datetime.eval(config, **additional_parameters))
+            if max_time:
+                max_time = self._parser.parse(max_time, datetime_format)
+                time = min(time, max_time)
         return time
 
     @property
@@ -72,4 +77,7 @@ class MinMaxDatetime:
     @datetime_format.setter
     def datetime_format(self, value: str):
         """Setter for the datetime format"""
-        self._datetime_format = value
+        # Covers the case where datetime_format is not provided in the constructor, which causes the property object
+        # to be set which we need to avoid doing
+        if not isinstance(value, property):
+            self._datetime_format = value

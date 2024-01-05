@@ -1,14 +1,16 @@
 #
-# Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+from dataclasses import dataclass
 from typing import Any, List, Mapping, Union
 
 import requests
 
 
-class Decoder(ABC):
+@dataclass
+class Decoder:
     """
     Decoder strategy to transform a requests.Response into a Mapping[str, Any]
     """

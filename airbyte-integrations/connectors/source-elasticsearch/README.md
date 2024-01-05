@@ -20,8 +20,9 @@ Credentials can be provided in three ways:
 
 #### Build
 Build the connector image via Gradle:
+
 ```
-./gradlew :airbyte-integrations:connectors:source-elasticsearch:airbyteDocker
+./gradlew :airbyte-integrations:connectors:source-elasticsearch:buildConnectorImage
 ```
 When building via Gradle, the docker image name and tag, respectively, are the values of the `io.airbyte.name` and `io.airbyte.version` `LABEL`s in
 the Dockerfile.
@@ -52,11 +53,11 @@ Airbyte has a standard test suite that all destination connectors must pass. See
 All commands should be run from airbyte project root.
 To run unit tests:
 ```
-./gradlew :airbyte-integrations:connectors:sources-elasticsearch:unitTest
+./gradlew :airbyte-integrations:connectors:source-elasticsearch:unitTest
 ```
 To run acceptance and custom integration tests:
 ```
-./gradlew :airbyte-integrations:connectors:sources-elasticsearch:integrationTest
+./gradlew :airbyte-integrations:connectors:source-elasticsearch:integrationTest
 ```
 
 ## Dependency Management

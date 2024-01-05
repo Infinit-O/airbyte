@@ -1,31 +1,48 @@
 #
-# Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
+import freezegun
 import pendulum
 import pytest
-from source_facebook_marketing.utils import DATA_RETENTION_PERIOD, ValidationDateException, validate_date_field
+from source_facebook_marketing.utils import DATA_RETENTION_PERIOD, validate_end_date, validate_start_date
+
+TODAY = pendulum.local(2023, 3, 31)
 
 
 @pytest.mark.parametrize(
-    "date, expected_message, raise_error",
+    "field_name, date, expected_date, expected_messages",
     [
-        (pendulum.now(), "", False),
         (
-            pendulum.now() - pendulum.duration(months=DATA_RETENTION_PERIOD.months + 1),
-            f" cannot be beyond {DATA_RETENTION_PERIOD.months} months from the current date.",
-            True,
+            "start_date",
+            TODAY.subtract(months=DATA_RETENTION_PERIOD - 1),
+            TODAY.subtract(months=DATA_RETENTION_PERIOD - 1),
+            [],
         ),
-        (pendulum.now() + pendulum.duration(months=1), " cannot be in the future. Please set today's date or later.", True),
+        (
+            "start_date",
+            pendulum.local(2019, 1, 1),
+            pendulum.local(2020, 3, 2),
+            [f"The start date cannot be beyond 37 months from the current date. " f"Set start date to {pendulum.local(2020, 3, 2)}."],
+        ),
+        (
+            "start_date",
+            TODAY + pendulum.duration(months=1),
+            TODAY,
+            [f"The start date cannot be in the future. Set start date to today's date - {TODAY}."],
+        ),
+        (
+            "end_date",
+            TODAY.subtract(months=DATA_RETENTION_PERIOD),
+            TODAY,
+            [f"The end date must be after start date. Set end date to {TODAY}."],
+        ),
     ],
-    ids=["valid_date", f"date in the past by {DATA_RETENTION_PERIOD.months} months", "date in future"],
 )
-def test_validate_date_field(date, expected_message, raise_error):
-    field_name = "test_field_name"
-
-    if raise_error:
-        with pytest.raises(ValidationDateException) as error:
-            assert validate_date_field(field_name, date)
-        assert str(error.value) == field_name + expected_message
-    else:
-        assert validate_date_field(field_name, date)
+@freezegun.freeze_time("2023-03-31")
+def test_date_validators(caplog, field_name, date, expected_date, expected_messages):
+    if field_name == "start_date":
+        assert validate_start_date(date) == expected_date
+    elif field_name == "end_date":
+        assert validate_end_date(expected_date, date) == expected_date
+    assert caplog.messages == expected_messages

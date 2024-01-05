@@ -1,21 +1,21 @@
 /*
- * Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+ * Copyright (c) 2023 Airbyte, Inc., all rights reserved.
  */
 
 package io.airbyte.integrations.source.oracle;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
+import io.airbyte.cdk.db.factory.DatabaseDriver;
+import io.airbyte.cdk.db.jdbc.JdbcDatabase;
+import io.airbyte.cdk.db.jdbc.JdbcUtils;
+import io.airbyte.cdk.db.jdbc.streaming.AdaptiveStreamingQueryConfig;
+import io.airbyte.cdk.integrations.base.IntegrationRunner;
+import io.airbyte.cdk.integrations.base.Source;
+import io.airbyte.cdk.integrations.base.ssh.SshWrappedSource;
+import io.airbyte.cdk.integrations.source.jdbc.AbstractJdbcSource;
+import io.airbyte.cdk.integrations.source.relationaldb.TableInfo;
 import io.airbyte.commons.json.Jsons;
-import io.airbyte.db.factory.DatabaseDriver;
-import io.airbyte.db.jdbc.JdbcDatabase;
-import io.airbyte.db.jdbc.JdbcUtils;
-import io.airbyte.db.jdbc.streaming.AdaptiveStreamingQueryConfig;
-import io.airbyte.integrations.base.IntegrationRunner;
-import io.airbyte.integrations.base.Source;
-import io.airbyte.integrations.base.ssh.SshWrappedSource;
-import io.airbyte.integrations.source.jdbc.AbstractJdbcSource;
-import io.airbyte.integrations.source.relationaldb.TableInfo;
 import io.airbyte.protocol.models.CommonField;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -35,6 +35,7 @@ public class OracleSource extends AbstractJdbcSource<JDBCType> implements Source
   private static final Logger LOGGER = LoggerFactory.getLogger(OracleSource.class);
 
   public static final String DRIVER_CLASS = DatabaseDriver.ORACLE.getDriverClassName();
+  private static final int INTERMEDIATE_STATE_EMISSION_FREQUENCY = 10_000;
 
   private List<String> schemas;
 
@@ -46,13 +47,15 @@ public class OracleSource extends AbstractJdbcSource<JDBCType> implements Source
   private static final String UNRECOGNIZED = "Unrecognized";
   private static final String CONNECTION_DATA = "connection_data";
 
+  private static final String ORACLE_JDBC_PARAMETER_DELIMITER = ";";
+
   enum Protocol {
     TCP,
     TCPS
   }
 
   public OracleSource() {
-    super(DRIVER_CLASS, AdaptiveStreamingQueryConfig::new, JdbcUtils.getDefaultSourceOperations());
+    super(DRIVER_CLASS, AdaptiveStreamingQueryConfig::new, new OracleSourceOperations());
   }
 
   public static Source sshWrappedSource() {
@@ -75,13 +78,14 @@ public class OracleSource extends AbstractJdbcSource<JDBCType> implements Source
     final Protocol protocol = config.has(JdbcUtils.ENCRYPTION_KEY)
         ? obtainConnectionProtocol(config.get(JdbcUtils.ENCRYPTION_KEY), additionalParameters)
         : Protocol.TCP;
-    String connectionString;
+    final String connectionString;
     if (config.has(CONNECTION_DATA)) {
-      JsonNode connectionData = config.get(CONNECTION_DATA);
+      final JsonNode connectionData = config.get(CONNECTION_DATA);
       final String connectionType = connectionData.has("connection_type") ? connectionData.get("connection_type").asText()
           : UNRECOGNIZED;
       connectionString = switch (connectionType) {
-        case SERVICE_NAME -> buildConnectionString(config, protocol.toString(), SERVICE_NAME.toUpperCase(), config.get(CONNECTION_DATA).get(SERVICE_NAME).asText());
+        case SERVICE_NAME -> buildConnectionString(config, protocol.toString(), SERVICE_NAME.toUpperCase(),
+            config.get(CONNECTION_DATA).get(SERVICE_NAME).asText());
         case SID -> buildConnectionString(config, protocol.toString(), SID.toUpperCase(), config.get(CONNECTION_DATA).get(SID).asText());
         default -> throw new IllegalArgumentException("Unrecognized connection type: " + connectionType);
       };
@@ -113,7 +117,7 @@ public class OracleSource extends AbstractJdbcSource<JDBCType> implements Source
     }
 
     if (!additionalParameters.isEmpty()) {
-      final String connectionParams = String.join(getJdbcParameterDelimiter(), additionalParameters);
+      final String connectionParams = String.join(ORACLE_JDBC_PARAMETER_DELIMITER, additionalParameters);
       configBuilder.put(JdbcUtils.CONNECTION_PROPERTIES_KEY, connectionParams);
     }
 
@@ -192,8 +196,8 @@ public class OracleSource extends AbstractJdbcSource<JDBCType> implements Source
   }
 
   @Override
-  protected String getJdbcParameterDelimiter() {
-    return ";";
+  protected int getStateEmissionFrequency() {
+    return INTERMEDIATE_STATE_EMISSION_FREQUENCY;
   }
 
   public static void main(final String[] args) throws Exception {
@@ -203,7 +207,10 @@ public class OracleSource extends AbstractJdbcSource<JDBCType> implements Source
     LOGGER.info("completed source: {}", OracleSource.class);
   }
 
-  private String buildConnectionString(JsonNode config, String protocol, String connectionTypeName, String connectionTypeValue) {
+  private String buildConnectionString(final JsonNode config,
+                                       final String protocol,
+                                       final String connectionTypeName,
+                                       final String connectionTypeValue) {
     return String.format(
         "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=%s)(HOST=%s)(PORT=%s))(CONNECT_DATA=(%s=%s)))",
         protocol,
@@ -212,4 +219,5 @@ public class OracleSource extends AbstractJdbcSource<JDBCType> implements Source
         connectionTypeName,
         connectionTypeValue);
   }
+
 }

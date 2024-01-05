@@ -1,19 +1,19 @@
 #
-# Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Union
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional
 
 import pendulum
 import source_bing_ads.source
 from airbyte_cdk.models import SyncMode
 from airbyte_cdk.sources.streams.core import package_name_from_class
 from airbyte_cdk.sources.utils.schema_helpers import ResourceSchemaLoader
+from airbyte_cdk.sources.utils.transform import TransformConfig, TypeTransformer
 from bingads.service_client import ServiceClient
 from bingads.v13.internal.reporting.row_report import _RowReport
-from bingads.v13.internal.reporting.row_report_iterator import _RowReportRecord
 from bingads.v13.reporting import ReportingDownloadParameters
 from suds import sudsobject
 
@@ -149,6 +149,7 @@ class ReportsMixin(ABC):
     timeout: int = 300000
     report_file_format: str = "Csv"
 
+    transformer: TypeTransformer = TypeTransformer(TransformConfig.DefaultSchemaNormalization)
     primary_key: List[str] = ["TimePeriod", "Network", "DeviceType"]
 
     @property
@@ -164,6 +165,7 @@ class ReportsMixin(ABC):
     def report_columns(self) -> Iterable[str]:
         """
         Specifies bing ads report naming
+        TODO: refactor to use list(self.get_json_schema().get("properties", {}).keys()), see AgeGenderAudienceReport
         """
         pass
 
@@ -203,11 +205,7 @@ class ReportsMixin(ABC):
     def request_params(
         self, stream_state: Mapping[str, Any] = None, account_id: str = None, **kwargs: Mapping[str, Any]
     ) -> Mapping[str, Any]:
-        if not stream_state or not account_id or not stream_state.get(account_id, {}).get(self.cursor_field):
-            start_date = self.client.reports_start_date
-        else:
-            # gets starting point for a stream and account
-            start_date = pendulum.from_timestamp(stream_state[account_id][self.cursor_field])
+        start_date = self.get_start_date(stream_state, account_id)
 
         reporting_service = self.client.get_service("ReportingService")
         request_time_zone = reporting_service.factory.create("ReportTimeZone")
@@ -228,12 +226,19 @@ class ReportsMixin(ABC):
             "timeout_in_milliseconds": self.timeout,
         }
 
+    def get_start_date(self, stream_state: Mapping[str, Any] = None, account_id: str = None):
+        if stream_state and account_id:
+            if stream_state.get(account_id, {}).get(self.cursor_field):
+                return pendulum.from_timestamp(stream_state[account_id][self.cursor_field])
+
+        return self.client.reports_start_date
+
     def get_updated_state(
         self,
         current_stream_state: MutableMapping[str, Any],
         latest_record: Mapping[str, Any],
     ) -> Mapping[str, Any]:
-        account_id = latest_record["AccountId"]
+        account_id = str(latest_record["AccountId"])
         current_stream_state[account_id] = current_stream_state.get(account_id, {})
         current_stream_state[account_id][self.cursor_field] = max(
             self.get_report_record_timestamp(latest_record[self.cursor_field]),
@@ -286,35 +291,6 @@ class ReportsMixin(ABC):
         report_request.Columns = columns
         return report_request
 
-    def parse_response(self, response: sudsobject.Object, **kwargs: Mapping[str, Any]) -> Iterable[Mapping]:
-        if response is not None:
-            for row in response.report_records:
-                yield {column: self.get_column_value(row, column) for column in self.report_columns}
-
-        yield from []
-
-    def get_column_value(self, row: _RowReportRecord, column: str) -> Union[str, None, int, float]:
-        """
-        Reads field value from row and transforms string type field to numeric if possible
-        """
-        value = row.value(column)
-        if value == "":
-            return None
-
-        if value is not None and column in REPORT_FIELD_TYPES:
-            if REPORT_FIELD_TYPES[column] == "integer":
-                value = 0 if value == "--" else int(value.replace(",", ""))
-            elif REPORT_FIELD_TYPES[column] == "number":
-                if value == "--":
-                    value = 0.0
-                else:
-                    if "%" in value:
-                        value = float(value.replace("%", "").replace(",", "")) / 100
-                    else:
-                        value = float(value.replace(",", ""))
-
-        return value
-
     def get_report_record_timestamp(self, datestring: str) -> int:
         """
         Parse report date field based on aggregation type
@@ -337,3 +313,15 @@ class ReportsMixin(ABC):
             yield {"account_id": account["Id"], "customer_id": account["ParentCustomerId"]}
 
         yield from []
+
+
+class PerformanceReportsMixin(ReportsMixin):
+    def get_start_date(self, stream_state: Mapping[str, Any] = None, account_id: str = None):
+        start_date = super().get_start_date(stream_state, account_id)
+
+        if self.config.get("lookback_window"):
+            # Datetime subtract won't work with days = 0
+            # it'll output an AirbyteError
+            return start_date.subtract(days=self.config["lookback_window"])
+        else:
+            return start_date

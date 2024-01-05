@@ -1,15 +1,17 @@
 #
-# Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from abc import ABC, abstractmethod
-from typing import Iterable, List, Optional
+from abc import abstractmethod
+from dataclasses import dataclass
+from typing import Iterable, Optional
 
-from airbyte_cdk.models import SyncMode
-from airbyte_cdk.sources.declarative.types import Record, StreamSlice, StreamState
+from airbyte_cdk.sources.declarative.types import StreamSlice, StreamState
+from airbyte_cdk.sources.streams.core import StreamData
 
 
-class Retriever(ABC):
+@dataclass
+class Retriever:
     """
     Responsible for fetching a stream's records from an HTTP API source.
     """
@@ -17,11 +19,8 @@ class Retriever(ABC):
     @abstractmethod
     def read_records(
         self,
-        sync_mode: SyncMode,
-        cursor_field: Optional[List[str]] = None,
         stream_slice: Optional[StreamSlice] = None,
-        stream_state: Optional[StreamState] = None,
-    ) -> Iterable[Record]:
+    ) -> Iterable[StreamData]:
         """
         Fetch a stream's records from an HTTP API source
 
@@ -33,7 +32,7 @@ class Retriever(ABC):
         """
 
     @abstractmethod
-    def stream_slices(self, *, sync_mode: SyncMode, stream_state: Optional[StreamState] = None) -> Iterable[Optional[StreamSlice]]:
+    def stream_slices(self) -> Iterable[Optional[StreamSlice]]:
         """Returns the stream slices"""
 
     @property
@@ -53,5 +52,5 @@ class Retriever(ABC):
 
     @state.setter
     @abstractmethod
-    def state(self, value: StreamState):
+    def state(self, value: StreamState) -> None:
         """State setter, accept state serialized by state getter."""

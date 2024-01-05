@@ -119,6 +119,9 @@
         }
       }
     },
+    "custom_attributes": {
+      "type": ["null", "object"]
+    },
     "priority": {
       "type": ["null", "string"]
     },
@@ -425,6 +428,34 @@
     },
     "redacted": {
       "type": ["null", "boolean"]
+    },
+    "topics": {
+      "type": ["null", "object"],
+      "properties": {
+        "type": {
+          "type": ["null", "string"]
+        },
+        "topics": {
+          "type": ["null", "array"],
+          "items": {
+            "type": ["null", "object"],
+            "properties": {
+              "type": {
+                "type": ["null", "string"]
+              },
+              "id": {
+                "type": ["null", "integer"]
+              },
+              "name": {
+                "type": ["null", "string"]
+              }
+            }
+          }
+        },
+        "total_count": {
+          "type": ["null", "integer"]
+        }
+      }
     }
   }
 }

@@ -1,9 +1,9 @@
 #
-# Copyright (c) 2022 Airbyte, Inc., all rights reserved.
+# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from dataclasses import dataclass
-from typing import Any, List, Mapping, Optional, Union
+from dataclasses import InitVar, dataclass, field
+from typing import Any, List, Mapping, Optional, Type, Union
 
 import dpath.util
 from airbyte_cdk.sources.declarative.interpolation.interpolated_string import InterpolatedString
@@ -17,6 +17,8 @@ class AddedFieldDefinition:
 
     path: FieldPointer
     value: Union[InterpolatedString, str]
+    value_type: Optional[Type[Any]]
+    parameters: InitVar[Mapping[str, Any]]
 
 
 @dataclass(frozen=True)
@@ -25,8 +27,11 @@ class ParsedAddFieldDefinition:
 
     path: FieldPointer
     value: InterpolatedString
+    value_type: Optional[Type[Any]]
+    parameters: InitVar[Mapping[str, Any]]
 
 
+@dataclass
 class AddFields(RecordTransformation):
     """
     Transformation which adds field to an output record. The path of the added field can be nested. Adding nested fields will create all
@@ -73,25 +78,36 @@ class AddFields(RecordTransformation):
         # by supplying any valid Jinja template directive or expression https://jinja.palletsprojects.com/en/3.1.x/templates/#
         - path: ["two_times_two"]
           value: {{ 2 * 2 }}
+
+    Attributes:
+        fields (List[AddedFieldDefinition]): A list of transformations (path and corresponding value) that will be added to the record
     """
 
-    def __init__(self, fields: List[AddedFieldDefinition], **options: Optional[Mapping[str, Any]]):
-        """
-        :param fields: Fields to add
-        :param options: Additional runtime parameters to be used for string interpolation
-        """
-        self._fields: List[ParsedAddFieldDefinition] = []
-        for field in fields:
-            if len(field.path) < 1:
-                raise f"Expected a non-zero-length path for the AddFields transformation {field}"
+    fields: List[AddedFieldDefinition]
+    parameters: InitVar[Mapping[str, Any]]
+    _parsed_fields: List[ParsedAddFieldDefinition] = field(init=False, repr=False, default_factory=list)
 
-            if not isinstance(field.value, InterpolatedString):
-                if not isinstance(field.value, str):
-                    raise f"Expected a string value for the AddFields transformation: {field}"
+    def __post_init__(self, parameters: Mapping[str, Any]) -> None:
+        for add_field in self.fields:
+            if len(add_field.path) < 1:
+                raise ValueError(f"Expected a non-zero-length path for the AddFields transformation {add_field}")
+
+            if not isinstance(add_field.value, InterpolatedString):
+                if not isinstance(add_field.value, str):
+                    raise f"Expected a string value for the AddFields transformation: {add_field}"
                 else:
-                    self._fields.append(ParsedAddFieldDefinition(field.path, InterpolatedString.create(field.value, options=options)))
+                    self._parsed_fields.append(
+                        ParsedAddFieldDefinition(
+                            add_field.path,
+                            InterpolatedString.create(add_field.value, parameters=parameters),
+                            value_type=add_field.value_type,
+                            parameters=parameters,
+                        )
+                    )
             else:
-                self._fields.append(ParsedAddFieldDefinition(field.path, field.value))
+                self._parsed_fields.append(
+                    ParsedAddFieldDefinition(add_field.path, add_field.value, value_type=add_field.value_type, parameters={})
+                )
 
     def transform(
         self,
@@ -100,12 +116,15 @@ class AddFields(RecordTransformation):
         stream_state: Optional[StreamState] = None,
         stream_slice: Optional[StreamSlice] = None,
     ) -> Record:
+        if config is None:
+            config = {}
         kwargs = {"record": record, "stream_state": stream_state, "stream_slice": stream_slice}
-        for field in self._fields:
-            value = field.value.eval(config, **kwargs)
-            dpath.util.new(record, field.path, value)
+        for parsed_field in self._parsed_fields:
+            valid_types = (parsed_field.value_type,) if parsed_field.value_type else None
+            value = parsed_field.value.eval(config, valid_types=valid_types, **kwargs)
+            dpath.util.new(record, parsed_field.path, value)
 
         return record
 
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+    def __eq__(self, other: Any) -> bool:
+        return bool(self.__dict__ == other.__dict__)

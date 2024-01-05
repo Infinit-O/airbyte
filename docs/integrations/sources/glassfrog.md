@@ -1,10 +1,10 @@
-# Shortio
+# Glassfrog
 
 ## Sync overview
 
 The Glassfrog source supports only Full Refresh syncs. This source can sync data for the [Glassfrog API](https://documenter.getpostman.com/view/1014385/glassfrog-api-v3/2SJViY).
 
-This Source Connector is based on the [Airbyte CDK](https://docs.airbyte.io/connector-development/cdk-python).
+This Source Connector is based on the [Airbyte CDK](https://docs.airbyte.com/connector-development/cdk-python).
 
 ### Output schema
 
@@ -18,9 +18,6 @@ This Source is capable of syncing the following Streams:
 * [People](https://documenter.getpostman.com/view/1014385/glassfrog-api-v3/2SJViY#78b74b9f-72b7-63fc-a18c-18518932944b)
 * [Projects](https://documenter.getpostman.com/view/1014385/glassfrog-api-v3/2SJViY#110bde88-a319-ae9c-077a-9752fd2f0843)
 * [Roles](https://documenter.getpostman.com/view/1014385/glassfrog-api-v3/2SJViY#d1f31f7a-1d42-8c86-be1d-a36e640bf993)
-
-
-
 
 
 ### Data type mapping
@@ -51,5 +48,7 @@ This Source is capable of syncing the following Streams:
 
 | Version | Date | Pull Request | Subject |
 | :--- | :--- | :--- | :--- |
-| 0.1.0 | 2022-06-16 | [13868g](https://github.com/airbytehq/airbyte/pull/13868) | Add Native Glassfrog Source Connector |
+| 0.2.0 | 2023-08-10 | [29306](https://github.com/airbytehq/airbyte/pull/29306) | Migrated to LowCode CDK |
+| 0.1.1 | 2023-08-15 | [13868](https://github.com/airbytehq/airbyte/pull/13868) | Fix schema and tests |
+| 0.1.0 | 2022-06-16 | [13868](https://github.com/airbytehq/airbyte/pull/13868) | Add Native Glassfrog Source Connector |
 
