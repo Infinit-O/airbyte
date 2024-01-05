@@ -1,4 +1,7 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "name": "accounts",
   "properties": {
     "_id": {
       "type": "string"
@@ -458,6 +461,5 @@
       "type": "string"
     }
   },
-  "title": "ApplicationTemplate",
-  "type": "object"
+  "title": "ApplicationTemplate"
 }

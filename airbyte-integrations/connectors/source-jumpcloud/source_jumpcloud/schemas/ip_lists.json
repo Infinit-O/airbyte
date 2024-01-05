@@ -16,6 +16,7 @@
       "type": "string"
     }
   },
+  "$schema": "http://json-schema.org/draft-07/schema",
   "title": "IPList",
   "type": "object"
 }
