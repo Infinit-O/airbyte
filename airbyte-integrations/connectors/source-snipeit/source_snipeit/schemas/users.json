@@ -1,6 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
     "type": "object",
+    "name": "users",
     "properties": {
         "id": {"type": "integer"},
         "avatar": {"type": "string"},
@@ -8,21 +9,21 @@
         "first_name": {"type": "string"},
         "last_name": {"type": "string"},
         "username": {"type": "string"},
-        "locale": {"type": "string"},
-        "employee_num": {"type": "string"},
-        "manager": {},
-        "jobtitle": {"type": "string"},
-        "phone": {},
-        "website": {},
-        "address": {},
-        "city": {},
-        "state": {},
-        "country": {},
-        "zip": {},
-        "email": {"type": "string"},
-        "department": {},
+        "locale": {"type": ["string", "null"]},
+        "employee_num": {"type": ["string", "null"]},
+        "manager": {"type": ["string", "null"]},
+        "jobtitle": {"type": ["string", "null"]},
+        "phone": {"type": ["string", "null"]},
+        "website": {"type": ["string", "null"]},
+        "address": {"type": ["string", "null"]},
+        "city": {"type": ["string", "null"]},
+        "state": {"type": ["string", "null"]},
+        "country": {"type": ["string", "null"]},
+        "zip": {"type": ["string", "null"]},
+        "email": {"type": ["string", "null"]},
+        "department": {"type": ["object", "null"]},
         "location": {
-            "type": "object",
+            "type": ["object", "null"],
             "properties": {
                 "id": {
                     "type": "integer",
@@ -37,7 +38,7 @@
             }
         },
         "notes": {"type": "string"},
-        "permissions": {"type": "object"},
+        "permissions": {"type": ["object", "null"]},
         "activated": {"type": "boolean"},
         "ldap_import": {"type": "boolean"},
         "two_factor_activated": {"type": "boolean"},
@@ -46,7 +47,7 @@
         "licenses_count": {"type": "integer"},
         "accessories_count": {"type": "integer"},
         "consumables_count": {"type": "integer"},
-        "company": {"type": "object"},
+        "company": {"type": ["object", "null"]},
         "created_at": {
             "type": "object",
             "properties": {
@@ -74,7 +75,7 @@
             }
         },
         "last_login": {
-            "type": "object",
+            "type": ["object", "null"],
             "properties": {
                 "datetime": {
                     "type": "string",
@@ -87,7 +88,7 @@
             }
         },
         "deleted_at": {
-            "type": "object",
+            "type": ["object", "null"],
             "properties": {
                 "datetime": {
                     "type": "string",

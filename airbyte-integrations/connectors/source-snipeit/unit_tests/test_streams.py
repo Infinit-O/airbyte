@@ -6,41 +6,42 @@ from http import HTTPStatus
 from unittest.mock import MagicMock
 
 import pytest
-from source_snipeit.source import SnipeitStream
+from source_snipeit.streams import SnipeitStream
+# from source_acceptance_test
 
 
 @pytest.fixture
 def patch_base_class(mocker):
     # Mock abstract methods to enable instantiating abstract class
     mocker.patch.object(SnipeitStream, "path", "v0/example_endpoint")
-    mocker.patch.object(SnipeitStream, "primary_key", "test_primary_key")
+    mocker.patch.object(SnipeitStream, "primary_key", "id")
     mocker.patch.object(SnipeitStream, "__abstractmethods__", set())
 
 
 def test_request_params(patch_base_class):
     stream = SnipeitStream()
-    # TODO: replace this with your input parameters
     inputs = {"stream_slice": None, "stream_state": None, "next_page_token": None}
-    # TODO: replace this with your expected request parameters
-    expected_params = {}
+    expected_params = {"limit": 10000, "offset": 0}
     assert stream.request_params(**inputs) == expected_params
 
 
 def test_next_page_token(patch_base_class):
     stream = SnipeitStream()
-    # TODO: replace this with your input parameters
     inputs = {"response": MagicMock()}
-    # TODO: replace this with your expected next page token
-    expected_token = None
+    stream.offset = 10
+    stream.total = 250
+    expected_token = {"offset": 10010}
     assert stream.next_page_token(**inputs) == expected_token
 
 
 def test_parse_response(patch_base_class):
     stream = SnipeitStream()
     # TODO: replace this with your input parameters
-    inputs = {"response": MagicMock()}
+    fake_response = MagicMock()
+    fake_response.json = MagicMock(return_value={"total": 1, "rows": [{"test": "working"}]})
+    inputs = {"response": fake_response, "stream_state": None}
     # TODO: replace this with your expected parced object
-    expected_parsed_object = {}
+    expected_parsed_object = {"test": "working"}
     assert next(stream.parse_response(**inputs)) == expected_parsed_object
 
 

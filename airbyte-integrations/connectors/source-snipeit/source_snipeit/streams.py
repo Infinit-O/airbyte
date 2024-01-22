@@ -1,7 +1,9 @@
 from abc import ABC
-from typing import Any, Iterable, Mapping, MutableMapping, Optional
+from typing import Any, Iterable, Mapping, MutableMapping, Optional, Tuple
+from copy import deepcopy
 
 import requests
+import arrow
 
 from airbyte_cdk.sources.streams.http import HttpStream
 
@@ -30,19 +32,21 @@ class SnipeitStream(HttpStream, ABC):
 
     See the reference docs for the full list of configurable options.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, config=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.limit_per_page: int = 10000
+        self.limit_per_page: int = 500
         self.total: int = 0
         self.offset: int = 0
+        self.config: dict = config
 
-    # TODO: Fill in the url base. Required.
-    url_base = "https://infinit-o.snipe-it.io/api/v1/"
+        self.stop_immediately: bool = False
+
+    @property
+    def url_base(self):
+        return self.config["base_url"]
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """
-        TODO: Override this method to define a pagination strategy. If you will not be using pagination, no action is required - just return None.
-
         This method should return a Mapping (e.g: dict) containing whatever information required to make paginated requests. This dict is passed
         to most other methods in this class to help you form headers, request bodies, query params, etc..
 
@@ -54,28 +58,117 @@ class SnipeitStream(HttpStream, ABC):
         :return If there is another page in the result, a mapping (e.g: dict) containing information needed to query the next page in the response.
                 If there are no more pages in the result, return None.
         """
-        if self.offset < self.total:
+        if self.stop_immediately:
+            return None
+        elif self.offset < self.total:
             self.offset += self.limit_per_page
             return {"offset": self.offset}
         else:
-            return {}
+            return None
 
     def request_params(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
+        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> MutableMapping[str, Any]:
         """
-        TODO: Override this method to define any query parameters to be set. Remove this method if you don't need to define request params.
         Usually contains common params e.g. pagination size etc.
         """
-        return {}
+        if next_page_token:
+            return {'limit': self.limit_per_page, 'offset': next_page_token.get("offset", None)}
+        else:
+            return {'limit': self.limit_per_page, 'offset': self.offset}
 
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
         """
-        TODO: Override this method to define how a response is parsed.
         :return an iterable containing each record in the response
         """
         self.total = response.json().get("total", 0)
         yield from response.json().get("rows", [])
+
+
+# NOTE: Temporary, dirty hack to account for the import differences
+#       between airbyte_cdk 0.1.53 and 0.1.55
+from airbyte_cdk.sources.streams import IncrementalMixin
+
+class Events(SnipeitStream, IncrementalMixin):
+    primary_key = "id"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._state = {}
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, value):
+        self._state[self.cursor_field] = value
+
+    @property
+    def cursor_field(self):
+        return "updated_at"
+
+    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
+        # NOTE: This was originally the key function in the max() call below
+        #       I moved it out here to keep mypy happy.
+        def __key_function(item: Tuple) -> Any:
+            return item[1]
+        if current_stream_state == {}:
+            self.state = latest_record[self.cursor_field]
+            return {self.cursor_field: latest_record[self.cursor_field]}
+        else:
+            records = {}
+            records[current_stream_state[self.cursor_field]] = arrow.get(current_stream_state[self.cursor_field])
+            records[latest_record[self.cursor_field]] = arrow.get(latest_record[self.cursor_field])
+            # NOTE: mypy complains about records.items() not having the right type for max() but it works just fine
+            #       in runtime regardless.
+            latest_record = max(records.items(), key=__key_function)[0]   # type: ignore[arg-type]
+            self.state[self.cursor_field] = latest_record
+            return {self.cursor_field: latest_record}
+
+    def path(
+        self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        return "reports/activity/"
+
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any] , **kwargs) -> Iterable[Mapping]:
+        """
+        Parses response and returns a result set suitable for incremental sync. It takes in the stream state saved
+        by Airbyte, and uses it to filter out records that have already been synced, leaving only the newest records.
+
+        :return an iterable containing each record in the response
+        """
+        def __move_cursor_up(record: Mapping[str, Any]) -> Mapping[str, Any]:
+            result: dict = deepcopy(record)
+            result["updated_at"] = result["updated_at"]["datetime"]
+            return result
+
+        def _newer_than_latest(latest_record_date: arrow.Arrow, record: Mapping[str, Any]) -> bool:
+            current_record_date = arrow.get(record["updated_at"])
+            if current_record_date > latest_record_date:
+                return True
+            else:
+                return False
+
+        base = response.json().get("rows", [])
+        self.total = response.json().get("total")
+        # NOTE: Airbyte's recommendation is to transform the object so that the cursor is
+        #       top-level.
+        transformed = [__move_cursor_up(record) for record in base]
+
+        if stream_state != {}:
+            latest_record_date: arrow.Arrow = arrow.get(stream_state[self.cursor_field])
+            if _newer_than_latest(latest_record_date, transformed[0]) == False:
+                self.stop_immediately = True
+                yield from []
+            else:
+                # NOTE: There's probably a more succint way of doing this but I can't think of it right now.
+                ascending_list: list = reversed(transformed)
+                only_the_newest: list = [x for x in ascending_list if _newer_than_latest(latest_record_date, x)]
+                yield from only_the_newest
+        else:
+            ascending_list = reversed(transformed)
+            yield from ascending_list
 
 class Hardware(SnipeitStream):
     primary_key = "id"

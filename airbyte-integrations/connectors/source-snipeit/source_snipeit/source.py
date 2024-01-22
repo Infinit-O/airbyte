@@ -1,31 +1,32 @@
 #
 # Copyright (c) 2021 Airbyte, Inc., all rights reserved.
 #
-from abc import ABC
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from urllib.parse import urljoin
+from typing import Any, List, Mapping, Tuple
 
-from copy import deepcopy
+import requests
+
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
 
-from .full_refresh_streams import (
-    Hardware,
-    Companies,
-    Locations,
+from .streams import (
     Accessories,
-    Consumables,
-    Components,
-    Users,
-    StatusLabels,
-    Models,
-    Licenses,
     Categories,
+    Consumables,
+    Companies,
+    Components,
+    Departments,
+    Events,
+    Hardware,
+    Licenses,
+    Locations,
+    Models,
     Manufacturers,
     Maintenances,
-    Departments,
+    StatusLabels,
+    Users,
 )
-from .incremental_streams import Events
 
 """
 This file provides a stubbed example of how to use the Airbyte CDK to develop both a source connector which supports full refresh or and an
@@ -39,10 +40,9 @@ The approach here is not authoritative, and devs are free to use their own judge
 There are additional required TODOs in the files within the integration_tests folder and the spec.json file.
 """
 
-
 # Source
 class SourceSnipeit(AbstractSource):
-    def check_connection(self, logger, config) -> Tuple[bool, any]:
+    def check_connection(self, logger, config) -> Tuple[bool, Any]:
         """
         Implement a connection check to validate that the user-provided config can be used to connect to the underlying API
 
@@ -53,13 +53,29 @@ class SourceSnipeit(AbstractSource):
         :param logger:  logger object
         :return Tuple[bool, any]: (True, None) if the input config can be used to connect to the API successfully, (False, error) otherwise.
         """
+        ok = False
+        err_message = None
+
         token = config.get("access_token", None)
-        if token is None:
-            return False, "You need to provide an Access Token! Check config and try again."
-        elif token == "":
-            return False, "Token cannot be an empty string! Check config and try again."
-        else:
-            return True, None
+        logger.debug(f"Token present? {bool(token)}")
+        base_url = config.get("base_url", None)
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/json"
+        }
+        full_url = urljoin(base_url, "/api/v1/hardware")
+        logger.debug(f"Sending a request to: {full_url}")
+        z = requests.get(full_url, headers=headers)
+        logger.debug(f"Status code of response: {z.status_code}")
+
+        try:
+            z.raise_for_status()
+            ok = True
+        except Exception as e:
+            err_message = repr(e)
+
+        return ok, err_message
+
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         """
@@ -67,23 +83,22 @@ class SourceSnipeit(AbstractSource):
 
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
-        # TODO remove the authenticator if not required.
         access_jwt = config.get("access_token")
-        auth = TokenAuthenticator(token=access_jwt)  # Oauth2Authenticator is also available if you need oauth support
+        auth = TokenAuthenticator(token=access_jwt) 
         return [
-            Hardware(authenticator=auth),
-            Companies(authenticator=auth),
-            Locations(authenticator=auth),
-            Accessories(authenticator=auth),
-            Consumables(authenticator=auth),
-            Components(authenticator=auth),
-            Users(authenticator=auth),
-            StatusLabels(authenticator=auth),
-            Models(authenticator=auth),
-            Licenses(authenticator=auth),
-            Categories(authenticator=auth),
-            Manufacturers(authenticator=auth),
-            Maintenances(authenticator=auth),
-            Departments(authenticator=auth),
-            Events(authenticator=auth),
+            Accessories(authenticator=auth, config=config),
+            Categories(authenticator=auth, config=config),
+            Companies(authenticator=auth, config=config),
+            Components(authenticator=auth, config=config),
+            Consumables(authenticator=auth, config=config),
+            Departments(authenticator=auth, config=config),
+            Events(authenticator=auth, config=config),
+            Hardware(authenticator=auth, config=config),
+            Licenses(authenticator=auth, config=config),
+            Locations(authenticator=auth, config=config),
+            Maintenances(authenticator=auth, config=config),
+            Manufacturers(authenticator=auth, config=config),
+            Models(authenticator=auth, config=config),
+            StatusLabels(authenticator=auth, config=config),
+            Users(authenticator=auth, config=config),
         ]
