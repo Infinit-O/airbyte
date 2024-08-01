@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "Status": {
+      "type": "integer"
+    },
+    "Dashboard": {
+      "type": "object",
+      "properties": {
+        "DashboardId": {
+          "type": ["string", "null"]
+        },
+        "Arn": {
+          "type": ["string", "null"]
+        },
+        "Name": {
+          "type": ["string", "null"]
+        },
+        "Version": {
+          "type": "object",
+          "properties": {
+            "CreatedTime": {
+              "type": ["string", "null"]
+            },
+            "Errors": {
+              "type": "array",
+              "items": {
+                "type": ["string", "null"]
+              }
+            },
+            "VersionNumber": {
+              "type": "integer"
+            },
+            "Status": {
+              "type": ["string", "null"]
+            },
+            "SourceEntityArn": {
+              "type": ["string", "null"]
+            },
+            "DataSetArns": {
+              "type": "array",
+              "items": {
+                "type": ["string", "null"]
+              }
+            },
+            "ThemeArn": {
+              "type": ["string", "null"]
+            },
+            "Sheets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "SheetId": {
+                    "type": ["string", "null"]
+                  },
+                  "Name": {
+                    "type": ["string", "null"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "CreatedTime": {
+      "type": ["string", "null"]
+      
+    },
+    "LastPublishedTime": {
+      "type": ["string", "null"]
+    },
+    "LastUpdatedTime": {
+      "type": ["string", "null"]
+    },
+    "LinkEntities": {
+      "type": "array",
+      "items": {
+        "type": ["string", "null"]
+      }
+    },
+    "RequestId": {
+      "type": ["string", "null"]
+    }
+  }
+}

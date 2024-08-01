@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "Arn": {
+      "type": ["string", "null"]
+    },
+    "DataSetId": {
+      "type": ["string", "null"]
+    },
+    "Name": {
+      "type": ["string", "null"]
+    },
+    "CreatedTime": {
+      "type": ["string", "null"]
+    },
+    "LastUpdatedTime": {
+      "type": ["string", "null"]
+    },
+    "ImportMode": {
+      "type": ["string", "null"]
+    },
+    "RowLevelPermissionDataSet": {
+      "type": "object", 
+        "properties": {
+          "Namespace": {
+            "type": ["string", "null"]
+          },
+          "Arn": {
+            "type": ["string", "null"]
+          },
+          "PermissionPolicy": {
+            "type": ["string", "null"]
+          },
+          "FormatVersion": {
+            "type": ["string", "null"]
+          },
+          "Status": {
+            "type": ["string", "null"]
+          }
+        }
+  },
+  "RowLevelPermissionTagConfigurationApplied": {
+    "type": ["string", "null"]
+  },
+  "ColumnLevelPermissionRulesApplied": {
+    "type": ["string", "null"]
+  }
+},
+"NextToken": {
+  "type": ["string", "null"]
+},
+"RequestId": {
+  "type": "integer"
+},
+"Status": {
+  "type": "integer"
+  }
+}

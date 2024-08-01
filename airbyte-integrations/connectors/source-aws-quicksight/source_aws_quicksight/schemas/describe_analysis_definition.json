@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "AnalysisId": {
+      "type": ["string", "null"]
+    },
+    "Definition": {
+      "type": "object",
+      "properties": {
+        "AnalysisDefaults": {
+          "type": "object",
+          "properties": {
+            "DefaultNewSheetConfiguration": {}
+          }
+        },
+        "CalculatedFields": {
+          "type": "array",
+          "items": {}
+        },
+        "ColumnConfigurations": {
+          "type": "array",
+          "items": {}
+        },
+        "DataSetIdentifierDeclarations": {
+          "type": "array",
+          "items": {}
+        },
+        "FilterGroups": {
+          "type": "array",
+          "items": {}
+        },
+        "Options": {
+          "type": "object",
+          "properties": {
+            "Timezone": {
+              "type": ["string", "null"]
+            },
+            "WeekStart": {
+              "type": ["string", "null"]
+            }
+          }
+        },
+        "ParameterDeclarations": {
+          "type": "array",
+          "items": {}
+        },
+        "Sheets": {
+          "type": "array",
+          "items": {}
+        }
+      }
+    },
+    "Errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "Message": {
+            "type": ["string", "null"]
+          },
+          "Type": {
+            "type": ["string", "null"]
+          },
+          "ViolatedEntities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "Path": {
+                  "type": ["string", "null"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Name": {
+      "type": ["string", "null"]
+    },
+    "RequestId": {
+      "type": ["string", "null"]
+    },
+    "ResourceStatus": {
+      "type": ["string", "null"]
+    },
+    "ThemeArn": {
+      "type": ["string", "null"]
+    }
+  }
+}

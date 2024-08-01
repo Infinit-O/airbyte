@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "Name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Arn": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "CapacityRegion": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "CreationStatus": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "IdentityStore": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "NamespaceError ": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "Message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "NextToken": {
+    "type": [
+      "string",
+      "null"
+    ]
+  },
+  "Status": {
+    "type": "string"
+  },
+  "RequestId": {
+    "type": "integer"
+  }
+}

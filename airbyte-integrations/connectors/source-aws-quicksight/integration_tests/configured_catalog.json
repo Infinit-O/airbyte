@@ -1,0 +1,160 @@
+{
+  "streams": [
+    {
+      "stream": {
+        "name": "list_dashboards",
+        "json_schema": {},
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": []
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append"
+    },
+    {
+      "stream": {
+        "name": "list_dashboard_versions",
+        "json_schema": {},
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": []
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append"
+    },
+    {
+      "stream": {
+        "name": "list_namespaces",
+        "json_schema": {},
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": []
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append"
+    },
+    {
+      "stream": {
+        "name": "list_folders",
+        "json_schema": {},
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": []
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append"
+    },
+    {
+      "stream": {
+        "name": "list_folders",
+        "json_schema": {},
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": []
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append"
+    },
+    {
+      "stream": {
+        "name": "list_folder_members",
+        "json_schema": {},
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": []
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append"
+    },
+    {
+      "stream": {
+        "name": "list_data_sources",
+        "json_schema": {},
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": []
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append"
+    },
+    {
+      "stream": {
+        "name": "list_data_sets",
+        "json_schema": {},
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": []
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append"
+    },
+    {
+      "stream": {
+        "name": "list_analyses",
+        "json_schema": {},
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": []
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append"
+    },
+    {
+      "stream": {
+        "name": "describe_dashboard",
+        "json_schema": {},
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": []
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append"
+    },
+    {
+      "stream": {
+        "name": "describe_analysis",
+        "json_schema": {},
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": []
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append"
+    },
+    {
+      "stream": {
+        "name": "describe_analysis_definition",
+        "json_schema": {},
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": []
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append"
+    }
+  ]
+}

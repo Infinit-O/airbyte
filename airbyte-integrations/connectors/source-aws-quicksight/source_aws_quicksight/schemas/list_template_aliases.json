@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "AliasName": {
+      "type": ["string", "null"]
+    },
+    "Arn": {
+      "type": ["string", "null"]
+    },
+    "TemplateVersionNumber": {
+      "type": ["string", "null"]
+    }
+  }
+}
