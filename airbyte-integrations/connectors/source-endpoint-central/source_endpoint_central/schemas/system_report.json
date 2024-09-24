@@ -1,0 +1,149 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "update_id": {
+        "type": "integer"
+      },
+      "patch_affected_status_image": {
+        "type": "string"
+      },
+      "patch_download_status_label": {
+        "type": "string"
+      },
+      "patch_updated_time": {
+        "type": "string"
+      },
+      "installpatchstatus.patch_id": {
+        "type": "integer"
+      },
+      "install_error_code": {
+        "type": "string"
+      },
+      "bulletin_id": {
+        "type": "string"
+      },
+      "patch_noreboot": {
+        "type": "integer"
+      },
+      "update_name": {
+        "type": "string"
+      },
+      "platform": {
+        "type": "integer"
+      },
+      "deploy_remarks": {
+        "type": "string"
+      },
+      "patch_download_status_image": {
+        "type": "string"
+      },
+      "patch_released_time": {
+        "type": "integer"
+      },
+      "resource_id_string": {
+        "type": "string"
+      },
+      "customerpatchstatus.patch_id": {
+        "type": "string"
+      },
+      "patch_uninstall_status": {
+        "type": "integer"
+      },
+      "download_status": {
+        "type": "string"
+      },
+      "platform_name": {
+        "type": "string"
+      },
+      "patch_type": {
+        "type": "integer"
+      },
+      "pmseverity.name": {
+        "type": "string"
+      },
+      "patch_status": {
+        "type": "string"
+      },
+      "affected_patch_status": {
+        "type": "integer"
+      },
+      "severity": {
+        "type": "integer"
+      },
+      "patch_install_status_image": {
+        "type": "string"
+      },
+      "patch_id": {
+        "type": "integer"
+      },
+      "patch_name": {
+        "type": "string"
+      },
+      "patch_description": {
+        "type": "string"
+      },
+      "vendor_name": {
+        "type": "string"
+      },
+      "deployment_status": {
+        "type": "string"
+      },
+      "superceded_by": {
+        "type": "string"
+      },
+      "severity_name": {
+        "type": "string"
+      },
+      "installpatchstatus.resource_id": {
+        "type": "string"
+      },
+      "deployer.first_name": {
+        "type": "string"
+      },
+      "patch_supported_time": {
+        "type": "integer"
+      },
+      "status_label": {
+        "type": "string"
+      },
+      "patch_install_status_label": {
+        "type": "string"
+      },
+      "patch_affected_status_label": {
+        "type": "string"
+      },
+      "config_id": {
+        "type": "string"
+      },
+      "affectedpatchstatus.resource_id": {
+        "type": "integer"
+      },
+      "resource_id": {
+        "type": "integer"
+      },
+      "approveduser.first_name": {
+        "type": "string"
+      },
+      "customer_id": {
+        "type": "string"
+      },
+      "deploy_remarks_args": {
+        "type": "string"
+      },
+      "installed_time": {
+        "type": "string"
+      },
+      "collection_name": {
+        "type": "string"
+      },
+      "status_image": {
+        "type": "string"
+      },
+      "url": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": true
+  }
+  

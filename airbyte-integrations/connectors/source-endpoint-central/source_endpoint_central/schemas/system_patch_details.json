@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "patches": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "severity": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "patchname": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "update_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "patch_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "patch_description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vendor_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "install_error_code": {
+            "type": [
+              "string",
+              "number",
+              "null"
+            ]
+          },
+          "patch_released_time": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bulletinid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reboot_required": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "platform_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "installed_time": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "deployment_remarks": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "patch_status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "patch_approval_status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "resource_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

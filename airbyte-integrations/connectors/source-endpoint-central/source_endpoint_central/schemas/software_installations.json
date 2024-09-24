@@ -1,0 +1,137 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "computer_status": {
+            "type": "string"
+        },
+        "branch_office_name": {
+            "type": "string"
+        },
+        "uninstall_remarks": {
+            "type": "string"
+        },
+        "user_name": {
+            "type": "string"
+        },
+        "sw_usage_type": {
+            "type": "string"
+        },
+        "domain_netbios_name": {
+            "type": "string"
+        },
+        "branch_office_id": {
+            "type": "integer"
+        },
+        "user_component_id": {
+            "type": "integer"
+        },
+        "fqdn_name": {
+            "type": "string"
+        },
+        "primary_owner_name": {
+            "type": "string"
+        },
+        "resource_id_string": {
+            "type": "string"
+        },
+        "boot_up_state": {
+            "type": "string"
+        },
+        "mac_address": {
+            "type": "string"
+        },
+        "model": {
+            "type": "string"
+        },
+        "installed_date": {
+            "type": "integer"
+        },
+        "software_name": {
+            "type": "string"
+        },
+        "software_version": {
+            "type": "string"
+        },
+        "computer_resource_id": {
+            "type": "integer"
+        },
+        "architecture": {
+            "type": "string"
+        },
+        "asset_tag": {
+            "type": "string"
+        },
+        "managedcomputer.friendly_name": {
+            "type": "string"
+        },
+        "os_platform": {
+            "type": "integer"
+        },
+        "agent_logged_on_users": {
+            "type": "string"
+        },
+        "last_sync_time": {
+            "type": "integer"
+        },
+        "ip_address": {
+            "type": "string"
+        },
+        "display_name": {
+            "type": "string"
+        },
+        "osflavor_id": {
+            "type": "integer"
+        },
+        "sw_family": {
+            "type": "integer"
+        },
+        "computer_description": {
+            "type": "string"
+        },
+        "no_of_processors": {
+            "type": "integer"
+        },
+        "system_type": {
+            "type": "string"
+        },
+        "servicetag": {
+            "type": "string"
+        },
+        "domain": {
+            "type": "string"
+        },
+        "total_ram_memory": {
+            "type": "integer"
+        },
+        "resource_id": {
+            "type": "integer"
+        },
+        "location": {
+            "type": "string"
+        },
+        "computer_live_status": {
+            "type": "integer"
+        },
+        "uninstall_status": {
+            "type": "string"
+        },
+        "resource_name": {
+            "type": "string"
+        },
+        "last_successful_scan": {
+            "type": "integer"
+        },
+        "computer_status_update_time": {
+            "type": "integer"
+        },
+        "software_id": {
+            "type": "integer"
+        },
+        "url": {
+            "type": "string"
+        },
+        "additionalProperties": true
+    },
+    "additionalProperties": true
+}

@@ -1,0 +1,125 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "update_id": {
+            "type": "integer"
+        },
+        "patch_download_status_label": {
+            "type": "string"
+        },
+        "aaauser.first_name": {
+            "type": "string"
+        },
+        "patch_lang": {
+            "type": "integer"
+        },
+        "patch_updated_time": {
+            "type": "string"
+        },
+        "sqnumber": {
+            "type": "string"
+        },
+        "patch_updated": {
+            "type": "integer"
+        },
+        "is_superceded": {
+            "type": "integer"
+        },
+        "bulletin_id": {
+            "type": "string"
+        },
+        "patch_noreboot": {
+            "type": "integer"
+        },
+        "update_name": {
+            "type": "string"
+        },
+        "platform": {
+            "type": "integer"
+        },
+        "configstatusdefn.image_name": {
+            "type": "string"
+        },
+        "patch_download_status_image": {
+            "type": "string"
+        },
+        "patch_released_time": {
+            "type": "integer"
+        },
+        "patch_size": {
+            "type": "integer"
+        },
+        "customerpatchstatus.patch_id": {
+            "type": "string"
+        },
+        "patch_uninstall_status": {
+            "type": "integer"
+        },
+        "platform_name": {
+            "type": "string"
+        },
+        "download_status": {
+            "type": "integer"
+        },
+        "patchdetails.releasedtime": {
+            "type": "integer"
+        },
+        "patch_type": {
+            "type": "integer"
+        },
+        "pmseverity.name": {
+            "type": "string"
+        },
+        "patch_status": {
+            "type": "integer"
+        },
+        "severity": {
+            "type": "integer"
+        },
+        "configstatusdefn.label": {
+            "type": "string"
+        },
+        "patch_id": {
+            "type": "integer"
+        },
+        "patch_name": {
+            "type": "string"
+        },
+        "patch_description": {
+            "type": "string"
+        },
+        "newpatchinfo.patchid": {
+            "type": "string"
+        },
+        "pmpatchtype.status": {
+            "type": "integer"
+        },
+        "patch_remarks": {
+            "type": "string"
+        },
+        "vendor_name": {
+            "type": "string"
+        },
+        "superceded_by": {
+            "type": "string"
+        },
+        "severity_name": {
+            "type": "string"
+        },
+        "patch_supported_time": {
+            "type": "integer"
+        },
+        "patchdetails.patchid": {
+            "type": "integer"
+        },
+        "customer_id": {
+            "type": "string"
+        },
+        "url": {
+            "type": "string"
+        },
+        "additionalProperties": true
+    },
+    "additionalProperties": true
+}

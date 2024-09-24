@@ -1,0 +1,70 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "file_version": {
+            "type": "string"
+        },
+        "rules_summary_app_definition_id": {
+            "type": [
+                "string",
+                "integer"
+            ]
+        },
+        "comments": {
+            "type": "string"
+        },
+        "added_time": {
+            "type": "number"
+        },
+        "file_name": {
+            "type": "string"
+        },
+        "total_run_time": {
+            "type": [
+                "string",
+                "integer"
+            ]
+        },
+        "product_name": {
+            "type": "string"
+        },
+        "swm_discovered_count": {
+            "type": [
+                "integer",
+                "string"
+            ]
+        },
+        "app_definition_status": {
+            "type": "boolean"
+        },
+        "modified_time": {
+            "type": "number"
+        },
+        "added_by": {
+            "type": "string"
+        },
+        "total_run_count": {
+            "type": [
+                "string",
+                "integer"
+            ]
+        },
+        "definition_name": {
+            "type": "string"
+        },
+        "modified_by": {
+            "type": "string"
+        },
+        "app_definition_id": {
+            "type": "number"
+        },
+        "original_file_name": {
+            "type": "string"
+        },
+        "customer_id": {
+            "type": "number"
+        },
+        "additionalProperties": true
+    }
+}

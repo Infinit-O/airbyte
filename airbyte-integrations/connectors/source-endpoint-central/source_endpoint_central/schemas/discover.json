@@ -1,0 +1,25 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "login_data": {
+            "type": "object",
+            "properties": {
+                "is_local_authentication_only": {
+                    "type": "boolean"
+                },
+                "isLoginWebViewSupported": {
+                    "type": "boolean"
+                },
+                "domain_list": {
+                    "type": "string"
+                },
+                "default_domain": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": true
+        }
+    },
+    "additionalProperties": true
+}

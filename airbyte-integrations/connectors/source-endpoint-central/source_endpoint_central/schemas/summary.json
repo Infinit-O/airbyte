@@ -1,0 +1,42 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "last_contact_time_summary": {
+        "type": "object",
+        "properties": {
+          "equal_3_day": { "type": "null" },
+          "8_day_to_15_day": { "type": "null" },
+          "16_day_to_30_day": { "type": "null" },
+          "greater_30_day": { "type": "null" },
+          "4_day_to_7_day": { "type": "null" }
+        },
+        "additionalProperties": true
+      },
+      "installation_status_summary": {
+        "type": "object",
+        "properties": {
+          "uninstallation_failed": { "type": "null" },
+          "installed": { "type": "null" },
+          "total": { "type": "null" },
+          "installation_failed": { "type": "null" },
+          "yet_to_install": { "type": "null" },
+          "uninstalled": { "type": "null" }
+        },
+        "additionalProperties": true
+      },
+      "live_status_summary": {
+        "type": "object",
+        "properties": {
+          "down": { "type": "null" },
+          "live": { "type": "null" },
+          "unknown": { "type": "null" }
+        },
+        "additionalProperties": true
+      },
+      "url": { "type": "null" },
+      "emitted_at": { "type": "null" }
+    },
+    "additionalProperties": true
+  }
+  

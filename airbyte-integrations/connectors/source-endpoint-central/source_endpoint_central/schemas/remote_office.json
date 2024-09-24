@@ -1,0 +1,218 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "updated_time": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "ds_status": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "is_https": {
+            "type": [
+                "boolean",
+                "null"
+            ]
+        },
+        "branch_office_name": {
+            "type": "string"
+        },
+        "agent_arc_loc": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "compression_type": {
+            "type": "integer"
+        },
+        "replicationpolicydetails.policy_name": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "branch_office_id": {
+            "type": "integer"
+        },
+        "proxy_details_branch_office_id": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "resource_id_string": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "policytobranchofficerel.policy_id": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "agent_comm_branch_office_id": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "ds_dns_name": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "branch_office_desc": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "ds_version": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "policytobranchofficerel.branch_office_id": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "proxy_port_number": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "last_contact_time": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "is_proxy": {
+            "type": [
+                "boolean",
+                "null"
+            ]
+        },
+        "colorquality_type": {
+            "type": "integer"
+        },
+        "ds_https_port": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "proxy_username": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "adgroupremoteofficemapping.branch_office_id": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "has_masteragent": {
+            "type": "boolean"
+        },
+        "managed_computers": {
+            "type": "string"
+        },
+        "replicationpolicydetails.policy_id": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "error_code_kb_url": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "ds_sync_status": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "error_kb_url": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "ds_ipaddress": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "branch_office_customer_id": {
+            "type": "integer"
+        },
+        "proxy_server_name": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "resource_id": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "disserverdetails.branch_office_id": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "error_code": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "customer_name": {
+            "type": "string"
+        },
+        "customer_id": {
+            "type": "integer"
+        },
+        "resource_name": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "remarks": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "url": {
+            "type": "string"
+        },
+        "additionalProperties": true
+    },
+    "additionalProperties": true
+}

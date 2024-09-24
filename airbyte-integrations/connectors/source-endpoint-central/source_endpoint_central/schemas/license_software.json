@@ -1,0 +1,66 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "software_compliance_description": {
+            "type": "string"
+        },
+        "remaining_copies": {
+            "type": "integer"
+        },
+        "sw_type": {
+            "type": "integer"
+        },
+        "compliant_status": {
+            "type": "integer"
+        },
+        "software_id": {
+            "type": "integer"
+        },
+        "sw_category_name": {
+            "type": "string"
+        },
+        "installed_copies": {
+            "type": "integer"
+        },
+        "manufacturer_name": {
+            "type": "string"
+        },
+        "license_owner": {
+            "type": "string"
+        },
+        "total_copies": {
+            "type": "integer"
+        },
+        "display_name": {
+            "type": "string"
+        },
+        "software_version": {
+            "type": "string"
+        },
+        "license_id": {
+            "type": "integer"
+        },
+        "manufacturer_id": {
+            "type": "integer"
+        },
+        "software_name": {
+            "type": "string"
+        },
+        "is_multiple": {
+            "type": "boolean"
+        },
+        "is_usage_prohibited": {
+            "type": "integer"
+        },
+        "detected_time": {
+            "type": "integer"
+        },
+        "comments": {
+            "type": "string"
+        },
+        "managed_installations": {
+            "type": "integer"
+        }
+    }
+}

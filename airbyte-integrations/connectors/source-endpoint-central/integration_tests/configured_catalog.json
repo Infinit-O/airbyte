@@ -1,0 +1,389 @@
+{
+    "streams": [
+        {
+            "stream": {
+                "name": "all_patches",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "all_patch_details",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "all_summary",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "all_systems",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "approval_settings",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "computers",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "computer_summary",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "db_update_status",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "deployment_policies",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "discover",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "filter_params",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "hardware",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "hardware_installations",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "health_policy",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "patch_summary",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "remote_office",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "scan_computers",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "scan_details",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "software",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "software_installations",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "software_metering_summary",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "software_on_computer",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "summary",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "supported_patches",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_report",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "view_config",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "software_metering_computers",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "server_properties",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "applicable_patches",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "system_patch_details",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "supported_patches_unrated",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "supported_patches_low",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "supported_patches_moderate",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "supported_patches_important",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        },
+        {
+            "stream": {
+                "name": "supported_patches_critical",
+                "json_schema": {},
+                "supported_sync_modes": [
+                    "full_refresh"
+                ]
+            },
+            "sync_mode": "full_refresh",
+            "destination_sync_mode": "append"
+        }
+    ]
+}

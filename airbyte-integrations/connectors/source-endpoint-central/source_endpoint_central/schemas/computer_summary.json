@@ -1,0 +1,155 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "asset_summary": {
+            "type": "object",
+            "properties": {
+                "noncommercial_software": {
+                    "type": "string"
+                },
+                "commercial_software": {
+                    "type": "string"
+                },
+                "total_software": {
+                    "type": "string"
+                },
+                "prohibited_software": {
+                    "type": "string"
+                },
+                "total_hardware": {
+                    "type": "string"
+                }
+            }
+        },
+        "computer_os_summary": {
+            "type": "object",
+            "properties": {
+                "os_build_number": {
+                    "type": "string"
+                },
+                "os_service_pack": {
+                    "type": "string"
+                },
+                "os_version": {
+                    "type": "string"
+                },
+                "product_id": {
+                    "type": "string"
+                },
+                "os_name": {
+                    "type": "string"
+                },
+                "registered_to": {
+                    "type": "string"
+                },
+                "os_cd_key": {
+                    "type": "string"
+                }
+            }
+        },
+        "computer_disk_summary": {
+            "type": "object",
+            "properties": {
+                "percent_used": {
+                    "type": "string"
+                },
+                "total_size": {
+                    "type": "string"
+                },
+                "percent_free": {
+                    "type": "string"
+                },
+                "used_space": {
+                    "type": "string"
+                },
+                "free_space": {
+                    "type": "string"
+                }
+            }
+        },
+        "computer_summary": {
+            "type": "object",
+            "properties": {
+                "computer_name": {
+                    "type": "string"
+                },
+                "primary_owner": {
+                    "type": "string"
+                },
+                "domain_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "computer_network_adapter_summary": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "dhcp_status": {
+                        "type": "string"
+                    },
+                    "adapter_name": {
+                        "type": "string"
+                    },
+                    "mac_address": {
+                        "type": "string"
+                    },
+                    "dhcp_server": {
+                        "type": "string"
+                    },
+                    "ip_address": {
+                        "type": "string"
+                    },
+                    "gateway": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "computer_hardware_summary": {
+            "type": "object",
+            "properties": {
+                "memory": {
+                    "type": "string"
+                },
+                "shipping_date": {
+                    "type": "string"
+                },
+                "device_model": {
+                    "type": "string"
+                },
+                "device_type": {
+                    "type": "string"
+                },
+                "serial_number": {
+                    "type": "string"
+                },
+                "processor": {
+                    "type": "string"
+                },
+                "device_manufacturer": {
+                    "type": "string"
+                },
+                "warranty_expiry_date": {
+                    "type": "string"
+                },
+                "product_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "resource_id": {
+            "type": "integer"
+        },
+        "url": {
+            "type": "string"
+        },
+        "emitted_at": {
+            "type": "integer"
+        },
+        "additionalProperties": true
+    },
+    "additionalProperties": true
+}

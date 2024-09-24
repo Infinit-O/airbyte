@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "computer_live_status": {
+      "type": "integer"
+    },
+    "computer_description": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "no_of_processors": {
+      "type": "integer"
+    },
+    "computer_status": {
+      "type": "string"
+    },
+    "agent_logged_on_users": {
+      "type": "string"
+    },
+    "computer_status_update_time": {
+      "type": "integer"
+    },
+    "boot_up_state": {
+      "type": "string"
+    },
+    "branch_office_id": {
+      "type": "integer"
+    },
+    "shipping_date": {
+      "type": "string"
+    },
+    "primary_owner_name": {
+      "type": "string"
+    },
+    "warranty_expiry_date": {
+      "type": "string"
+    },
+    "total_ram_memory": {
+      "type": "integer"
+    },
+    "servicetag": {
+      "type": "string"
+    },
+    "branch_office_name": {
+      "type": "string"
+    },
+    "mac_address": {
+      "type": "string"
+    },
+    "domain_netbios_name": {
+      "type": "string"
+    },
+    "resource_id": {
+      "type": "integer"
+    },
+    "system_type": {
+      "type": "string"
+    },
+    "ip_address": {
+      "type": "string"
+    },
+    "copies": {
+      "type": "integer"
+    },
+    "resource_name": {
+      "type": "string"
+    },
+    "live_status_resource_id": {
+      "type": "integer"
+    },
+    "product_number": {
+      "type": "string"
+    },
+    "asset_tag": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

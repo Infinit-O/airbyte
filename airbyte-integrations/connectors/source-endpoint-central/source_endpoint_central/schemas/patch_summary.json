@@ -1,0 +1,151 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "patch_summary": {
+            "type": "object",
+            "properties": {
+                "installed_patches": {
+                    "type": "integer"
+                },
+                "applicable_patches": {
+                    "type": "integer"
+                },
+                "new_patches": {
+                    "type": "integer"
+                },
+                "patch_summary_report_generation_time": {
+                    "type": "integer"
+                },
+                "missing_patches": {
+                    "type": "integer"
+                }
+            },
+            "additionalProperties": true
+        },
+        "missing_patch_severity_summary": {
+            "type": "object",
+            "properties": {
+                "moderate_count": {
+                    "type": "integer"
+                },
+                "unrated_count": {
+                    "type": "integer"
+                },
+                "total_count": {
+                    "type": "integer"
+                },
+                "critical_count": {
+                    "type": "integer"
+                },
+                "important_count": {
+                    "type": "integer"
+                },
+                "low_count": {
+                    "type": "integer"
+                }
+            },
+            "additionalProperties": true
+        },
+        "apd_summary": {
+            "type": "object",
+            "properties": {
+                "last_task_scheduled_time": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "next_task_scheduled_time": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "number_of_apd_tasks": {
+                    "type": "integer"
+                },
+                "last_executed_task": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "next_task": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                }
+            },
+            "additionalProperties": true
+        },
+        "system_summary": {
+            "type": "object",
+            "properties": {
+                "total_systems": {
+                    "type": "integer"
+                },
+                "moderately_vulnerable_systems": {
+                    "type": "integer"
+                },
+                "healthy_systems": {
+                    "type": "integer"
+                },
+                "system_summary_report_generation_time": {
+                    "type": "integer"
+                },
+                "highly_vulnerable_systems": {
+                    "type": "integer"
+                },
+                "health_unknown_systems": {
+                    "type": "integer"
+                }
+            },
+            "additionalProperties": true
+        },
+        "patch_scan_summary": {
+            "type": "object",
+            "properties": {
+                "scan_summary_report_generation_time": {
+                    "type": "integer"
+                },
+                "unscanned_system_count": {
+                    "type": "integer"
+                },
+                "scanned_systems": {
+                    "type": "integer"
+                },
+                "scan_success_count": {
+                    "type": "integer"
+                },
+                "scan_failure_count": {
+                    "type": "integer"
+                }
+            },
+            "additionalProperties": true
+        },
+        "vulnerability_db_summary": {
+            "type": "object",
+            "properties": {
+                "last_db_update_status": {
+                    "type": "string"
+                },
+                "next_db_update_scheduled_time": {
+                    "type": "integer"
+                },
+                "is_auto_db_update_disabled": {
+                    "type": "boolean"
+                },
+                "db_update_in_progress": {
+                    "type": "string"
+                },
+                "last_db_update_time": {
+                    "type": "integer"
+                }
+            },
+            "additionalProperties": true
+        }
+    },
+    "additionalProperties": true
+}

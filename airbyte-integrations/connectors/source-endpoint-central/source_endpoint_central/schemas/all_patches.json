@@ -1,0 +1,86 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "installed": {
+            "type": "string"
+        },
+        "sqnumber": {
+            "type": "string"
+        },
+        "patch_status_label": {
+            "type": "string"
+        },
+        "bulletin_id": {
+            "type": "string"
+        },
+        "patch_noreboot": {
+            "type": "string"
+        },
+        "update_name": {
+            "type": "string"
+        },
+        "platform": {
+            "type": "string"
+        },
+        "patch_size": {
+            "type": "integer"
+        },
+        "status_id": {
+            "type": "string"
+        },
+        "patch_uninstall_status": {
+            "type": "string"
+        },
+        "platform_name": {
+            "type": "string"
+        },
+        "missing": {
+            "type": "integer"
+        },
+        "download_status": {
+            "type": "string"
+        },
+        "first_name": {
+            "type": "string"
+        },
+        "severity": {
+            "type": "string"
+        },
+        "patch_id": {
+            "type": "string"
+        },
+        "patch_name": {
+            "type": "string"
+        },
+        "patch_description": {
+            "type": "string"
+        },
+        "patch_status_image": {
+            "type": "string"
+        },
+        "vendor_name": {
+            "type": "string"
+        },
+        "superceded_by": {
+            "type": "string"
+        },
+        "severity_name": {
+            "type": "string"
+        },
+        "failed": {
+            "type": "string"
+        },
+        "status_label": {
+            "type": "string"
+        },
+        "status_image": {
+            "type": "string"
+        },
+        "url": {
+            "type": "string",
+            "format": "uri"
+        }
+    },
+    "additionalProperties": true
+}

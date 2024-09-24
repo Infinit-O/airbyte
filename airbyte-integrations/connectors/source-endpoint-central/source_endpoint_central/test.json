@@ -1,0 +1,67 @@
+{
+    "metadata": {
+        "pageLimit": 30,
+        "totalRecords": "2",
+        "totalPages": 1,
+        "links": {
+            "next": null,
+            "prev": null
+        },
+        "page": 1
+    },
+    "response_code": 200,
+    "message_type": "patches",
+    "message_response": {
+        "patches": [
+            {
+                "severity": "Important",
+                "patchname": "vcredist_x86_sp1.exe",
+                "updated_time": "1704363395117",
+                "update_type": "Security Updates",
+                "patch_description": "Microsoft Visual C++ 2010        Service Pack 1 Redistributable Package MFC Security        Update",
+                "kb_number": "2565063",
+                "vendor_name": "Microsoft",
+                "installed_system_count": 1,
+                "supercededby": "NA",
+                "patch_released_time": "1307989800000",
+                "patch_supported_time": "1307989800000",
+                "patch_size": "8993744",
+                "patchid": "12621",
+                "patch_uninstall": "not supported",
+                "bulletinid": "MS11-025",
+                "approveduser_first_name": "DC-SYSTEM-USER",
+                "reboot_required": "may require",
+                "platform_name": "Windows",
+                "download_status": "--",
+                "missing_system_count": 0,
+                "failed_system_count": 0,
+                "patch_status": "approved"
+            },
+            {
+                "severity": "Important",
+                "patchname": "vcredist_x64_sp1.exe",
+                "updated_time": "1704363395117",
+                "update_type": "Security Updates",
+                "patch_description": "Microsoft Visual C++ 2010        Service Pack 1 Redistributable Package MFC Security        Update",
+                "kb_number": "2565063",
+                "vendor_name": "Microsoft",
+                "installed_system_count": 1,
+                "supercededby": "NA",
+                "patch_released_time": "1307989800000",
+                "patch_supported_time": "1307989800000",
+                "patch_size": "10274136",
+                "patchid": "12622",
+                "patch_uninstall": "not supported",
+                "bulletinid": "MS11-025",
+                "approveduser_first_name": "DC-SYSTEM-USER",
+                "reboot_required": "may require",
+                "platform_name": "Windows",
+                "download_status": "--",
+                "missing_system_count": 0,
+                "failed_system_count": 0,
+                "patch_status": "approved"
+            }
+        ]
+    },
+    "status": "success"
+}

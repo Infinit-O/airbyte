@@ -1,0 +1,48 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "hardware_name": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "manufacturer_name": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "hw_type_description": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "network_installations": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "hardware_id": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "managed_installations": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "url": {
+            "type": [
+                "string",
+                "null"
+            ]
+        }
+    }
+}

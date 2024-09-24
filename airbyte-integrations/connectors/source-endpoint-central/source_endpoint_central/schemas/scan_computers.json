@@ -1,0 +1,125 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "branch_office_name": {
+          "type": "string"
+        },
+        "agent_last_contact_time": {
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "domain_netbios_name": {
+          "type": "string"
+        },
+        "agent_installed_on": {
+          "type": "integer"
+        },
+        "process_start_time": {
+          "type": "integer"
+        },
+        "fqdn_name": {
+          "type": "string"
+        },
+        "resource_id_string": {
+          "type": "string"
+        },
+        "agent_installed_dir": {
+          "type": "string"
+        },
+        "mac_address": {
+          "type": "string"
+        },
+        "scan_remarks_en": {
+          "type": "string"
+        },
+        "service_pack": {
+          "type": "string"
+        },
+        "software_name": {
+          "type": "string"
+        },
+        "invclientscanstatus.mdm_last_successful_scan": {
+          "type": "integer"
+        },
+        "service_pack_minor_version": {
+          "type": "integer"
+        },
+        "modernappdetails.last_contact_time": {
+          "type": "string"
+        },
+        "scan_status": {
+          "type": "integer"
+        },
+        "scan_remarks": {
+          "type": "string"
+        },
+        "managedcomputer.friendly_name": {
+          "type": "string"
+        },
+        "os_platform": {
+          "type": "integer"
+        },
+        "os_version": {
+          "type": "string"
+        },
+        "agent_logged_on_users": {
+          "type": "string"
+        },
+        "last_sync_time": {
+          "type": "integer"
+        },
+        "process_end_time": {
+          "type": "integer"
+        },
+        "ip_address": {
+          "type": "string"
+        },
+        "osflavor_id": {
+          "type": "integer"
+        },
+        "agent_version": {
+          "type": "string"
+        },
+        "status_label": {
+          "type": "string"
+        },
+        "error_kb_url": {
+          "type": "string"
+        },
+        "installation_status": {
+          "type": "integer"
+        },
+        "resource_id": {
+          "type": "integer"
+        },
+        "build_number": {
+          "type": "string"
+        },
+        "service_pack_major_version": {
+          "type": "integer"
+        },
+        "os_name": {
+          "type": "string"
+        },
+        "computer_live_status": {
+          "type": "integer"
+        },
+        "resource_name": {
+          "type": "string"
+        },
+        "last_successful_scan": {
+          "type": "integer"
+        },
+        "computer_status_update_time": {
+          "type": "integer"
+        },
+        "url": {
+          "type": "string"
+        },
+        "additionalProperties": true
+      },
+      "additionalProperties": true
+    }

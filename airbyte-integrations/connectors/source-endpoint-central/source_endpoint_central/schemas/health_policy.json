@@ -1,0 +1,55 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "vulnerable": {
+            "type": "object",
+            "properties": {
+                "important": {
+                    "type": "integer"
+                },
+                "critical": {
+                    "type": "integer"
+                },
+                "low": {
+                    "type": "integer"
+                },
+                "moderate": {
+                    "type": "integer"
+                }
+            },
+            "additionalProperties": true
+        },
+        "highly_vulnerable": {
+            "type": "object",
+            "properties": {
+                "important": {
+                    "type": "integer"
+                },
+                "critical": {
+                    "type": "integer"
+                },
+                "low": {
+                    "type": "integer"
+                },
+                "moderate": {
+                    "type": "integer"
+                }
+            },
+            "additionalProperties": true
+        },
+        "advanced_settings": {
+            "type": "object",
+            "properties": {
+                "exclude_tp_apps": {
+                    "type": "boolean"
+                },
+                "consider_only_approved": {
+                    "type": "boolean"
+                }
+            },
+            "additionalProperties": true
+        }
+    },
+    "additionalProperties": true
+}

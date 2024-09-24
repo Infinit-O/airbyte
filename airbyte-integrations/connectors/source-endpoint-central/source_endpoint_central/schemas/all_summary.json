@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "audit_summary": {
+      "type": "object",
+      "properties": {
+        "not_scanned": {
+          "type": "null"
+        },
+        "scan_failed": {
+          "type": "null"
+        },
+        "scan_success": {
+          "type": "null"
+        }
+      },
+      "additionalProperties": true
+    },
+    "software_summary": {
+      "type": "object",
+      "properties": {
+        "commercial_software": {
+          "type": "null"
+        },
+        "total_software": {
+          "type": "null"
+        },
+        "prohibited_software": {
+          "type": "null"
+        },
+        "non_commercial_software": {
+          "type": "null"
+        }
+      },
+      "additionalProperties": true
+    },
+    "software_compliance_summary": {
+      "type": "object",
+      "properties": {
+        "expired_license": {
+          "type": "null"
+        },
+        "over_licensed": {
+          "type": "null"
+        },
+        "under_licensed": {
+          "type": "null"
+        },
+        "license_in_compliance": {
+          "type": "null"
+        }
+      },
+      "additionalProperties": true
+    },
+    "computer_by_os": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "null"
+      }
+    },
+    "warranty_summary": {
+      "type": "object",
+      "properties": {
+        "unidentified": {
+          "type": "null"
+        },
+        "expired_warranty": {
+          "type": "null"
+        },
+        "warranty_in_compliance": {
+          "type": "null"
+        }
+      },
+      "additionalProperties": true
+    },
+    "url": {
+      "type": "null"
+    },
+    "emitted_at": {
+      "type": "null"
+    }
+  },
+  "additionalProperties": true
+}

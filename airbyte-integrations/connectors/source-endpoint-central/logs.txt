@@ -1,0 +1,3 @@
+{"type": "LOG", "log": {"level": "INFO", "message": "Starting syncing SourceEndpointCentral"}}
+{"type": "LOG", "log": {"level": "INFO", "message": "Finished syncing all_summary"}}
+{"type": "LOG", "log": {"level": "INFO", "message": "SourceEndpointCentral runtimes:\nSyncing stream all_summary 0:01:46.592994"}}

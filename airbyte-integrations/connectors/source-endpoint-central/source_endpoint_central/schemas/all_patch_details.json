@@ -1,0 +1,188 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "sqnumber": {
+            "type": "string"
+        },
+        "os_language": {
+            "type": "integer"
+        },
+        "install_error_code": {
+            "type": [
+                "string",
+                "integer"
+            ]
+        },
+        "bulletin_id": {
+            "type": "string"
+        },
+        "update_name": {
+            "type": "string"
+        },
+        "patch_size": {
+            "type": "integer"
+        },
+        "resource_id_string": {
+            "type": "string"
+        },
+        "image_name": {
+            "type": "string"
+        },
+        "uninstall_for": {
+            "type": "integer"
+        },
+        "patch_uninstall_status": {
+            "type": "integer"
+        },
+        "service_pack": {
+            "type": "string"
+        },
+        "patch_status": {
+            "type": "integer"
+        },
+        "patch_install_status_image": {
+            "type": "string"
+        },
+        "patch_id": {
+            "type": [
+                "string",
+                "integer"
+            ]
+        },
+        "patch_name": {
+            "type": "string"
+        },
+        "patch_description": {
+            "type": "string"
+        },
+        "vendor_name": {
+            "type": "string"
+        },
+        "superceded_by": {
+            "type": "string"
+        },
+        "deployer.first_name": {
+            "type": "string"
+        },
+        "config_id": {
+            "type": [
+                "string",
+                "integer"
+            ]
+        },
+        "user_id": {
+            "type": "string"
+        },
+        "managedcomputer.resource_id": {
+            "type": "integer"
+        },
+        "deploy_remarks_args": {
+            "type": "string"
+        },
+        "installed_time": {
+            "type": [
+                "string",
+                "integer"
+            ]
+        },
+        "collection_name": {
+            "type": "string"
+        },
+        "patch_affected_status_image": {
+            "type": "string"
+        },
+        "branch_office_name": {
+            "type": "string"
+        },
+        "patch_updated_time": {
+            "type": "string"
+        },
+        "domain_netbios_name": {
+            "type": "string"
+        },
+        "deploy_remarks": {
+            "type": "string"
+        },
+        "platform": {
+            "type": "integer"
+        },
+        "patch_released_time": {
+            "type": "integer"
+        },
+        "mac_address": {
+            "type": "string"
+        },
+        "platform_name": {
+            "type": "string"
+        },
+        "patch_type": {
+            "type": "integer"
+        },
+        "first_name": {
+            "type": "string"
+        },
+        "pmseverity.name": {
+            "type": "string"
+        },
+        "severity": {
+            "type": "integer"
+        },
+        "affected_patch_status": {
+            "type": "integer"
+        },
+        "managedcomputer.friendly_name": {
+            "type": "string"
+        },
+        "oslanguage.i18n": {
+            "type": "string"
+        },
+        "deployment_status": {
+            "type": [
+                "string",
+                "integer"
+            ]
+        },
+        "severity_name": {
+            "type": "string"
+        },
+        "resourcemacip.resource_id": {
+            "type": "integer"
+        },
+        "ip_address": {
+            "type": "string"
+        },
+        "label": {
+            "type": "string"
+        },
+        "patch_supported_time": {
+            "type": "integer"
+        },
+        "agent_version": {
+            "type": "string"
+        },
+        "patch_install_status_label": {
+            "type": "string"
+        },
+        "patch_affected_status_label": {
+            "type": "string"
+        },
+        "resource_id": {
+            "type": "integer"
+        },
+        "os_name": {
+            "type": "string"
+        },
+        "customer_name": {
+            "type": "string"
+        },
+        "resource_name": {
+            "type": "string"
+        },
+        "url": {
+            "type": "string"
+        },
+        "additionalProperties": true
+    },
+    "additionalProperties": true
+}

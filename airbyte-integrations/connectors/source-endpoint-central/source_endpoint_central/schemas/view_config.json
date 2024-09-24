@@ -1,0 +1,122 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "total_target_count": {
+            "type": "number"
+        },
+        "configurationparams.config_id": {
+            "type": "number"
+        },
+        "configdata.config_data_id": {
+            "type": "number"
+        },
+        "config_small_image_name": {
+            "type": "string"
+        },
+        "collection_platform_id": {
+            "type": "number"
+        },
+        "dcuserscollectionmapping.collection_id": {
+            "type": "number"
+        },
+        "collection_id": {
+            "type": "number"
+        },
+        "os_platform_name": {
+            "type": "string"
+        },
+        "collection_status": {
+            "type": "number"
+        },
+        "status_id": {
+            "type": "number"
+        },
+        "collection_modified_time": {
+            "type": "number"
+        },
+        "config_data_id": {
+            "type": "number"
+        },
+        "not_applicable_count": {
+            "type": "number"
+        },
+        "config_type": {
+            "type": "number"
+        },
+        "first_name": {
+            "type": "string"
+        },
+        "os_platform_id": {
+            "type": "number"
+        },
+        "config_label": {
+            "type": "string"
+        },
+        "is_single_config": {
+            "type": "boolean"
+        },
+        "is_collection_deleted": {
+            "type": "boolean"
+        },
+        "success_count": {
+            "type": "number"
+        },
+        "deletedby": {
+            "type": "string"
+        },
+        "status_label": {
+            "type": "string"
+        },
+        "collection.collection_id": {
+            "type": "number"
+        },
+        "retry_inprogress_count": {
+            "type": "number"
+        },
+        "status_count_desc": {
+            "type": "string"
+        },
+        "cfgdatatocollection.collection_id": {
+            "type": "number"
+        },
+        "user_id": {
+            "type": "number"
+        },
+        "config_id": {
+            "type": "number"
+        },
+        "yet_to_apply_count": {
+            "type": "number"
+        },
+        "failed_count": {
+            "type": "number"
+        },
+        "modifieduser.user_id": {
+            "type": "number"
+        },
+        "customer_id": {
+            "type": "number"
+        },
+        "modifieduser.first_name": {
+            "type": "string"
+        },
+        "deleted_time": {
+            "type": "integer"
+        },
+        "collection_name": {
+            "type": "string"
+        },
+        "dc_user_id": {
+            "type": "integer"
+        },
+        "status_image": {
+            "type": "string"
+        },
+        "show_in_view": {
+            "type": "boolean"
+        },
+        "additionalProperties": true
+    },
+    "additionalProperties": true
+}

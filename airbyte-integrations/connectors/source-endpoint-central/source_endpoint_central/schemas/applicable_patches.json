@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "severity": {
+      "type": ["string", "null"]
+    },
+    "patchname": {
+      "type": ["string", "null"]
+    },
+    "updated_time": {
+      "type": ["string", "null"]
+    },
+    "update_type": {
+      "type": ["string", "null"]
+    },
+    "patch_description": {
+      "type": ["string", "null"]
+    },
+    "kb_number": {
+      "type": ["string", "null"]
+    },
+    "vendor_name": {
+      "type": ["string", "null"]
+    },
+    "installed_system_count": {
+      "type": "integer"
+    },
+    "supercededby": {
+      "type": ["string", "null"]
+    },
+    "patch_released_time": {
+      "type": ["string", "null"]
+    },
+    "patch_supported_time": {
+      "type": ["string", "null"]
+    },
+    "patch_size": {
+      "type": ["string", "null"]
+    },
+    "patchid": {
+      "type": ["string", "null"]
+    },
+    "patch_uninstall": {
+      "type": ["string", "null"]
+    },
+    "bulletinid": {
+      "type": ["string", "null"]
+    },
+    "approveduser_first_name": {
+      "type": ["string", "null"]
+    },
+    "reboot_required": {
+      "type": ["string", "null"]
+    },
+    "platform_name": {
+      "type": ["string", "null"]
+    },
+    "download_status": {
+      "type": ["string", "null"]
+    },
+    "missing_system_count": {
+      "type": "integer"
+    },
+    "failed_system_count": {
+      "type": "integer"
+    },
+    "patch_status": {
+      "type": ["string", "null"]
+    },
+    "url": {
+      "type": ["string", "null"]
+    }
+  },
+  "additionalProperties": true
+}
