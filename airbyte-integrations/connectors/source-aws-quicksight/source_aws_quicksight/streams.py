@@ -9,6 +9,7 @@ import botocore.exceptions
 from airbyte_cdk.models import SyncMode
 from airbyte_cdk.sources.streams import Stream
 from botocore.config import Config
+from http import HTTPStatus
 
 
 class Client:
@@ -35,6 +36,10 @@ class AwsQuicksightStream(Stream, ABC):
         self.aws_secret_access_key = aws_secret_access_key
         self.aws_access_key_id = aws_access_key_id
         self.aws_account_id = aws_account_id
+        #self.logger.info(f"TEST: {aws_region_name}")
+        if self.region_name is not None:
+            aws_region_name = self.region_name
+        #self.logger.info(f"TEST: {aws_region_name}")
         self.client = Client(aws_access_key_id, aws_secret_access_key, aws_region_name)
         self.records_left = kwargs.get("records_limit", math.inf)
     
@@ -44,13 +49,17 @@ class AwsQuicksightStream(Stream, ABC):
     def request_params(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> MutableMapping[str, Any]:
-        if self.limit is not None:
+        #self.logger.info(f"name_space: {self.name_space}")
+        if self.name_space is not None:
+            params = {"MaxResults": self.limit, "AwsAccountId": self.aws_account_id, "Namespace": self.name_space}
+        elif self.limit is not None:
             params = {"MaxResults": self.limit, "AwsAccountId": self.aws_account_id}
         else:
             params = {"AwsAccountId": self.aws_account_id}
         if next_page_token:
            params["NextToken"] = next_page_token
-
+           
+        #self.logger.info(f"Param: {params}")
         return params  
 
     def datetime_to_timestamp(self, date: datetime) -> int:
@@ -131,6 +140,130 @@ class AwsQuicksightSubStream(Stream, ABC):
         
         if stream_slice:
             stream_slice = ', '.join(stream_slice)
+            self.logger.info(f"parent_key: {stream_slice}")
+            params[self.parent_stream.primary_key] = stream_slice 
+     
+        
+        if next_page_token:
+            params["NextToken"] = next_page_token
+
+        return params
+
+    def datetime_to_timestamp(self, date: datetime) -> int:
+        return int(date.timestamp())
+
+    @abstractmethod
+    def send_request(self, **kwargs) -> Mapping[str, Any]:
+        """
+        This method should be overridden by subclasses to send proper request with appropriate parameters to QuickSight.
+        """
+        pass
+    
+    def is_read_limit_reached(self) -> bool:
+        return self.records_left <= 0
+    
+    def read_records(
+        self,
+        sync_mode: SyncMode,
+        cursor_field: List[str] = None,
+        stream_slice: Mapping[str, Any] = None,
+        stream_state: Mapping[str, Any] = None,
+    ) -> Iterable[Mapping[str, Any]]:
+        stream_state = stream_state or {}
+        pagination_complete = False
+        next_page_token = None
+
+        
+        while not pagination_complete:
+            params = self.request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
+            response = self.send_request(**params)   
+            
+
+            next_page_token = self.next_page_token(response)
+            if not next_page_token:
+                pagination_complete = True
+                
+
+            for record in self.parse_response(response):
+                yield record
+                self.records_left -= 1
+
+                if self.is_read_limit_reached():
+                    return iter(())
+
+        yield from []
+        
+        if hasattr(self, 'records_left'):
+            return self.records_left <= 0
+        return False
+    
+    def parse_response(self, response: dict, **kwargs) -> Iterable[Mapping[str, Any]]:
+           
+        if self.data_field is not None:
+            for event in response.get(self.data_field, []):
+                if isinstance(event, str):
+                    if  (self.time_field is not None): 
+                        response[self.time_field] = self.datetime_to_timestamp(response[self.time_field])
+                        self.logger.info(f"resp{response}")
+                    yield response
+                elif (self.time_field in event) and (self.time_field is not None): 
+                    event[self.time_field] = self.datetime_to_timestamp(event[self.time_field])
+                    yield event   
+                else:
+                    yield event     
+        elif self.data_field is None:
+            if (self.time_field in response) and (self.time_field is not None): 
+                event[self.time_field] = self.datetime_to_timestamp(response[self.time_field])
+            yield response 
+        
+       
+       
+    def stream_slices(
+        self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None
+    ) -> Iterable[Optional[Mapping[str, Any]]]:
+        seen = []
+        pr = self.parent_stream(aws_access_key_id=self.aws_access_key_id, aws_secret_access_key=self.aws_secret_access_key,aws_account_id=self.aws_account_id, aws_region_name=self.client.session.meta.region_name)
+        self.logger.info("Fetching records from parent stream...")
+        pr_records = pr.read_records(sync_mode=SyncMode.full_refresh)
+        
+
+        self.logger.info("Sorting out unique IDs...")
+        for record in pr_records:
+            if record[self.parent_stream.primary_key] in seen:
+                continue
+            else:
+                 seen.append(record[self.parent_stream.primary_key])
+
+        self.logger.info("Yielding results...")
+        for parentsid in seen:
+            self.logger.debug(f"Yielding: {parentsid}")
+            yield {parentsid}
+
+class AwsQuicksightSubStreamDescribe(Stream, ABC):
+    
+    def __init__(self, aws_access_key_id: str, aws_secret_access_key: str, aws_account_id: str, aws_region_name: str, **kwargs):
+        self.aws_secret_access_key = aws_secret_access_key
+        self.aws_access_key_id = aws_access_key_id
+        self.aws_account_id = aws_account_id
+        self.client = Client(aws_access_key_id, aws_secret_access_key, aws_region_name)
+        self.records_left = kwargs.get("records_limit", math.inf)
+    
+    def next_page_token(self, response: Mapping[str, Any]) -> Optional[Mapping[str, Any]]:
+        return response.get("NextToken")
+
+    def request_params(
+        self, 
+        stream_state: Mapping[str, Any], 
+        stream_slice: Mapping[str, Any], 
+        next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        if self.limit is not None:
+            params = {"MaxResults": self.limit, "AwsAccountId": self.aws_account_id}
+        else:
+            params = {"AwsAccountId": self.aws_account_id}
+        
+        if stream_slice:
+            stream_slice = ', '.join(stream_slice)
             #self.logger.info(f"parent_key: {stream_slice}")
             params[self.parent_stream.primary_key] = stream_slice 
      
@@ -164,56 +297,42 @@ class AwsQuicksightSubStream(Stream, ABC):
         pagination_complete = False
         next_page_token = None
 
-
+        
         while not pagination_complete:
             params = self.request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
-            response = self.send_request(**params)   
-            
-
+            try:
+                response = self.send_request(**params)
+            except Exception as e:
+                self.logger.info(f"this is parent key is not supported: {params[self.parent_stream.primary_key]}")
+                break 
             next_page_token = self.next_page_token(response)
             if not next_page_token:
                 pagination_complete = True
-                
 
             for record in self.parse_response(response):
                 yield record
                 self.records_left -= 1
 
                 if self.is_read_limit_reached():
-                    return iter(())
-
+                    return iter(())         
+                
+              
         yield from []
         
         if hasattr(self, 'records_left'):
             return self.records_left <= 0
         return False
+    
     def parse_response(self, response: dict, **kwargs) -> Iterable[Mapping[str, Any]]:
+           
+        
+        event = response.get(self.data_field, [])
+        #self.logger.info(f"event: {event}")
         if self.data_field is not None:
-            for event in response.get(self.data_field, []):
-                if isinstance(event, str):
-                    if  (self.time_field is not None): 
-                        response[self.time_field] = self.datetime_to_timestamp(response[self.time_field])
-                        self.logger.info(f"resp{response}")
-                    yield response
-            
-                elif (self.time_field in event) and (self.time_field is not None): 
-                    event[self.time_field] = self.datetime_to_timestamp(event[self.time_field])
-                    yield event 
-                
-                else:
-                    yield event
-                
-                
+            yield event
         elif self.data_field is None:
-            if (self.time_field in response) and (self.time_field is not None): 
-                event[self.time_field] = self.datetime_to_timestamp(response[self.time_field])
-            yield response  
-
-            
-            
-
-            
-
+            yield response 
+                  
 
     def stream_slices(
         self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None
@@ -234,7 +353,7 @@ class AwsQuicksightSubStream(Stream, ABC):
         self.logger.info("Yielding results...")
         for parentsid in seen:
             self.logger.debug(f"Yielding: {parentsid}")
-            yield {parentsid}
+            yield {parentsid}            
         
 class list_dashboards(AwsQuicksightStream):
     primary_key = "DashboardId"
@@ -242,6 +361,8 @@ class list_dashboards(AwsQuicksightStream):
     cursor_field = "CreatedTime"
     data_field = "DashboardSummaryList"
     limit: int = 100
+    name_space = None
+    region_name = None
 
     def send_request(self, **kwargs) -> Mapping[str, Any]:
         return self.client.session.list_dashboards(**kwargs)
@@ -259,6 +380,8 @@ class list_dashboard_versions(AwsQuicksightSubStream):
     data_field = "DashboardVersionSummaryList"
     parent_stream = list_dashboards
     limit: int = 100
+    name_space = None
+    region_name = None
 
     def send_request(self, **kwargs) -> Mapping[str, Any]:
         return self.client.session.list_dashboard_versions(**kwargs)
@@ -275,6 +398,8 @@ class list_themes(AwsQuicksightStream):
     cursor_field = "CreatedTime"
     data_field = "ThemeSummaryList"
     limit: int = 100
+    name_space = None
+    region_name = None
 
     def send_request(self, **kwargs) -> Mapping[str, Any]:
         return self.client.session.list_themes(**kwargs)
@@ -291,6 +416,8 @@ class list_templates(AwsQuicksightStream):
     cursor_field = "CreatedTime"
     data_field = "TemplateSummaryList"
     limit: int = 100
+    name_space = None
+    region_name = None
 
     def send_request(self, **kwargs) -> Mapping[str, Any]:
         return self.client.session.list_templates(**kwargs)
@@ -308,6 +435,8 @@ class list_template_versions(AwsQuicksightSubStream):
     data_field = "TemplateVersionSummaryList"
     limit: int = 100 # 90 days in seconds
     parent_stream = list_templates
+    name_space = None
+    region_name = None
 
         # Initialize the logger
         
@@ -327,6 +456,8 @@ class list_template_aliases(AwsQuicksightSubStream):
     data_field = "TemplateAliasList"
     limit: int = 100 # 90 days in seconds
     parent_stream = list_templates
+    name_space = None
+    region_name = None
 
         # Initialize the logger
         
@@ -343,8 +474,10 @@ class list_namespaces(AwsQuicksightStream):
     primary_key = None
     time_field = None
     ####cursor_field = None
-    data_field = "Namespaces"
+    data_field = "namespaces"
     limit: int = 100
+    name_space = None
+    region_name = None
 
     def send_request(self, **kwargs) -> Mapping[str, Any]:
         return self.client.session.list_namespaces(**kwargs)
@@ -361,6 +494,8 @@ class list_data_sets(AwsQuicksightStream):
     cursor_field = "CreatedTime"
     data_field = "DataSetSummaries"
     limit: int = 100
+    name_space = None
+    region_name = None
 
     def send_request(self, **kwargs) -> Mapping[str, Any]:
         return self.client.session.list_data_sets(**kwargs)
@@ -377,6 +512,8 @@ class list_folders(AwsQuicksightStream):
     #cursor_field = "CreatedTime"
     data_field = "FolderSummaryList"
     limit: int = 100
+    name_space = None
+    region_name = None
 
     def send_request(self, **kwargs) -> Mapping[str, Any]:
         return self.client.session.list_folders(**kwargs)
@@ -395,6 +532,8 @@ class list_folder_members(AwsQuicksightSubStream):
     data_field = "FolderMemberList"
     parent_stream = list_folders
     limit: int = 100
+    name_space = None
+    region_name = None
 
     def send_request(self, **kwargs) -> Mapping[str, Any]:
         return self.client.session.list_folder_members(**kwargs)
@@ -412,6 +551,8 @@ class list_ingestions(AwsQuicksightSubStream):
     data_field = "Ingestions"
     limit: int = 100 # 90 days in seconds
     parent_stream = list_data_sets
+    name_space = None
+    region_name = None
 
         # Initialize the logger
         
@@ -430,6 +571,8 @@ class list_analyses(AwsQuicksightStream):
     cursor_field = "CreatedTime"
     data_field = "AnalysisSummaryList"
     limit: int = 100
+    name_space = None
+    region_name = None
 
     def send_request(self, **kwargs) -> Mapping[str, Any]:
         return self.client.session.list_analyses(**kwargs)
@@ -446,6 +589,8 @@ class list_data_sources(AwsQuicksightStream):
     cursor_field = "CreatedTime"
     data_field = "DataSources"
     limit = 100
+    name_space = None
+    region_name = None
 
     def send_request(self, **kwargs) -> Mapping[str, Any]:
         return self.client.session.list_data_sources(**kwargs)
@@ -458,7 +603,7 @@ class list_data_sources(AwsQuicksightStream):
  
  
          
-class describe_dashboard(AwsQuicksightSubStream):
+class describe_dashboard(AwsQuicksightSubStreamDescribe):
     primary_key = None
     time_field = None
     ##cursor_field = "CreatedTime"
@@ -466,6 +611,8 @@ class describe_dashboard(AwsQuicksightSubStream):
     parent_stream = list_dashboards
     #limit: int = 100
     limit = None
+    name_space = None
+    region_name = None
     
         
     def send_request(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> Mapping[str, Any]:
@@ -477,7 +624,7 @@ class describe_dashboard(AwsQuicksightSubStream):
         return params
     
 
-class describe_analysis_definition(AwsQuicksightSubStream):
+class describe_analysis_definition(AwsQuicksightSubStreamDescribe):
     primary_key = None
     time_field = None
     ##cursor_field = "CreatedTime"
@@ -485,6 +632,8 @@ class describe_analysis_definition(AwsQuicksightSubStream):
     parent_stream = list_analyses
     #limit: int = 100
     limit = None
+    name_space = None
+    region_name = None
     
         
     def send_request(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> Mapping[str, Any]:
@@ -495,7 +644,7 @@ class describe_analysis_definition(AwsQuicksightSubStream):
         params = super().request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
         return params
     
-class describe_analysis(AwsQuicksightSubStream):
+class describe_analysis(AwsQuicksightSubStreamDescribe):
     primary_key = None
     time_field = None
     ##cursor_field = "CreatedTime"
@@ -503,6 +652,8 @@ class describe_analysis(AwsQuicksightSubStream):
     parent_stream = list_analyses
     #limit: int = 100
     limit = None
+    name_space = None
+    region_name = None
     
         
     def send_request(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> Mapping[str, Any]:
@@ -512,3 +663,63 @@ class describe_analysis(AwsQuicksightSubStream):
         ) -> MutableMapping[str, Any]:
         params = super().request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
         return params
+          
+    
+class list_users(AwsQuicksightStream):
+    primary_key = None
+    time_field = None
+    #cursor_field = "CreatedTime"
+    data_field = "UserList"
+    limit: int = 100
+    name_space = "default"
+    region_name = "us-east-1"
+
+    def send_request(self, **kwargs) -> Mapping[str, Any]:
+        return self.client.session.list_users(**kwargs)
+
+    def request_params(
+        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        params = super().request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
+        return params  
+
+
+class describe_data_set(AwsQuicksightSubStreamDescribe):
+    primary_key = None
+    time_field = None
+    #cursor_field = None
+    data_field = "DataSet" 
+    parent_stream = list_data_sets
+    #limit: int = 100
+    limit = None
+    name_space = None
+    region_name = None
+    
+        
+    def send_request(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> Mapping[str, Any]:
+        return self.client.session.describe_data_set(stream_slice=stream_slice, **kwargs)
+
+    def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+        ) -> MutableMapping[str, Any]:
+        params = super().request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
+        return params
+
+class describe_data_source(AwsQuicksightSubStreamDescribe):
+    primary_key = None
+    time_field = None
+    #cursor_field = None
+    data_field = "DataSource"
+    parent_stream = list_data_sources
+    #limit: int = 100
+    limit = None
+    name_space = None
+    region_name = None
+    
+        
+    def send_request(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> Mapping[str, Any]:
+        return self.client.session.describe_data_source(stream_slice=stream_slice, **kwargs)
+
+    def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
+        ) -> MutableMapping[str, Any]:
+        params = super().request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
+        return params    

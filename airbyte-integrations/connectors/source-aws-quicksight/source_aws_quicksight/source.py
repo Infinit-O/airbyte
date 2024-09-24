@@ -26,7 +26,10 @@ from .streams import (list_dashboards,
                       list_ingestions,
                       describe_dashboard,
                       describe_analysis,
-                      describe_analysis_definition
+                      describe_analysis_definition,
+                      list_users,
+                      describe_data_set,
+                      describe_data_source
                       )
 
 class Client:
@@ -58,6 +61,8 @@ class SourceAwsQuicksight(AbstractSource):
 
         return True, None
 
+
+
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         return [list_dashboards(**config),
                 list_dashboard_versions(**config),
@@ -73,6 +78,9 @@ class SourceAwsQuicksight(AbstractSource):
                 list_ingestions(**config),
                 describe_dashboard(**config),
                 describe_analysis(**config),
-                describe_analysis_definition(**config)
+                describe_analysis_definition(**config),
+                list_users(**config),
+                describe_data_set(**config),
+                describe_data_source(**config),
                 ]
         

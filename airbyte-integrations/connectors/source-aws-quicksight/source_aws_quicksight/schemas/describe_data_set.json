@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "Arn": {
+      "type": ["string", "null"]
+    },
+    "DataSetId": {
+      "type": ["string", "null"]
+    },
+    "Name": {
+      "type": ["string", "null"]
+    },
+    "CreatedTime": {
+      "type": ["string", "null"]
+    },
+    "LastUpdatedTime": {
+      "type": ["string", "null"]
+    },
+    "PhysicalTableMap": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "s3PhysicalTable": {
+          "type": ["object", "null"],
+          "additionalProperties": true,
+          "properties": {
+            "S3Source": {
+              "type": ["object", "null"],
+              "additionalProperties": true,
+              "properties": {
+                "DataSourceArn": {
+                  "type": ["string", "null"]
+                },
+                "UploadSettings": {
+                  "type": ["object", "null"],
+                  "additionalProperties": true,
+                  "properties": {
+                    "Format": {
+                      "type": ["string", "null"]
+                    },
+                    "StartFromRow": {
+                      "type": ["integer", "null"]
+                    },
+                    "ContainsHeader": {
+                      "type": ["boolean", "null"]
+                    },
+                    "TextQualifier": {
+                      "type": ["string", "null"]
+                    },
+                    "Delimiter": {
+                      "type": ["string", "null"]
+                    }
+                  }
+                },
+                "InputColumns": {
+                  "type": ["array", "null"],
+                  "items": {
+                    "type": ["object", "null"],
+                    "additionalProperties": true,
+                    "properties": {
+                      "Name": {
+                        "type": ["string", "null"]
+                      },
+                      "Type": {
+                        "type": ["string", "null"]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "LogicalTableMap": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "s3PhysicalTable": {
+          "type": ["object", "null"],
+          "additionalProperties": true,
+          "properties": {
+            "Alias": {
+              "type": ["string", "null"]
+            },
+            "DataTransforms": {
+              "type": ["array", "null"],
+              "items": {
+                "type": ["object", "null"],
+                "additionalProperties": true
+              }
+            },
+            "Source": {
+              "type": ["object", "null"],
+              "additionalProperties": true,
+              "properties": {
+                "PhysicalTableId": {
+                  "type": ["string", "null"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "OutputColumns": {
+      "type": ["array", "null"],
+      "items": {
+        "type": ["object", "null"],
+        "additionalProperties": true,
+        "properties": {
+          "Name": {
+            "type": ["string", "null"]
+          },
+          "Type": {
+            "type": ["string", "null"]
+          },
+          "SubType": {
+            "type": ["string", "null"]
+          }
+        }
+      }
+    },
+    "ImportMode": {
+      "type": ["string", "null"]
+    },
+    "ConsumedSpiceCapacityInBytes": {
+      "type": ["integer", "null"]
+    },
+    "DataSetUsageConfiguration": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "DisableUseAsDirectQuerySource": {
+          "type": ["boolean", "null"]
+        },
+        "DisableUseAsImportedSource": {
+          "type": ["boolean", "null"]
+        }
+      }
+    }
+  }
+}

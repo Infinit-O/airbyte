@@ -39,7 +39,7 @@
       }     
     },
     "CreatedTime": {
-      "type": ["string", "null"]
+      "type": ["integer", "null"]
     },
     "IngestionTimeInSeconds": {
       "type": ["integer", "null"]

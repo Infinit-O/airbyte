@@ -16,13 +16,13 @@
       "type": ["string", "null"]
     },
     "CreatedTime": {
-      "type": ["string", "null"]
+      "type": ["integer", "null"]
     },
     "LastUpdatedTime": {
       "type": ["string", "null"]
     },
     "SharingModel": {
-      "type": ["integer", "null"]
+      "type": ["string", "null"]
     }
   },
   "NextToken": {

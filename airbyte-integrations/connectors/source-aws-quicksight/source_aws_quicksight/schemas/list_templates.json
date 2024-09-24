@@ -13,10 +13,10 @@
       "type": ["string", "null"]
     },
     "LatestVersionNumber": {
-      "type": ["string", "null"]
+      "type": ["integer", "null"]
     },
     "CreatedTime": {
-      "type": ["string", "null"]
+      "type": ["integer", "null"]
     },
     "LastUpdatedTime": {
       "type": ["string", "null"]

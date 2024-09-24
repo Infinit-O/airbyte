@@ -1,7 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "additionalProperties": true,
   "properties": {
     "Arn": {
       "type": [
@@ -35,7 +34,7 @@
     },
     "CreatedTime": {
       "type": [
-        "integer",
+        "string",
         "null"
       ]
     },
@@ -47,30 +46,24 @@
     },
     "DataSourceParameters": {
       "type": "object",
-      "additionalProperties": true
-    },
-    "AlternateDataSourceParameters": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": true
-      }
-    },
-    "VpcConnectionProperties": {
-      "type": "object",
-      "additionalProperties": true,
       "properties": {
-        "VpcConnectionArn": {
-          "type": [
-            "string",
-            "null"
-          ]
+        "AthenaParameters": {
+          "type": "object",
+          "properties": {
+            "WorkGroup": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": true
         }
-      }
+      },
+      "additionalProperties": true
     },
     "SslProperties": {
       "type": "object",
-      "additionalProperties": true,
       "properties": {
         "DisableSsl": {
           "type": [
@@ -78,31 +71,9 @@
             "null"
           ]
         }
-      }
-    },
-    "ErrorInfo": {
-      "type": "object",
-      "additionalProperties": true,
-      "properties": {
-        "Type": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "Message": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "SecretArn": {
-      "type": [
-        "string",
-        "null"
-      ]
+      },
+      "additionalProperties": true
     }
-  }
+  },
+  "additionalProperties": true
 }

@@ -13,7 +13,7 @@
       "type": ["string", "null"]
     },
     "CreatedTime": {
-      "type": ["string", "null"]
+      "type": ["integer", "null"]
     },
     "LastUpdatedTime": {
       "type": ["string", "null"]
@@ -42,10 +42,10 @@
         }
   },
   "RowLevelPermissionTagConfigurationApplied": {
-    "type": ["string", "null"]
+    "type": ["boolean", "null"]
   },
   "ColumnLevelPermissionRulesApplied": {
-    "type": ["string", "null"]
+    "type": ["boolean", "null"]
   }
 },
 "NextToken": {

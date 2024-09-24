@@ -11,13 +11,13 @@
     },
     "VersionNumber": {
       "type": [
-        "string",
+        "integer",
         "null"
       ]
     },
     "CreatedTime": {
       "type": [
-        "string",
+        "integer",
         "null"
       ]
     },

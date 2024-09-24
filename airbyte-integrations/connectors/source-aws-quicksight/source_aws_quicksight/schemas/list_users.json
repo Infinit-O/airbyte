@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "Arn": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "UserName": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Email": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Role": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "IdentityType": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Active": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "PrincipalId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "CustomPermissionsName": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ExternalLoginFederationProviderType": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ExternalLoginFederationProviderUrl": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ExternalLoginId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}
+  
