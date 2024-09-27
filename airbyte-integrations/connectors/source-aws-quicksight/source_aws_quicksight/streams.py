@@ -110,7 +110,6 @@ class AwsQuicksightStream(Stream, ABC):
 
     def parse_response(self, response: dict, **kwargs) -> Iterable[Mapping[str, Any]]:
         for event in response.get(self.data_field, []): 
-            #self.logger.info(f"{self.time_field}")
             if (self.time_field in event) and (self.time_field is not None): 
                 event[self.time_field] = self.datetime_to_timestamp(event[self.time_field])
             yield event       
@@ -140,7 +139,7 @@ class AwsQuicksightSubStream(Stream, ABC):
         
         if stream_slice:
             stream_slice = ', '.join(stream_slice)
-            self.logger.info(f"parent_key: {stream_slice}")
+            #self.logger.info(f"parent_key: {stream_slice}")
             params[self.parent_stream.primary_key] = stream_slice 
      
         
@@ -474,7 +473,7 @@ class list_namespaces(AwsQuicksightStream):
     primary_key = None
     time_field = None
     ####cursor_field = None
-    data_field = "namespaces"
+    data_field = "Namespaces"
     limit: int = 100
     name_space = None
     region_name = None

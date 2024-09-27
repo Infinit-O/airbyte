@@ -13,7 +13,7 @@
       "type": ["string", "null"]
     },
     "CreatedTime": {
-      "type": ["string", "null"]
+      "type": ["integer", "null"]
     },
     "LastUpdatedTime": {
       "type": ["string", "null"]

@@ -1,88 +1,80 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
+  "additionalProperties": true,
   "properties": {
-    "Status": {
-      "type": "integer"
+    "DashboardId": {
+      "type": "string"
     },
-    "Dashboard": {
+    "Arn": {
+      "type": "string"
+    },
+    "Name": {
+      "type": "string"
+    },
+    "Version": {
       "type": "object",
+      "additionalProperties": true,
       "properties": {
-        "DashboardId": {
-          "type": ["string", "null"]
+        "CreatedTime": {
+          "type": "string"
         },
-        "Arn": {
-          "type": ["string", "null"]
+        "Errors": {
+          "type": "array",
+          "items": {
+            "type": "null"
+          }
         },
-        "Name": {
-          "type": ["string", "null"]
+        "VersionNumber": {
+          "type": "integer"
         },
-        "Version": {
-          "type": "object",
-          "properties": {
-            "CreatedTime": {
-              "type": ["string", "null"]
-            },
-            "Errors": {
-              "type": "array",
-              "items": {
-                "type": ["string", "null"]
+        "Status": {
+          "type": "string"
+        },
+        "SourceEntityArn": {
+          "type": "string"
+        },
+        "DataSetArns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ThemeArn": {
+          "type": "string"
+        },
+        "Sheets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "SheetId": {
+                "type": "string"
+              },
+              "Name": {
+                "type": "string"
               }
             },
-            "VersionNumber": {
-              "type": "integer"
-            },
-            "Status": {
-              "type": ["string", "null"]
-            },
-            "SourceEntityArn": {
-              "type": ["string", "null"]
-            },
-            "DataSetArns": {
-              "type": "array",
-              "items": {
-                "type": ["string", "null"]
-              }
-            },
-            "ThemeArn": {
-              "type": ["string", "null"]
-            },
-            "Sheets": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "SheetId": {
-                    "type": ["string", "null"]
-                  },
-                  "Name": {
-                    "type": ["string", "null"]
-                  }
-                }
-              }
-            }
+            "additionalProperties": true
           }
         }
       }
     },
     "CreatedTime": {
-      "type": ["string", "null"]
-      
+      "type": "string"
     },
     "LastPublishedTime": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "LastUpdatedTime": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "LinkEntities": {
       "type": "array",
       "items": {
-        "type": ["string", "null"]
+        "type": "string"
       }
     },
-    "RequestId": {
-      "type": ["string", "null"]
-    }
+    "additionalProperties": true
   }
 }

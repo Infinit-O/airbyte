@@ -7,10 +7,10 @@
       "type": ["string", "null"]
     },
     "CreatedTime": {
-      "type": ["string", "null"]
+      "type": ["integer", "null"]
     },
     "VersionNumber": {
-      "type": ["string", "null"]
+      "type": ["integer", "null"]
     },
     "Status": {
       "type": ["string", "null"]

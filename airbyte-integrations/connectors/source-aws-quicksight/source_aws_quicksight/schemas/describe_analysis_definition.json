@@ -6,32 +6,43 @@
       "type": ["string", "null"]
     },
     "Definition": {
-      "type": "object",
+      "type": ["object", "null"],
       "properties": {
         "AnalysisDefaults": {
-          "type": "object",
+          "type": ["object", "null"],
           "properties": {
-            "DefaultNewSheetConfiguration": {}
-          }
+            "DefaultNewSheetConfiguration": {
+              "type": ["object", "null"]
+            }
+          },
+          "additionalProperties": true
         },
         "CalculatedFields": {
-          "type": "array",
-          "items": {}
+          "type": ["array", "null"],
+          "items": {
+            "type": ["object", "null"]
+          }
         },
         "ColumnConfigurations": {
-          "type": "array",
-          "items": {}
+          "type": ["array", "null"],
+          "items": {
+            "type": ["object", "null"]
+          }
         },
         "DataSetIdentifierDeclarations": {
-          "type": "array",
-          "items": {}
+          "type": ["array", "null"],
+          "items": {
+            "type": ["object", "null"]
+          }
         },
         "FilterGroups": {
-          "type": "array",
-          "items": {}
+          "type": ["array", "null"],
+          "items": {
+            "type": ["object", "null"]
+          }
         },
         "Options": {
-          "type": "object",
+          "type": ["object", "null"],
           "properties": {
             "Timezone": {
               "type": ["string", "null"]
@@ -39,20 +50,35 @@
             "WeekStart": {
               "type": ["string", "null"]
             }
-          }
+          },
+          "additionalProperties": true
         },
         "ParameterDeclarations": {
-          "type": "array",
-          "items": {}
+          "type": ["array", "null"],
+          "items": {
+            "type": ["object", "null"]
+          }
+        },
+        "QueryExecutionOptions": {
+          "type": ["object", "null"],
+          "properties": {
+            "QueryExecutionMode": {
+              "type": ["string", "null"]
+            }
+          },
+          "additionalProperties": true
         },
         "Sheets": {
-          "type": "array",
-          "items": {}
+          "type": ["array", "null"],
+          "items": {
+            "type": ["object", "null"]
+          }
         }
-      }
+      },
+      "additionalProperties": true
     },
     "Errors": {
-      "type": "array",
+      "type": ["array", "null"],
       "items": {
         "type": "object",
         "properties": {
@@ -63,17 +89,19 @@
             "type": ["string", "null"]
           },
           "ViolatedEntities": {
-            "type": "array",
+            "type": ["array", "null"],
             "items": {
               "type": "object",
               "properties": {
                 "Path": {
                   "type": ["string", "null"]
                 }
-              }
+              },
+              "additionalProperties": true
             }
           }
-        }
+        },
+        "additionalProperties": true
       }
     },
     "Name": {
@@ -88,5 +116,6 @@
     "ThemeArn": {
       "type": ["string", "null"]
     }
-  }
+  },
+  "additionalProperties": true
 }
