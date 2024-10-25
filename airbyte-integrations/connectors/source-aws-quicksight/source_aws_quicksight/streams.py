@@ -237,6 +237,134 @@ class AwsQuicksightSubStream(Stream, ABC):
         for parentsid in seen:
             self.logger.debug(f"Yielding: {parentsid}")
             yield {parentsid}
+            
+class AwsQuicksightParentSubStream(Stream, ABC):
+    
+    def __init__(self, aws_access_key_id: str, aws_secret_access_key: str, aws_account_id: str, aws_region_name: str, **kwargs):
+        self.aws_secret_access_key = aws_secret_access_key
+        self.aws_access_key_id = aws_access_key_id
+        self.aws_account_id = aws_account_id
+        self.client = Client(aws_access_key_id, aws_secret_access_key, aws_region_name)
+        self.records_left = kwargs.get("records_limit", math.inf)
+    
+    def next_page_token(self, response: Mapping[str, Any]) -> Optional[Mapping[str, Any]]:
+        return response.get("NextToken")
+
+    def request_params(
+        self, 
+        stream_state: Mapping[str, Any], 
+        stream_slice: Mapping[str, Any], 
+        next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        if self.limit is not None:
+            params = {"MaxResults": self.limit, "AwsAccountId": self.aws_account_id}
+        else:
+            params = {"AwsAccountId": self.aws_account_id}
+        
+        if stream_slice:
+            stream_slice = ', '.join(stream_slice)
+            #self.logger.info(f"parent_key: {stream_slice}")
+            params[self.parent_stream.primary_key] = stream_slice 
+     
+        
+        if next_page_token:
+            params["NextToken"] = next_page_token
+
+        return params
+
+    def datetime_to_timestamp(self, date: datetime) -> int:
+        return int(date.timestamp())
+
+    @abstractmethod
+    def send_request(self, **kwargs) -> Mapping[str, Any]:
+        """
+        This method should be overridden by subclasses to send proper request with appropriate parameters to QuickSight.
+        """
+        pass
+    
+    def is_read_limit_reached(self) -> bool:
+        return self.records_left <= 0
+    
+    def read_records(
+        self,
+        sync_mode: SyncMode,
+        cursor_field: List[str] = None,
+        stream_slice: Mapping[str, Any] = None,
+        stream_state: Mapping[str, Any] = None,
+    ) -> Iterable[Mapping[str, Any]]:
+        stream_state = stream_state or {}
+        pagination_complete = False
+        next_page_token = None
+
+        
+        while not pagination_complete:
+            params = self.request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
+            response = self.send_request(**params)   
+            
+
+            next_page_token = self.next_page_token(response)
+            if not next_page_token:
+                pagination_complete = True
+            
+            if stream_slice:
+                stream_slice = ', '.join(stream_slice)
+                self.logger
+            
+            for record in self.parse_response(response):
+                record[self.parent_stream.primary_key] = stream_slice
+                yield record
+                self.records_left -= 1
+
+                if self.is_read_limit_reached():
+                    return iter(())
+
+        yield from []
+        
+        if hasattr(self, 'records_left'):
+            return self.records_left <= 0
+        return False
+    
+    def parse_response(self, response: dict, **kwargs) -> Iterable[Mapping[str, Any]]:
+           
+        if self.data_field is not None:
+            for event in response.get(self.data_field, []):
+                if isinstance(event, str):
+                    if  (self.time_field is not None): 
+                        response[self.time_field] = self.datetime_to_timestamp(response[self.time_field])
+                        self.logger.info(f"resp{response}")
+                    yield response
+                elif (self.time_field in event) and (self.time_field is not None): 
+                    event[self.time_field] = self.datetime_to_timestamp(event[self.time_field])
+                    yield event   
+                else:
+                    yield event     
+        elif self.data_field is None:
+            if (self.time_field in response) and (self.time_field is not None): 
+                event[self.time_field] = self.datetime_to_timestamp(response[self.time_field])
+            yield response 
+        
+       
+       
+    def stream_slices(
+        self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None
+    ) -> Iterable[Optional[Mapping[str, Any]]]:
+        seen = []
+        pr = self.parent_stream(aws_access_key_id=self.aws_access_key_id, aws_secret_access_key=self.aws_secret_access_key,aws_account_id=self.aws_account_id, aws_region_name=self.client.session.meta.region_name)
+        self.logger.info("Fetching records from parent stream...")
+        pr_records = pr.read_records(sync_mode=SyncMode.full_refresh)
+        
+
+        self.logger.info("Sorting out unique IDs...")
+        for record in pr_records:
+            if record[self.parent_stream.primary_key] in seen:
+                continue
+            else:
+                 seen.append(record[self.parent_stream.primary_key])
+
+        self.logger.info("Yielding results...")
+        for parentsid in seen:
+            self.logger.debug(f"Yielding: {parentsid}")
+            yield {parentsid}
 
 class AwsQuicksightSubStreamDescribe(Stream, ABC):
     
@@ -524,7 +652,7 @@ class list_folders(AwsQuicksightStream):
         return params
 
 
-class list_folder_members(AwsQuicksightSubStream):
+class list_folder_members(AwsQuicksightParentSubStream):
     primary_key = None
     time_field = None
     #cursor_field = "CreatedTime"
